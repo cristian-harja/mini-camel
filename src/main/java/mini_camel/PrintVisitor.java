@@ -1,38 +1,40 @@
 package mini_camel;
 
+import mini_camel.ast.*;
+
 import java.util.*;
 
-class PrintVisitor implements Visitor {
-    public void visit(Unit e) {
+public final class PrintVisitor implements Visitor {
+    public void visit(AstUnit e) {
         System.out.print("()");
     }
 
-    public void visit(Bool e) {
+    public void visit(AstBool e) {
         System.out.print(e.b);
     }
 
-    public void visit(Int e) {
+    public void visit(AstInt e) {
         System.out.print(e.i);
     }
 
-    public void visit(FloatExp e) {
+    public void visit(AstFloat e) {
         String s = String.format("%.2f", e.f);
         System.out.print(s);
     }
 
-    public void visit(Not e) {
+    public void visit(AstNot e) {
         System.out.print("(not ");
         e.e.accept(this);
         System.out.print(")");
     }
 
-    public void visit(Neg e) {
+    public void visit(AstNeg e) {
         System.out.print("(- ");
         e.e.accept(this);
         System.out.print(")");
     }
 
-    public void visit(Add e) {
+    public void visit(AstAdd e) {
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" + ");
@@ -40,7 +42,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Sub e) {
+    public void visit(AstSub e) {
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" - ");
@@ -48,13 +50,13 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(FNeg e){
+    public void visit(AstFNeg e){
         System.out.print("(-. ");
         e.e.accept(this);
         System.out.print(")");
     }
 
-    public void visit(FAdd e){
+    public void visit(AstFAdd e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" +. ");
@@ -62,7 +64,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(FSub e){
+    public void visit(AstFSub e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" -. ");
@@ -70,7 +72,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(FMul e) {
+    public void visit(AstFMul e) {
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" *. ");
@@ -78,7 +80,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(FDiv e){
+    public void visit(AstFDiv e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" /. ");
@@ -86,7 +88,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Eq e){
+    public void visit(AstEq e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" = ");
@@ -94,7 +96,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(LE e){
+    public void visit(AstLE e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(" <= ");
@@ -102,7 +104,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(If e){
+    public void visit(AstIf e){
         System.out.print("(if ");
         e.e1.accept(this);
         System.out.print(" then ");
@@ -112,7 +114,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Let e) {
+    public void visit(AstLet e) {
         System.out.print("(let ");
         System.out.print(e.id);
         System.out.print(" = ");
@@ -122,7 +124,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Var e){
+    public void visit(AstVar e){
         System.out.print(e.id);
     }
 
@@ -140,11 +142,11 @@ class PrintVisitor implements Visitor {
     }
 
     // print sequence of ast.Exp
-    void printInfix2(List<Exp> l, String op) {
+    void printInfix2(List<AstExp> l, String op) {
         if (l.isEmpty()) {
             return;
         }
-        Iterator<Exp> it = l.iterator();
+        Iterator<AstExp> it = l.iterator();
         it.next().accept(this);
         while (it.hasNext()) {
             System.out.print(op);
@@ -152,7 +154,7 @@ class PrintVisitor implements Visitor {
         }
     }
 
-    public void visit(LetRec e){
+    public void visit(AstLetRec e){
         System.out.print("(let rec " + e.fd.id + " ");
         printInfix(e.fd.args, " ");
         System.out.print(" = ");
@@ -162,7 +164,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(App e){
+    public void visit(AstApp e){
         System.out.print("(");
         e.e.accept(this);
         System.out.print(" ");
@@ -170,13 +172,13 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Tuple e){
+    public void visit(AstTuple e){
         System.out.print("(");
         printInfix2(e.es, ", ");
         System.out.print(")");
     }
 
-    public void visit(LetTuple e){
+    public void visit(AstLetTuple e){
         System.out.print("(let (");
         printInfix(e.ids, ", ");
         System.out.print(") = ");
@@ -186,7 +188,7 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Array e){
+    public void visit(AstArray e){
         System.out.print("(Array.create ");
         e.e1.accept(this);
         System.out.print(" ");
@@ -194,14 +196,14 @@ class PrintVisitor implements Visitor {
         System.out.print(")");
     }
 
-    public void visit(Get e){
+    public void visit(AstGet e){
         e.e1.accept(this);
         System.out.print(".(");
         e.e2.accept(this);
         System.out.print(")");
     }
 
-    public void visit(Put e){
+    public void visit(AstPut e){
         System.out.print("(");
         e.e1.accept(this);
         System.out.print(".(");
@@ -209,6 +211,10 @@ class PrintVisitor implements Visitor {
         System.out.print(") <- ");
         e.e3.accept(this);
         System.out.print(")");
+    }
+
+    public void visit(AstFunDef e) {
+
     }
 }
 
