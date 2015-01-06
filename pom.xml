@@ -8,6 +8,27 @@
     <artifactId>mini-camel</artifactId>
     <version>0.1</version>
 
+    <properties>
+        <!-- Miscellaneous -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Source files -->
+        <src.dir>${basedir}/src</src.dir>
+        <src_cup.dir>${src.dir}/main/cup</src_cup.dir>
+        <src_flex.dir>${src.dir}/main/flex</src_flex.dir>
+        <src_java.dir>${src.dir}/main/java</src_java.dir>
+
+        <!-- Output directories -->
+        <out.dir>${basedir}/target</out.dir>
+        <out_java.dir>${out.dir}/classes</out_java.dir>
+
+        <!-- Generated sources -->
+        <gen.dir>${out.dir}/generated-sources</gen.dir>
+        <gen_cup.dir>${gen.dir}/cup</gen_cup.dir>
+        <gen_flex.dir>${gen.dir}/flex</gen_flex.dir>
+
+    </properties>
+
     <dependencies>
 
         <!-- @Nonnull, @Nullable ...-->
@@ -23,6 +44,14 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava-collections</artifactId>
             <version>r03</version>
+        </dependency>
+
+        <dependency>
+            <scope>system</scope>
+            <groupId>les-quatre-mousquetengineers</groupId>
+            <artifactId>java_cup-runtime</artifactId>
+            <version>11a</version>
+            <systemPath>${basedir}/bin/java-cup-11b-runtime.jar</systemPath>
         </dependency>
 
         <!-- Unit Testing Library -->
@@ -55,25 +84,72 @@
 
         <plugins>
 
-            <!-- Load .properties file -->
+            <!-- Use Ant to run JFlex and CUP (to generate sources) -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>properties-maven-plugin</artifactId>
-                <version>1.0-alpha-1</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+
                 <executions>
                     <execution>
-                        <phase>initialize</phase>
+                        <id>default-cli</id>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>read-project-properties</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <files>
-                                <file>${basedir}/build.properties</file>
-                            </files>
+                            <target>
+                                <taskdef name="cup"
+                                         classname="java_cup.anttask.CUPTask"
+                                         classpath="bin/java-cup-11b.jar"/>
+
+                                <taskdef name="jflex"
+                                         classname="jflex.anttask.JFlexTask"
+                                         classpath="bin/jflex-1.6.0.jar"/>
+
+                                <cup
+                                        srcfile="${src_cup.dir}/Parser.cup"
+                                        interface="on"
+                                        destdir="${gen_cup.dir}"
+                                        parser="Parser"
+                                        expect="150"
+                                        symbols="sym"
+                                        quiet="false"
+                                        nonterms="false"
+                                        nopositions="true"/>
+
+                                <jflex
+                                        file="${src_flex.dir}/Lexer.flex"
+                                        destdir="${gen_flex.dir}"/>
+
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Add the generated sources to the classpath -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>add-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${gen_cup.dir}</source>
+                                <source>${gen_flex.dir}</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
 
     </build>
