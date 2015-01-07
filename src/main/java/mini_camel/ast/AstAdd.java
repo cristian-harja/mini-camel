@@ -11,4 +11,9 @@ public final class AstAdd extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        return "(" + e1.toString() + " + " + e2.toString() + ")";
+    }
+
 }

@@ -15,4 +15,21 @@ public final class AstApp extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        sb.append(e);
+        boolean first = true;
+        sb.append("(");
+        for (AstExp l : es){
+            if(!first){
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(l);
+        }
+        sb.append("))");
+        return sb.toString();
+    }
 }

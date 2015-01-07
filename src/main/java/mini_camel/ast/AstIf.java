@@ -12,4 +12,18 @@ public final class AstIf extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("(if(");
+        sb.append(e1);
+        sb.append(") then ");
+        sb.append(e2);
+        sb.append(" else ");
+        sb.append(e3);
+        sb.append(")");
+
+        return sb.toString();
+    }
 }

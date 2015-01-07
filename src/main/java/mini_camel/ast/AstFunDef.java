@@ -22,4 +22,26 @@ public final class AstFunDef extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("(Let ");
+        sb.append(id);
+
+        boolean first = true;
+        sb.append("(");
+        for (Id l : args){
+            if(!first){
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(l);
+        }
+        sb.append(") = ");
+        sb.append(e);
+        sb.append(")");
+
+        return sb.toString();
+    }
 }

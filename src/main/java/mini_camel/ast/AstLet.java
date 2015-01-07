@@ -19,4 +19,8 @@ public final class AstLet extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        return "(Let " + id.toString() + " = " + e1.toString() + " in " + e2.toString() + ")";
+    }
 }

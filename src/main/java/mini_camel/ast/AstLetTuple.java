@@ -21,4 +21,27 @@ public final class AstLetTuple extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("(Let ");
+
+        boolean first = true;
+        sb.append("(");
+        for (Id l : ids){
+            if(!first){
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(l);
+        }
+        sb.append(") = ");
+        sb.append(e1);
+        sb.append(" in ");
+        sb.append(e2);
+        sb.append(")");
+
+        return sb.toString();
+    }
 }

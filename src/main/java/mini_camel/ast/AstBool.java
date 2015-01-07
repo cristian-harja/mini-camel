@@ -11,4 +11,8 @@ public final class AstBool extends AstExp {
         v.visit(this);
     }
 
+    public String toString(){
+        return b ? "True" : "False";
+    }
+
 }
