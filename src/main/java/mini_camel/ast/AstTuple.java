@@ -13,4 +13,21 @@ public final class AstTuple extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        boolean first = true;
+        sb.append("(");
+        for (AstExp l : es){
+            if(!first){
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(l);
+        }
+        sb.append(")");
+
+        return sb.toString();
+    }
 }

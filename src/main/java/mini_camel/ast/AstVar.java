@@ -12,4 +12,8 @@ public final class AstVar extends AstExp {
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+    public String toString(){
+        return id.toString();
+    }
 }
