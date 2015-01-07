@@ -27,7 +27,6 @@ nb-configuration.xml
 .pydevproject
 .metadata
 .gradle
-bin/
 tmp/
 *.tmp
 *.bak
