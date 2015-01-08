@@ -16,6 +16,10 @@ public final class AstApp extends AstExp {
         v.visit(this);
     }
 
+    public <T, U> T accept(Visitor2<T, U> v, U a) {
+        return v.visit(a, this);
+    }
+
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("(");
