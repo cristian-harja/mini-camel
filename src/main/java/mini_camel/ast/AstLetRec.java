@@ -18,7 +18,7 @@ public final class AstLetRec extends AstExp {
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append("(Let rec ");
+        sb.append("(let rec ");
         sb.append(fd.id);
 
         boolean first = true;
@@ -28,7 +28,7 @@ public final class AstLetRec extends AstExp {
                 sb.append(", ");
             }
             first = false;
-            sb.append(l);
+            sb.append(l.id);
         }
         sb.append(") = ");
         sb.append(fd.e);

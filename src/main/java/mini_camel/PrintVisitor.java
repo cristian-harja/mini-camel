@@ -2,215 +2,226 @@ package mini_camel;
 
 import mini_camel.ast.*;
 
+import java.io.PrintStream;
 import java.util.*;
 
 public final class PrintVisitor implements Visitor {
+
+    private PrintStream out;
+    
+    public PrintVisitor(PrintStream out) {
+        this.out = out;
+    }
+    
     public void visit(AstUnit e) {
-        System.out.print("()");
+        out.print("()");
     }
 
     public void visit(AstBool e) {
-        System.out.print(e.b);
+        out.print(e.b);
     }
 
     public void visit(AstInt e) {
-        System.out.print(e.i);
+        out.print(e.i);
     }
 
     public void visit(AstFloat e) {
         String s = String.format("%.2f", e.f);
-        System.out.print(s);
+        out.print(s);
     }
 
     public void visit(AstNot e) {
-        System.out.print("(not ");
+        out.print("(not ");
         e.e.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstNeg e) {
-        System.out.print("(- ");
+        out.print("(- ");
         e.e.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstAdd e) {
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" + ");
+        out.print(" + ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstSub e) {
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" - ");
+        out.print(" - ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFNeg e){
-        System.out.print("(-. ");
+        out.print("(-. ");
         e.e.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFAdd e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" +. ");
+        out.print(" +. ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFSub e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" -. ");
+        out.print(" -. ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFMul e) {
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" *. ");
+        out.print(" *. ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFDiv e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" /. ");
+        out.print(" /. ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstEq e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" = ");
+        out.print(" = ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstLE e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(" <= ");
+        out.print(" <= ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstIf e){
-        System.out.print("(if ");
+        out.print("(if ");
         e.e1.accept(this);
-        System.out.print(" then ");
+        out.print(" then ");
         e.e2.accept(this);
-        System.out.print(" else ");
+        out.print(" else ");
         e.e3.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstLet e) {
-        System.out.print("(let ");
-        System.out.print(e.id);
-        System.out.print(" = ");
+        out.print("(let ");
+        out.print(e.id);
+        out.print(" = ");
         e.e1.accept(this);
-        System.out.print(" in ");
+        out.print(" in ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstVar e){
-        System.out.print(e.id);
+        out.print(e.id.id);
     }
 
 
     // print sequence of identifiers 
-    static <E> void printInfix(List<E> l, String op) {
+    private void printInfix(List<Id> l, String op) {
         if (l.isEmpty()) {
             return;
         }
-        Iterator<E> it = l.iterator();
-        System.out.print(it.next());
+        Iterator<Id> it = l.iterator();
+        out.print(it.next().id);
         while (it.hasNext()) {
-            System.out.print(op + it.next());
+            out.print(op);
+            out.print(it.next().id);
         }
     }
 
     // print sequence of ast.Exp
-    void printInfix2(List<AstExp> l, String op) {
+    private void printInfix2(List<AstExp> l, String op) {
         if (l.isEmpty()) {
             return;
         }
         Iterator<AstExp> it = l.iterator();
         it.next().accept(this);
         while (it.hasNext()) {
-            System.out.print(op);
+            out.print(op);
             it.next().accept(this);
         }
     }
 
     public void visit(AstLetRec e){
-        System.out.print("(let rec " + e.fd.id + " ");
+        out.print("(let rec ");
+        out.print(e.fd.id.id);
+        out.print(" ");
         printInfix(e.fd.args, " ");
-        System.out.print(" = ");
+        out.print(" = ");
         e.fd.e.accept(this);
-        System.out.print(" in ");
+        out.print(" in ");
         e.e.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstApp e){
-        System.out.print("(");
+        out.print("(");
         e.e.accept(this);
-        System.out.print(" ");
+        out.print(" ");
         printInfix2(e.es, " ");
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstTuple e){
-        System.out.print("(");
+        out.print("(");
         printInfix2(e.es, ", ");
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstLetTuple e){
-        System.out.print("(let (");
+        out.print("(let (");
         printInfix(e.ids, ", ");
-        System.out.print(") = ");
+        out.print(") = ");
         e.e1.accept(this);
-        System.out.print(" in ");
+        out.print(" in ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstArray e){
-        System.out.print("(Array.create ");
+        out.print("(Array.create ");
         e.e1.accept(this);
-        System.out.print(" ");
+        out.print(" ");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstGet e){
         e.e1.accept(this);
-        System.out.print(".(");
+        out.print(".(");
         e.e2.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstPut e){
-        System.out.print("(");
+        out.print("(");
         e.e1.accept(this);
-        System.out.print(".(");
+        out.print(".(");
         e.e2.accept(this);
-        System.out.print(") <- ");
+        out.print(") <- ");
         e.e3.accept(this);
-        System.out.print(")");
+        out.print(")");
     }
 
     public void visit(AstFunDef e) {
