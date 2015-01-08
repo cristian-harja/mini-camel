@@ -25,7 +25,7 @@ public final class AstLetTuple extends AstExp {
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append("(Let ");
+        sb.append("(let ");
 
         boolean first = true;
         sb.append("(");
@@ -34,7 +34,7 @@ public final class AstLetTuple extends AstExp {
                 sb.append(", ");
             }
             first = false;
-            sb.append(l);
+            sb.append(l.id);
         }
         sb.append(") = ");
         sb.append(e1);

@@ -21,6 +21,6 @@ public final class AstLet extends AstExp {
     }
 
     public String toString(){
-        return "(Let " + id.toString() + " = " + e1.toString() + " in " + e2.toString() + ")";
+        return "(let " + id.id + " = " + e1 + " in " + e2 + ")";
     }
 }

@@ -26,7 +26,7 @@ public final class AstFunDef extends AstExp {
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append("(Let ");
+        sb.append("(let ");
         sb.append(id);
 
         boolean first = true;
@@ -36,7 +36,7 @@ public final class AstFunDef extends AstExp {
                 sb.append(", ");
             }
             first = false;
-            sb.append(l);
+            sb.append(l.id);
         }
         sb.append(") = ");
         sb.append(e);
