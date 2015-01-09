@@ -7,11 +7,6 @@ import java_cup.runtime.*;
 import java.util.*;
 
 parser code {:
-    Lexer l;
-    Parser(Lexer l){
-        this.l = l;
-    }
-
     class Pair<A,B> {
         A left;
         B right;
@@ -22,9 +17,6 @@ parser code {:
         }
     }
 :}
-
-init with {:  :};
-scan with {: return l.next_token(); :};
 
 terminal Boolean BOOL;
 

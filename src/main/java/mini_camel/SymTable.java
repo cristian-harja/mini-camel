@@ -42,7 +42,7 @@ public final class SymTable<T> {
         Map<String, T> result;
         int i = 0;
 
-        while (i <= st.size()) {
+        while (i < st.size()) {
             result = getStackElement(i);
             for (String key : result.keySet()) {
                 if (key.equals(name)) {
