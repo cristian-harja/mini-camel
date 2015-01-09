@@ -19,6 +19,8 @@ public class TestAssemblyCode {
             }
 
             MyCompiler c = new MyCompiler(result);
+            c.preprocessCode();
+            c.codeGeneration();
             c.generateAssembly("ARM/output.s");
 
 

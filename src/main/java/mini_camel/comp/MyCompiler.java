@@ -1,20 +1,25 @@
 package mini_camel.comp;
 
 import mini_camel.ast.*;
+import mini_camel.transform.AlphaConv;
 
 import java.io.*;
 
 public class MyCompiler {
-    public AstExp root;
+    private AstExp currentAst;
 
-    public MyCompiler(AstExp result){
-        this.root = result;
+    public MyCompiler(AstExp root){
+        currentAst = root;
     }
 
+    private void alphaConversion() {
+        AlphaConv ac = new AlphaConv();
+        currentAst = ac.applyTransform(currentAst);
+    }
 
     //type inference to closure conversion
     public void preprocessCode(){
-
+        alphaConversion();
     }
 
     // virtual code generation, immediate optimisation and register allocation
@@ -37,7 +42,7 @@ public class MyCompiler {
 
 
         AssemblyVisitor v = new AssemblyVisitor(data, text);
-        root.accept(v);
+        currentAst.accept(v);
 
 
         System.out.println(data.toString() + "\n" + text.toString());

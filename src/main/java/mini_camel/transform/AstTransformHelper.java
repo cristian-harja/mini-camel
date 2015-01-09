@@ -34,6 +34,10 @@ import java.util.List;
  */
 public abstract class AstTransformHelper<T> implements Visitor2<AstExp, T> {
 
+    protected AstExp recursiveVisit(T ctx, AstExp e) {
+        return e.accept(this, ctx);
+    }
+
     /*
         Arity = 0. No children to verify.
 
