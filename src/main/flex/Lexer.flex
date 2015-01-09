@@ -5,6 +5,7 @@ import java_cup.runtime.*;
    
 /* -----------------Options and Declarations Section----------------- */
    
+%public
 %class Lexer
 
 /*

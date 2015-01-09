@@ -45,6 +45,7 @@ public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
     public AstExp visit(Ctx ctx, AstVar e) {
         Id old_id = e.id;
         Id new_id = ctx.reMapping.get(old_id.id);
+        if (new_id == null || new_id.id.equals(old_id.id)) return e;
         return new AstVar(new_id);
     }
 }
