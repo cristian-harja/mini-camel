@@ -53,6 +53,12 @@ public class AlphaConvTest {
         testOnCode("let rec f x = f x in f");
     }
 
+    @Test
+    public void test6() throws Exception {
+        testOnCode("let rec fact x = if (x <= 1.0) " +
+                "then 1.0 else (x *. (fact (x -. 1.0))) in fact 7.0"
+        );
+    }
 
     private static void checkCorrectness(AstExp exp) {
         exp.accept(new DummyVisitor() {
