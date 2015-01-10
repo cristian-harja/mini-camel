@@ -38,7 +38,7 @@ public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
         }
         ctx.reMapping.pop();
 
-        return new AstLet(new_id, e.t, new_e1, new_e2);
+        return new AstLet(new_id, e.id_type, new_e1, new_e2);
     }
 
     @Override

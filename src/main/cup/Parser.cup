@@ -158,7 +158,7 @@ exp
 
 fundef
   ::= IDENT:name formal_args:args EQUAL exp:e
-      {: RESULT = new AstFunDef(name, null, args, e); :}
+      {: RESULT = new AstFunDef(name, args, e); :}
 ;
 
 formal_args
@@ -202,7 +202,7 @@ elems
 
 pat
   ::= pat:is COMMA IDENT:i
-      {: is.left.add(i); RESULT = is; :}
+      {: is.left.add(i); is.right.add(Type.gen()); RESULT = is; :}
 
   |   IDENT:i1 COMMA IDENT:i2
       {:
@@ -212,6 +212,6 @@ pat
         t.add(0, Type.gen());
         l.add(0, i2); 
         l.add(0, i1);
-        RESULT = new Pair<List<Id>, List<Type>>(l, null);
+        RESULT = new Pair<List<Id>, List<Type>>(l, t);
       :}
 ;
