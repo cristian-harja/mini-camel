@@ -1,3 +1,8 @@
 package mini_camel.type;
 
-public final class TFloat extends Type { }
+public final class TFloat extends Type {
+    @Override
+    public String toString() {
+        return "float";
+    }
+}

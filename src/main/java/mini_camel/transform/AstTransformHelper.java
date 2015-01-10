@@ -203,7 +203,7 @@ public abstract class AstTransformHelper<T> implements Visitor2<AstExp, T> {
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
         if (new_e1 == e.e1 && new_e2 == e.e2) return e;
-        return new AstLet(e.id, e.t, new_e1, new_e2);
+        return new AstLet(e.id, e.id_type, new_e1, new_e2);
     }
 
     @Override
@@ -302,7 +302,7 @@ public abstract class AstTransformHelper<T> implements Visitor2<AstExp, T> {
         AstExp old_e = e.e;
         AstExp new_e = old_e.accept(this, ctx);
         if (new_e == old_e) return e;
-        return new AstFunDef(e.id, e.type, e.args, new_e);
+        return new AstFunDef(e.id, e.args, new_e);
     }
 
     @Override
