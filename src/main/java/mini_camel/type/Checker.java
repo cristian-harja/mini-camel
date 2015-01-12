@@ -42,6 +42,7 @@ public class Checker {
         return solution;
     }
 
+    @SuppressWarnings("unused")
     public Type getSymbolType(final String symbolName) {
         final Type[] found = new Type[1];
         program.accept(new DummyVisitor() {

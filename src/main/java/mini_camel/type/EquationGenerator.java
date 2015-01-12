@@ -20,11 +20,10 @@ public class EquationGenerator {
         List<Pair<Type, Type>> out = new ArrayList<>();
         SymTable<Type> env = new SymTable<>();
         env.push();
-        env.put("print_newline", UNIT);
+        env.put("print_newline", new TFun(UNIT, UNIT));
         env.put("print_int", new TFun(INT, UNIT));
 
         Type floatFun = new TFun(FLOAT, FLOAT);
-        Type floatArr = new TArray(FLOAT);
 
         env.put("abs_float", floatFun);
         env.put("sqrt", floatFun);
@@ -34,7 +33,6 @@ public class EquationGenerator {
         env.put("float_of_int", new TFun(INT, FLOAT));
         env.put("int_of_float", new TFun(FLOAT, INT));
         env.put("truncate", new TFun(FLOAT, INT));
-        env.put("inprod", new TFun(floatArr, floatArr));
 
         genEquations(out, env, exp, UNIT);
         return out;

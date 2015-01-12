@@ -35,7 +35,11 @@ public class EquationSolver {
             TVar var1 = t1 instanceof TVar ? (TVar) t1 : null;
             TVar var2 = t2 instanceof TVar ? (TVar) t2 : null;
 
+
             if (var1 != null) {
+                if (var2 != null && var1.v.equals(var2.v)) {
+                    continue;
+                }
                 if (isRecursive(var1, t2)) {
                     circular.add(currentEquation);
                 } else {
