@@ -1,22 +1,11 @@
-package mini_camel;
+package mini_camel.gen;
 
+import mini_camel.Id;
+import mini_camel.Pair;
 import mini_camel.ast.*;
 import mini_camel.type.*;
 
-import java_cup.runtime.*;
 import java.util.*;
-
-parser code {:
-    class Pair<A,B> {
-        A left;
-        B right;
-
-        Pair(A left, B right) {
-            this.left = left;
-            this.right = right;
-        }
-    }
-:}
 
 terminal Boolean BOOL;
 
@@ -144,7 +133,7 @@ exp
       {: RESULT = new AstPut(e1, e2, e3); :}
 
   |   exp:e1 SEMICOLON exp:e2
-      {: RESULT = new AstLet(Id.gen(), new TUnit(), e1, e2); :}
+      {: RESULT = new AstLet(Id.gen(), TUnit.INSTANCE, e1, e2); :}
 
   |   ARRAY_CREATE simple_exp:e1 simple_exp:e2
       {: RESULT = new AstArray(e1, e2); :}

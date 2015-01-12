@@ -1,5 +1,12 @@
 package mini_camel.ast;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
+
+/**
+ * Floating point literal.
+ */
+@Immutable
 public final class AstFloat extends AstExp {
     public final float f;
 
@@ -7,11 +14,11 @@ public final class AstFloat extends AstExp {
         this.f = f;
     }
 
-    public void accept(Visitor v) {
+    public void accept(@Nonnull Visitor v) {
         v.visit(this);
     }
 
-    public <T, U> T accept(Visitor2<T, U> v, U a) {
+    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 

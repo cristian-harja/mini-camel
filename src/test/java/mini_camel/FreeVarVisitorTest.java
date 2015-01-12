@@ -1,6 +1,8 @@
 package mini_camel;
 
 import mini_camel.ast.AstExp;
+import mini_camel.gen.Lexer;
+import mini_camel.gen.Parser;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;

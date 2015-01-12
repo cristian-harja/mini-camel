@@ -7,6 +7,7 @@ import mini_camel.ast.AstFunDef;
 import mini_camel.ast.AstLet;
 import mini_camel.ast.DummyVisitor;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class Checker {
         final Type[] found = new Type[1];
         program.accept(new DummyVisitor() {
             @Override
-            public void visit(AstLet e) {
+            public void visit(@Nonnull AstLet e) {
                 if (e.id.id.equals(symbolName)) {
                     found[0] = e.id_type;
                 }
@@ -54,7 +55,7 @@ public class Checker {
             }
 
             @Override
-            public void visit(AstFunDef e) {
+            public void visit(@Nonnull AstFunDef e) {
                 if (e.id.id.equals(symbolName)) {
                     found[0] = e.functionType;
                     return;
