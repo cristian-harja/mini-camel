@@ -1,20 +1,26 @@
 package mini_camel.ast;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * An ordered pair of expressions ({@code (es1, es2, ..., esN)}.
+ */
+@Immutable
 public final class AstTuple extends AstExp {
     public final List<AstExp> es;
 
-    public AstTuple(List<AstExp> es) {
+    public AstTuple(@Nonnull List<AstExp> es) {
         this.es = Collections.unmodifiableList(es);
     }
 
-    public void accept(Visitor v) {
+    public void accept(@Nonnull Visitor v) {
         v.visit(this);
     }
 
-    public <T, U> T accept(Visitor2<T, U> v, U a) {
+    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 

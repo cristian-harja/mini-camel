@@ -1,9 +1,14 @@
 package mini_camel;
 
+import javax.annotation.Nonnull;
+
+/**
+ * Represents an identifier in the source code.
+ */
 public final class Id {
     public final String id;
 
-    public Id(String id) {
+    public Id(@Nonnull String id) {
         this.id = id;
     }
 
@@ -14,7 +19,7 @@ public final class Id {
 
     static int x = -1;
 
-    static Id gen() {
+    static public Id gen() {
         x++;
         return new Id("?v" + x);
     }

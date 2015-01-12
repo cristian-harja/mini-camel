@@ -4,31 +4,63 @@ import mini_camel.Id;
 import mini_camel.SymTable;
 import mini_camel.ast.*;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
+/**
+ * <p>Implements &alpha;-conversion, which is a transformation on ASTs that
+ * makes sure no symbol name is bound twice by nested {@code let} expressions.
+ * </p>
+ * <p>Example: {@code let x = 3 in let x = 6 in x + x}. This will be turned
+ * into something like {@code let x_1 = 3 in let x_2 = 6 in x_2 + x_2}, which
+ * is used as input to other stages of compilation.
+ * </p>
+ */
+public final class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
 
-
+    /**
+     * A helper class, providing context (the first argument) to the recursive
+     * calls in {@link AlphaConv AlphaConv}. In this particular case, it has
+     * (among other things) a symbol table to keep track of renamed symbols.
+     */
     public static class Ctx {
+        // To help generate new unique variable names.
         private int lastId = 0;
 
-        private Ctx() {}
+        // For mapping renamed variables.
         private SymTable<Id> reMapping = new SymTable<>();
 
+        // This class can only be instantiated from within `AlphaConv`.
+        private Ctx() {}
+
+        // The method that renames an identifier.
         private Id newId(Id id) {
             return new Id(id.id + "_" + (++lastId));
         }
     }
 
-    public AstExp applyTransform(AstExp astNode) {
+    /**
+     * This is the method that initiates the actual transformation.
+     *
+     * @param astNode input AST
+     * @return transformed AST
+     */
+    public AstExp applyTransform(@Nonnull AstExp astNode) {
         return recursiveVisit(new Ctx(), astNode);
     }
 
+    /**
+     * When encountering a `let` expression, we try to rename the identifier
+     * bound by it to something unique within the current environment.
+     */
     @Override
-    public AstExp visit(Ctx ctx, AstLet e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstLet e) {
+        // Rename the identifier introduced by this `let` expression
         Id old_id = e.id;
         Id new_id = ctx.newId(old_id);
+
+        // Recursively perform any modifications on the body of the `let`
         AstExp new_e1 = recursiveVisit(ctx, e.e1);
         AstExp new_e2;
 
@@ -42,17 +74,26 @@ public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
         return new AstLet(new_id, e.id_type, new_e1, new_e2);
     }
 
+    /**
+     * When encountering the usage of a variable, we check whether it was
+     * renamed by the current transformation and return its new name.
+     */
     @Override
-    public AstExp visit(Ctx ctx, AstVar e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstVar e) {
+        // Locate (in the environment) the symbol being referenced here.
         Id old_id = e.id;
         Id new_id = ctx.reMapping.get(old_id.id);
+
+        // If the symbol was not found, return the old name.
         if (new_id == null || new_id.id.equals(old_id.id)) return e;
+
+        // If the name was changed, return the new AST node.
         return new AstVar(new_id);
     }
 
 
     @Override
-    public AstExp visit(Ctx ctx, AstLetRec e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
         AstFunDef old_fd = e.fd;
         Id old_id = old_fd.id;
         AstFunDef new_fd = (AstFunDef)recursiveVisit(ctx, old_fd);
@@ -75,7 +116,7 @@ public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
 
 
     @Override
-    public AstExp visit(Ctx ctx, AstFunDef e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstFunDef e) {
         Id old_id = e.id;
         Id new_id = ctx.newId(old_id);
 
@@ -100,12 +141,12 @@ public class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
         ctx.reMapping.pop();
 
         if (new_id == old_id && new_args.equals(old_args) && new_e == old_e) return e;
-        return new AstFunDef(new_id, e.type, new_args, new_e);
+        return new AstFunDef(new_id, new_args, new_e);
     }
 
 
     @Override
-    public AstExp visit(Ctx ctx, AstApp e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstApp e) {
         AstExp old_e = e.e;
         AstExp new_e;
 

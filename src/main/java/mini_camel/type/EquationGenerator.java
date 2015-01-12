@@ -4,16 +4,17 @@ import javafx.util.Pair;
 import mini_camel.SymTable;
 import mini_camel.ast.*;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class EquationGenerator {
 
-    static Type UNIT = new TUnit();
-    static Type BOOL = new TBool();
-    static Type INT = new TInt();
-    static Type FLOAT = new TFloat();
+    static final Type UNIT = TUnit.INSTANCE;
+    static final Type BOOL = TBool.INSTANCE;
+    static final Type INT = TInt.INSTANCE;
+    static final Type FLOAT = TFloat.INSTANCE;
 
     public List<Pair<Type, Type>> genEquations(final AstExp exp) {
         List<Pair<Type, Type>> out = new ArrayList<>();
@@ -59,87 +60,87 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstUnit e) {
+            public void visit(@Nonnull AstUnit e) {
                 typeEquals(type, UNIT);
             }
 
             @Override
-            public void visit(AstBool e) {
+            public void visit(@Nonnull AstBool e) {
                 typeEquals(type, BOOL);
             }
 
             @Override
-            public void visit(AstInt e) {
+            public void visit(@Nonnull AstInt e) {
                 typeEquals(type, INT);
             }
 
             @Override
-            public void visit(AstFloat e) {
+            public void visit(@Nonnull AstFloat e) {
                 typeEquals(type, FLOAT);
             }
 
             @Override
-            public void visit(AstNot e) {
+            public void visit(@Nonnull AstNot e) {
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e, BOOL);
             }
 
             @Override
-            public void visit(AstNeg e) {
+            public void visit(@Nonnull AstNeg e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e, INT);
             }
 
             @Override
-            public void visit(AstFNeg e) {
+            public void visit(@Nonnull AstFNeg e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e, FLOAT);
             }
 
             @Override
-            public void visit(AstAdd e) {
+            public void visit(@Nonnull AstAdd e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e1, INT);
                 exprIsOfType(e.e2, INT);
             }
 
             @Override
-            public void visit(AstSub e) {
+            public void visit(@Nonnull AstSub e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e1, INT);
                 exprIsOfType(e.e2, INT);
             }
 
             @Override
-            public void visit(AstFAdd e) {
+            public void visit(@Nonnull AstFAdd e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
             @Override
-            public void visit(AstFSub e) {
+            public void visit(@Nonnull AstFSub e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
             @Override
-            public void visit(AstFMul e) {
+            public void visit(@Nonnull AstFMul e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
             @Override
-            public void visit(AstFDiv e) {
+            public void visit(@Nonnull AstFDiv e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
             @Override
-            public void visit(AstEq e) {
+            public void visit(@Nonnull AstEq e) {
                 Type t = Type.gen();
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e1, t);
@@ -147,7 +148,7 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstLE e) {
+            public void visit(@Nonnull AstLE e) {
                 Type t = Type.gen();
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e1, t);
@@ -155,14 +156,14 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstIf e) {
+            public void visit(@Nonnull AstIf e) {
                 exprIsOfType(e.e1, BOOL);
                 exprIsOfType(e.e2, type);
                 exprIsOfType(e.e3, type);
             }
 
             @Override
-            public void visit(AstLet e) {
+            public void visit(@Nonnull AstLet e) {
                 exprIsOfType(e.e1, e.id_type);
                 env.push();
                 {
@@ -173,12 +174,12 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstVar e) {
+            public void visit(@Nonnull AstVar e) {
                 typeEquals(type, env.get(e.id.id));
             }
 
             @Override
-            public void visit(AstLetRec e) {
+            public void visit(@Nonnull AstLetRec e) {
                 env.push();
                 {
                     env.put(e.fd.id.id, e.fd.functionType);
@@ -219,7 +220,7 @@ public class EquationGenerator {
             */
 
             @Override
-            public void visit(AstFunDef e) {
+            public void visit(@Nonnull AstFunDef e) {
                 int i, numArgs = e.args.size();
 
                 env.push();
@@ -253,14 +254,14 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstApp e) {
+            public void visit(@Nonnull AstApp e) {
                 Type calleeType = Type.gen();
                 exprIsOfType(e.e, calleeType);
                 curry(calleeType, e.es.iterator(), type);
             }
 
             @Override
-            public void visit(AstTuple e) {
+            public void visit(@Nonnull AstTuple e) {
                 List<Type> items = new ArrayList<>(e.es.size());
                 for (AstExp item : e.es) {
                     Type t = Type.gen();
@@ -271,7 +272,7 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstLetTuple e) {
+            public void visit(@Nonnull AstLetTuple e) {
                 int i, n = e.ids.size();
                 exprIsOfType(e.e1, new TTuple(e.ts));
 
@@ -287,7 +288,7 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstArray e) {
+            public void visit(@Nonnull AstArray e) {
                 Type elementType = Type.gen();
                 exprIsOfType(e.e1, INT);
                 exprIsOfType(e.e2, elementType);
@@ -295,13 +296,13 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(AstGet e) {
+            public void visit(@Nonnull AstGet e) {
                 exprIsOfType(e.e1, new TArray(type));
                 exprIsOfType(e.e2, INT);
             }
 
             @Override
-            public void visit(AstPut e) {
+            public void visit(@Nonnull AstPut e) {
                 Type t = Type.gen();
                 exprIsOfType(e.e1, new TArray(t));
                 exprIsOfType(e.e2, INT);

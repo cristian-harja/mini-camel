@@ -4,10 +4,17 @@ import mini_camel.Id;
 import mini_camel.type.TFun;
 import mini_camel.type.Type;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Ast node corresponding to a function definition. Can only occur in a
+ * "let rec" expression ({@code let rec func arg1 arg2 ... argN = e in ...}).
+ */
+@Immutable
 public final class AstFunDef extends AstExp {
     public final Id id;
     public final Type functionType;
@@ -16,7 +23,11 @@ public final class AstFunDef extends AstExp {
     public final List<Id> args;
     public final AstExp e;
 
-    public AstFunDef(Id id, List<Id> args, AstExp e) {
+    public AstFunDef(
+            @Nonnull Id id,
+            @Nonnull List<Id> args,
+            @Nonnull AstExp e
+    ) {
         this.id = id;
         this.args = Collections.unmodifiableList(args);
         this.e = e;
@@ -35,11 +46,11 @@ public final class AstFunDef extends AstExp {
         this.argTypes = Collections.unmodifiableList(argTypes);
     }
 
-    public void accept(Visitor v) {
+    public void accept(@Nonnull Visitor v) {
         v.visit(this);
     }
 
-    public <T, U> T accept(Visitor2<T, U> v, U a) {
+    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 

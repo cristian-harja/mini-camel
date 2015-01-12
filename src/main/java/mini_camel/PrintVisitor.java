@@ -2,6 +2,7 @@ package mini_camel;
 
 import mini_camel.ast.*;
 
+import javax.annotation.Nonnull;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -13,36 +14,36 @@ public final class PrintVisitor implements Visitor {
         this.out = out;
     }
     
-    public void visit(AstUnit e) {
+    public void visit(@Nonnull AstUnit e) {
         out.print("()");
     }
 
-    public void visit(AstBool e) {
+    public void visit(@Nonnull AstBool e) {
         out.print(e.b);
     }
 
-    public void visit(AstInt e) {
+    public void visit(@Nonnull AstInt e) {
         out.print(e.i);
     }
 
-    public void visit(AstFloat e) {
+    public void visit(@Nonnull AstFloat e) {
         String s = String.format("%.2f", e.f);
         out.print(s);
     }
 
-    public void visit(AstNot e) {
+    public void visit(@Nonnull AstNot e) {
         out.print("(not ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(AstNeg e) {
+    public void visit(@Nonnull AstNeg e) {
         out.print("(- ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(AstAdd e) {
+    public void visit(@Nonnull AstAdd e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" + ");
@@ -50,7 +51,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstSub e) {
+    public void visit(@Nonnull AstSub e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" - ");
@@ -58,13 +59,13 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFNeg e){
+    public void visit(@Nonnull AstFNeg e){
         out.print("(-. ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(AstFAdd e){
+    public void visit(@Nonnull AstFAdd e){
         out.print("(");
         e.e1.accept(this);
         out.print(" +. ");
@@ -72,7 +73,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFSub e){
+    public void visit(@Nonnull AstFSub e){
         out.print("(");
         e.e1.accept(this);
         out.print(" -. ");
@@ -80,7 +81,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFMul e) {
+    public void visit(@Nonnull AstFMul e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" *. ");
@@ -88,7 +89,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFDiv e){
+    public void visit(@Nonnull AstFDiv e){
         out.print("(");
         e.e1.accept(this);
         out.print(" /. ");
@@ -96,7 +97,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstEq e){
+    public void visit(@Nonnull AstEq e){
         out.print("(");
         e.e1.accept(this);
         out.print(" = ");
@@ -104,7 +105,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstLE e){
+    public void visit(@Nonnull AstLE e){
         out.print("(");
         e.e1.accept(this);
         out.print(" <= ");
@@ -112,7 +113,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstIf e){
+    public void visit(@Nonnull AstIf e){
         out.print("(if ");
         e.e1.accept(this);
         out.print(" then ");
@@ -122,7 +123,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstLet e) {
+    public void visit(@Nonnull AstLet e) {
         out.print("(let ");
         out.print(e.id);
         out.print(" = ");
@@ -132,7 +133,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstVar e){
+    public void visit(@Nonnull AstVar e){
         out.print(e.id.id);
     }
 
@@ -163,7 +164,7 @@ public final class PrintVisitor implements Visitor {
         }
     }
 
-    public void visit(AstLetRec e){
+    public void visit(@Nonnull AstLetRec e){
         out.print("(let rec ");
         out.print(e.fd.id.id);
         out.print(" ");
@@ -175,7 +176,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstApp e){
+    public void visit(@Nonnull AstApp e){
         out.print("(");
         e.e.accept(this);
         out.print(" ");
@@ -183,13 +184,13 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstTuple e){
+    public void visit(@Nonnull AstTuple e){
         out.print("(");
         printInfix2(e.es, ", ");
         out.print(")");
     }
 
-    public void visit(AstLetTuple e){
+    public void visit(@Nonnull AstLetTuple e){
         out.print("(let (");
         printInfix(e.ids, ", ");
         out.print(") = ");
@@ -199,7 +200,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstArray e){
+    public void visit(@Nonnull AstArray e){
         out.print("(Array.create ");
         e.e1.accept(this);
         out.print(" ");
@@ -207,14 +208,14 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstGet e){
+    public void visit(@Nonnull AstGet e){
         e.e1.accept(this);
         out.print(".(");
         e.e2.accept(this);
         out.print(")");
     }
 
-    public void visit(AstPut e){
+    public void visit(@Nonnull AstPut e){
         out.print("(");
         e.e1.accept(this);
         out.print(".(");
@@ -224,7 +225,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFunDef e) {
+    public void visit(@Nonnull AstFunDef e) {
 
     }
 }
