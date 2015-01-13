@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import javafx.util.Pair;
+import mini_camel.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class CheckerTest extends TestHelper {
         System.out.println("\t" + c.getProgram());
         System.out.println("Equations:");
         for (Pair<Type, Type> eq : c.getEquations()) {
-            System.out.println("\t" + eq.getKey() + " = " + eq.getValue());
+            System.out.println("\t" + eq.left + " = " + eq.right);
         }
         System.out.println("Solution:");
         for (Map.Entry<String, Type> e : c.getSolution().entrySet()) {
@@ -28,7 +28,7 @@ public class CheckerTest extends TestHelper {
         }
         System.err.println("Conflicts:");
         for (Pair<Type, Type> e : c.getErrors()) {
-            System.out.println("\t" + e.getKey() + " = " + e.getValue());
+            System.out.println("\t" + e.left + " = " + e.right);
         }
 
         return c;
