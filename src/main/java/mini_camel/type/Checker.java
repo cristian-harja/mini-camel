@@ -1,7 +1,7 @@
 package mini_camel.type;
 
-import javafx.util.Pair;
 import mini_camel.Id;
+import mini_camel.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;
 import mini_camel.ast.AstLet;

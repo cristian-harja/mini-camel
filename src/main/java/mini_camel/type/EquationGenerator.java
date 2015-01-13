@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import javafx.util.Pair;
+import mini_camel.Pair;
 import mini_camel.SymTable;
 import mini_camel.ast.*;
 

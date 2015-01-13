@@ -13,7 +13,7 @@ public class AssemblyVisitor implements Visitor {
     static {
         globals = new HashSet<>();
         globals.add("print_newline");
-        globals.add("hello_world");
+        //globals.add("hello_world");
     }
 
     public AssemblyVisitor(StringBuilder text, StringBuilder data){
