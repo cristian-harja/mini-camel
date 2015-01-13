@@ -3,6 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
 
     <groupId>les-quatre-mousquetengineers</groupId>
     <artifactId>mini-camel</artifactId>
@@ -46,14 +47,6 @@
             <version>r03</version>
         </dependency>
 
-        <dependency>
-            <scope>system</scope>
-            <groupId>les-quatre-mousquetengineers</groupId>
-            <artifactId>java_cup-runtime</artifactId>
-            <version>11a</version>
-            <systemPath>${basedir}/bin/java-cup-11b-runtime.jar</systemPath>
-        </dependency>
-
         <!-- Unit Testing Library -->
         <dependency>
             <groupId>junit</groupId>
@@ -84,6 +77,7 @@
 
         <plugins>
 
+            <!-- Specify the Java language level -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -112,7 +106,7 @@
                             <target>
                                 <taskdef name="cup"
                                          classname="java_cup.anttask.CUPTask"
-                                         classpath="bin/java-cup-11b.jar"/>
+                                         classpath="bin/java-cup-11a.jar"/>
 
                                 <taskdef name="jflex"
                                          classname="jflex.anttask.JFlexTask"
@@ -173,20 +167,38 @@
                 </configuration>
             </plugin>
 
-            <!-- Make this jar executable -->
+            <!-- Make this jar executable and include dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>mini_camel.ConsoleMain</mainClass>
-                            <addDefaultSpecificationEntries>
-                                true
-                            </addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-my-bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${project.name}</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>
+                                        mini_camel.ConsoleMain
+                                    </mainClass>
+                                    <addDefaultSpecificationEntries>
+                                        true
+                                    </addDefaultSpecificationEntries>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>
+                                    jar-with-dependencies
+                                </descriptorRef>
+                            </descriptorRefs>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
         </plugins>
