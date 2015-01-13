@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import javafx.util.Pair;
+import mini_camel.Pair;
 
 import java.util.*;
 
@@ -30,8 +30,8 @@ public class EquationSolver {
             Pair<Type, Type> currentEquation = workingSet.pop();
 
             // get the two types from the equality, try cast them to TVar
-            Type t1 = currentEquation.getKey();
-            Type t2 = currentEquation.getValue();
+            Type t1 = currentEquation.left;
+            Type t2 = currentEquation.right;
             TVar var1 = t1 instanceof TVar ? (TVar) t1 : null;
             TVar var2 = t2 instanceof TVar ? (TVar) t2 : null;
 
@@ -65,7 +65,7 @@ public class EquationSolver {
     }
 
     private void unify(Pair<Type, Type> equation) {
-        Type t1 = equation.getKey(), t2 = equation.getValue();
+        Type t1 = equation.left, t2 = equation.right;
         if (t1.getClass() != t2.getClass()) {
             unifyErrors.add(equation);
             return;
@@ -138,8 +138,8 @@ public class EquationSolver {
             Type with,
             Pair<Type, Type> eq
     ) {
-        Type t1 = eq.getKey();
-        Type t2 = eq.getValue();
+        Type t1 = eq.left;
+        Type t2 = eq.right;
         Type t3 = substituteInType(var, with, t1);
         Type t4 = substituteInType(var, with, t2);
         if (t1 != t3 || t2 != t4) {
