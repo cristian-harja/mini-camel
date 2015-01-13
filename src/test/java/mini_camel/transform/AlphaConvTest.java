@@ -1,6 +1,6 @@
 package mini_camel.transform;
 
-import mini_camel.Lexer;
+//import mini_camel.Lexer;
 import mini_camel.Parser;
 import mini_camel.ast.*;
 import org.junit.Test;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class AlphaConvTest {
-
+/*
     @Nonnull
     private static AstExp parse(String s) throws Exception {
         Parser p = new Parser(new Lexer(new StringReader(s)));
@@ -90,5 +90,5 @@ public class AlphaConvTest {
                 unbind(id);
             }
         });
-    }
+    }*/
 }
