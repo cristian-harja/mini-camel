@@ -1,5 +1,6 @@
 package mini_camel.comp;
 
+import ldf.java_cup.runtime.*;
 import mini_camel.ErrMsg;
 import mini_camel.Pair;
 import mini_camel.PrintVisitor;
@@ -13,6 +14,7 @@ import mini_camel.type.Checker;
 import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +24,34 @@ public class MyCompiler {
     private AstExp parsedAst;
     private AstExp transformedAst;
 
-    private List<ErrMsg> messageLog = new ArrayList<>(100);
+    private final List<ErrMsg> messageLog = new ArrayList<>(100);
 
-    private boolean parseBegun, parseSuccessful;
+    private boolean parseBegun, parseSuccessful, parseErrors;
     private boolean typingBegun, typingSuccessful;
 
     public MyCompiler(@Nonnull Reader input) {
         inputReader = input;
+    }
+
+    public void error(@Nonnull String msg, @Nullable Exception e) {
+        ErrMsg m = new ErrMsg();
+        m.type = ErrMsg.Type.ERROR;
+        m.message = msg;
+        m.ex = e;
+        messageLog.add(m);
+    }
+
+    public void error(@Nonnull String s) {
+        error(s, null);
+    }
+
+    public void parseError(Symbol s) {
+        parseErrors = true;
+
+        error(s.getLineL() +
+                ": Syntax error. Unexpected " +
+                s.getSymbolName()
+        );
     }
 
     public boolean parseCode() {
@@ -38,26 +61,21 @@ public class MyCompiler {
         parseBegun = true;
 
         try {
-            p = new Parser(new Lexer(inputReader));
+            TokenFactory tf = new MyTokenFactory();
+            p = new Parser(this, tf, new Lexer(inputReader, tf));
             parsedAst = (AstExp) p.parse().value;
         } catch (Exception e) {
-            ErrMsg msg = new ErrMsg();
-            msg.type = ErrMsg.Type.ERROR;
-            msg.message = "An exception has occurred.";
-            msg.ex = e;
-            messageLog.add(msg);
+            error("An exception has occurred.", e);
             return false;
         }
 
         if (parsedAst == null && messageLog.size() != 0) {
-            ErrMsg msg = new ErrMsg();
-            msg.type = ErrMsg.Type.ERROR;
-            msg.message = "Parser returned `null` instead of an AST.";
+            error("Parser returned `null` instead of an AST.");
             return false;
         }
 
         transformedAst = parsedAst;
-        return parseSuccessful = true;
+        return parseSuccessful = !parseErrors;
     }
 
     public boolean typeCheck() {

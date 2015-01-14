@@ -105,8 +105,8 @@
                         <configuration>
                             <target>
                                 <taskdef name="cup"
-                                         classname="java_cup.anttask.CUPTask"
-                                         classpath="bin/java-cup-11a.jar"/>
+                                         classname="ldf.java_cup.anttask.CUPTask"
+                                         classpath="bin/ldf-java_cup-cc.jar"/>
 
                                 <taskdef name="jflex"
                                          classname="jflex.anttask.JFlexTask"
@@ -120,8 +120,8 @@
                                         expect="150"
                                         symbols="sym"
                                         quiet="false"
-                                        nonterms="false"
-                                        nopositions="true"/>
+                                        nonterms="true"
+                                        nopositions="false"/>
 
                                 <jflex
                                         file="${src_flex.dir}/Lexer.flex"
