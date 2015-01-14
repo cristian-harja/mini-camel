@@ -1,6 +1,5 @@
 package mini_camel.ast;
 
-import mini_camel.Id;
 import mini_camel.ir.Couple;
 
 import javax.annotation.Nonnull;

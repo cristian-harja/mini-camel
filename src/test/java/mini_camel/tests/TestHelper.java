@@ -1,6 +1,6 @@
 package mini_camel.tests;
 
-import java_cup.runtime.Symbol;
+import ldf.java_cup.runtime.Symbol;
 import mini_camel.ast.AstExp;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
