@@ -33,25 +33,35 @@ public class MyCompiler {
         inputReader = input;
     }
 
-    public void error(@Nonnull String msg, @Nullable Exception e) {
+    public void error(
+            @Nullable LocationAwareEntity loc,
+            @Nonnull String msg,
+            @Nullable Exception e
+    ) {
         ErrMsg m = new ErrMsg();
         m.type = ErrMsg.Type.ERROR;
+        m.loc = loc;
         m.message = msg;
         m.ex = e;
         messageLog.add(m);
     }
 
+    public void error(LocationAwareEntity loc, @Nonnull String msg) {
+        error(loc, msg, null);
+    }
+
+    private void error(String s, Exception e) {
+        error(null, s, e);
+    }
+
     public void error(@Nonnull String s) {
-        error(s, null);
+        error(null, s, null);
     }
 
     public void parseError(Symbol s) {
         parseErrors = true;
 
-        error(s.getLineL() +
-                ": Syntax error. Unexpected " +
-                s.getSymbolName()
-        );
+        error(s, "Syntax error. Unexpected " + s.getSymbolName() + ".");
     }
 
     public boolean parseCode() {
@@ -76,6 +86,10 @@ public class MyCompiler {
 
         transformedAst = parsedAst;
         return parseSuccessful = !parseErrors;
+    }
+
+    public AstExp getParseTree() {
+        return parseCode() ? parsedAst : null;
     }
 
     public boolean typeCheck() {
@@ -163,7 +177,22 @@ public class MyCompiler {
             sb.setLength(0);
             sb.append('[');
             sb.append(msg.type);
-            sb.append("]: ");
+            sb.append("]");
+
+            LocationAwareEntity loc = msg.loc;
+            if (loc != null) {
+                sb.append(" (");
+                sb.append(loc.getLineL());
+                sb.append(':');
+                sb.append(loc.getColumnL());
+                sb.append(")-(");
+                sb.append(loc.getLineR());
+                sb.append(':');
+                sb.append(loc.getColumnR());
+                sb.append(")");
+            }
+
+            sb.append(": ");
             sb.append(msg.message);
             err.println(sb.toString());
 

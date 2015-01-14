@@ -3,6 +3,9 @@ package mini_camel.transform;
 import mini_camel.ast.Id;
 import mini_camel.SymTable;
 import mini_camel.ast.*;
+
+import javax.annotation.Nonnull;
+
 /**
  * Created by mommess on 09/01/15.
  */
@@ -20,13 +23,13 @@ public class BetaReduc extends AstTransformHelper<BetaReduc.Ctx> {
     }
 
 
-    public AstExp visit(Ctx ctx, AstVar e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstVar e) {
         AstExp new_e = ctx.reMapping.get(e.id.id);
         return (new_e == null) ? e : new_e;
     }
 
 
-    public AstExp visit(Ctx ctx, AstLet e){
+    public AstExp visit(Ctx ctx, @Nonnull AstLet e){
         Id old_id = e.id;
         AstExp new_e1 = recursiveVisit(ctx, e.e1);
         AstExp new_e2;

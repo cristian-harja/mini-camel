@@ -37,6 +37,7 @@ public interface Visitor2<RetT, ArgT>{
     RetT visit(ArgT a, @Nonnull AstGet e);
     RetT visit(ArgT a, @Nonnull AstPut e);
     RetT visit(ArgT a, @Nonnull AstFunDef e);
+    RetT visit(ArgT a, @Nonnull AstErr e);
 }
 
 
