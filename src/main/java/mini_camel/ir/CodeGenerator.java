@@ -3,6 +3,7 @@ package mini_camel.ir;
 import mini_camel.Id;
 import mini_camel.ast.*;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 /**
  * CodeGenerator
  */
-public class CodeGenerator implements Visitor2<AstExp, T>{
+public class CodeGenerator implements Visitor3{
 
     private int va;
 
@@ -23,12 +24,10 @@ public class CodeGenerator implements Visitor2<AstExp, T>{
         return c;
     }
 
-    /*public Couple visit(AstBool e) {
-        va++;
-        Var v = new Var("V"+va);
-        Couple c = new Couple(Collections.EMPTY_LIST, v);
-        return c;
-    }*/
+    @Override
+    public Couple visit(AstBool e) {
+        return null;
+    }
 
     public Couple visit(AstInt e) {
         va++;
@@ -53,12 +52,10 @@ public class CodeGenerator implements Visitor2<AstExp, T>{
         return c;
     }
 
-   /* public Couple visit(AstNot e) {
-        va++;
-        Var v = new Var("V"+va);
-        Couple c = new Couple(Collections.EMPTY_LIST, v);
-        return c;
-    }*/
+    @Override
+    public Couple visit(AstNot e) {
+        return null;
+    }
 
     public Couple visit(AstNeg e) {
         Couple cou1 = new Couple();
@@ -185,6 +182,11 @@ public class CodeGenerator implements Visitor2<AstExp, T>{
         return c;
     }
 
+    @Override
+    public Couple visit(AstEq e) {
+        return null;
+    }
+
     /*public Couple visit(AstEq e) {
         AstInt tmp1 = (AstInt)e.e1;
         AstInt tmp2 = (AstInt)e.e2;
@@ -198,55 +200,80 @@ public class CodeGenerator implements Visitor2<AstExp, T>{
         Couple c = new Couple(l,v);
         return c;
     }*/
+
+
+    protected Couple recursiveVisit(@Nonnull AstExp e) {
+        return e.accept(this);
+    }
     
+    public Couple visit(AstLE e) {
+
+        return null;
+    }
+
+    public Couple visit(AstIf e) {
+        return null;
+    }
+
+    public Couple visit(AstLet e) {
+        Couple cou1 = recursiveVisit(e.e1);
+        Couple cou2 = recursiveVisit(e.e2);
+        va++;
+        Var v = new Var("V"+va);
+        Instr i = new Let(v,cou1.getVar());
+
+        List<Instr> l = new ArrayList<Instr>();
+        cou1.addListInstr(l);
+        l.add(i);
+        cou2.addListInstr(l);
+
+        return new Couple(l,cou2.getVar());
+    }
+
+    public Couple visit(AstVar e) {
+        Instr i;
+        List<Instr> l = new ArrayList<Instr>();
+        if(e.id.id.equals("print_newline"))
+        {
+            i = new Routine(e.id.id);
+            l.add(i);
+            return new Couple(l,null);
+        }
+        va++;
+        Var v = new Var("V"+va);
+        return new Couple(Collections.EMPTY_LIST, v);
+    }
+
+    public Couple visit(AstLetRec e) {
+        return null;
+    }
+
+    public Couple visit(AstApp e) {
+        return null;
+    }
+
+    public Couple visit(AstTuple e) {
+        return null;
+    }
+
+    public Couple visit(AstLetTuple e) {
+        return null;
+    }
+
+    public Couple visit(AstArray e) {
+        return null;
+    }
+
+    public Couple visit(AstGet e) {
+        return null;
+    }
+
+    public Couple visit(AstPut e) {
+        return null;
+    }
+
+    public Couple visit(AstFunDef e) {
+        return null;
+    }
     
-    
-    
-    public void visit(AstLE e) {
-
-    }
-
-    public void visit(AstIf e) {
-
-    }
-
-    public void visit(AstLet e) {
-        Couple cou1 = visit(e.e1.accept(this));
-    }
-
-    public void visit(AstVar e) {
-
-    }
-
-    public void visit(AstLetRec e) {
-
-    }
-
-    public void visit(AstApp e) {
-
-    }
-
-    public void visit(AstTuple e) {
-
-    }
-
-    public void visit(AstLetTuple e) {
-
-    }
-
-    public void visit(AstArray e) {
-
-    }
-
-    public void visit(AstGet e) {
-
-    }
-
-    public void visit(AstPut e) {
-
-    }
-
-    public void visit(AstFunDef e) {
-
-    }
 }
