@@ -127,7 +127,6 @@ public final class AlphaConv extends AstTransformHelper<AlphaConv.Ctx> {
         List<Id> new_args = new ArrayList<>();
 
 
-
         ctx.reMapping.push();
         {
             ctx.reMapping.put(old_id.id, new_id);

@@ -1,5 +1,7 @@
 package mini_camel.ast;
 
+import mini_camel.ir.Couple;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -13,6 +15,13 @@ public abstract class AstExp extends AstNode {
      * the current AST node.
      */
     public abstract void accept(@Nonnull Visitor v);
+
+    /**
+     * Implements part of the "visitor" design pattern. Calls the appropriate
+     * version of {@link Visitor}{@code .visit()}, depending on the type of
+     * the current AST node.
+     */
+    public abstract Couple accept(@Nonnull Visitor3 v);
 
     /**
      * Implements part of the "visitor" design pattern, only using the
