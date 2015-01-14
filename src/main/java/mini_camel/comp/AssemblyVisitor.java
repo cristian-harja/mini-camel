@@ -169,4 +169,9 @@ public class AssemblyVisitor implements Visitor {
     public void visit(@Nonnull AstFunDef e) {
 
     }
+
+    @Override
+    public void visit(@Nonnull AstErr astErr) {
+
+    }
 }
