@@ -1,6 +1,7 @@
-package mini_camel;
+package mini_camel.gen;
 import java_cup.runtime.*;
-      
+import mini_camel.Id;
+
 %%
    
 /* -----------------Options and Declarations Section----------------- */

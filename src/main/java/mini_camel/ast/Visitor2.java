@@ -1,32 +1,42 @@
 package mini_camel.ast;
 
+import javax.annotation.Nonnull;
+
+/**
+ * A implementation of the "visitor" pattern for AST nodes, using generics.
+ * The {@code visit} method returns a value of type {@code RetT}, and also
+ * takes an extra (user-defined) argument of type {@code ArgT}.
+ *
+ * @param <RetT> The generic type of the returned value
+ * @param <ArgT> The generic type of the first argument.
+ */
 public interface Visitor2<RetT, ArgT>{
-    RetT visit(ArgT a, AstUnit e);
-    RetT visit(ArgT a, AstBool e);
-    RetT visit(ArgT a, AstInt e);
-    RetT visit(ArgT a, AstFloat e);
-    RetT visit(ArgT a, AstNot e);
-    RetT visit(ArgT a, AstNeg e);
-    RetT visit(ArgT a, AstAdd e);
-    RetT visit(ArgT a, AstSub e);
-    RetT visit(ArgT a, AstFNeg e);
-    RetT visit(ArgT a, AstFAdd e);
-    RetT visit(ArgT a, AstFSub e);
-    RetT visit(ArgT a, AstFMul e);
-    RetT visit(ArgT a, AstFDiv e);
-    RetT visit(ArgT a, AstEq e);
-    RetT visit(ArgT a, AstLE e);
-    RetT visit(ArgT a, AstIf e);
-    RetT visit(ArgT a, AstLet e);
-    RetT visit(ArgT a, AstVar e);
-    RetT visit(ArgT a, AstLetRec e);
-    RetT visit(ArgT a, AstApp e);
-    RetT visit(ArgT a, AstTuple e);
-    RetT visit(ArgT a, AstLetTuple e);
-    RetT visit(ArgT a, AstArray e);
-    RetT visit(ArgT a, AstGet e);
-    RetT visit(ArgT a, AstPut e);
-    RetT visit(ArgT a, AstFunDef e);
+    RetT visit(ArgT a, @Nonnull AstUnit e);
+    RetT visit(ArgT a, @Nonnull AstBool e);
+    RetT visit(ArgT a, @Nonnull AstInt e);
+    RetT visit(ArgT a, @Nonnull AstFloat e);
+    RetT visit(ArgT a, @Nonnull AstNot e);
+    RetT visit(ArgT a, @Nonnull AstNeg e);
+    RetT visit(ArgT a, @Nonnull AstAdd e);
+    RetT visit(ArgT a, @Nonnull AstSub e);
+    RetT visit(ArgT a, @Nonnull AstFNeg e);
+    RetT visit(ArgT a, @Nonnull AstFAdd e);
+    RetT visit(ArgT a, @Nonnull AstFSub e);
+    RetT visit(ArgT a, @Nonnull AstFMul e);
+    RetT visit(ArgT a, @Nonnull AstFDiv e);
+    RetT visit(ArgT a, @Nonnull AstEq e);
+    RetT visit(ArgT a, @Nonnull AstLE e);
+    RetT visit(ArgT a, @Nonnull AstIf e);
+    RetT visit(ArgT a, @Nonnull AstLet e);
+    RetT visit(ArgT a, @Nonnull AstVar e);
+    RetT visit(ArgT a, @Nonnull AstLetRec e);
+    RetT visit(ArgT a, @Nonnull AstApp e);
+    RetT visit(ArgT a, @Nonnull AstTuple e);
+    RetT visit(ArgT a, @Nonnull AstLetTuple e);
+    RetT visit(ArgT a, @Nonnull AstArray e);
+    RetT visit(ArgT a, @Nonnull AstGet e);
+    RetT visit(ArgT a, @Nonnull AstPut e);
+    RetT visit(ArgT a, @Nonnull AstFunDef e);
 }
 
 

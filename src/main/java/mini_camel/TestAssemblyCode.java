@@ -2,6 +2,8 @@ package mini_camel;
 
 import mini_camel.ast.AstExp;
 import mini_camel.comp.MyCompiler;
+import mini_camel.gen.Lexer;
+import mini_camel.gen.Parser;
 
 import java.io.*;
 
