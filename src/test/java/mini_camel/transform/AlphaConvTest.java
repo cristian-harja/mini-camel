@@ -1,7 +1,7 @@
 package mini_camel.transform;
 
-import mini_camel.Lexer;
-import mini_camel.Parser;
+import mini_camel.gen.Lexer;
+import mini_camel.gen.Parser;
 import mini_camel.ast.*;
 import org.junit.Test;
 
@@ -114,7 +114,7 @@ public class AlphaConvTest {
             }
 
             @Override
-            public void visit(AstLet e) {
+            public void visit(@Nonnull AstLet e) {
                 String id = e.id.id;
                 bind(e, id);
                 super.visit(e);
@@ -122,7 +122,7 @@ public class AlphaConvTest {
             }
 
             @Override
-            public void visit(AstLetRec e) {
+            public void visit(@Nonnull AstLetRec e) {
                 String id = e.fd.id.id;
                 super.visit(e);
                 unbind(id);

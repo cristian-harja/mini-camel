@@ -1,5 +1,12 @@
 package mini_camel.ast;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
+
+/**
+ * Boolean literal ({@code true} or {@code false}).
+ */
+@Immutable
 public final class AstBool extends AstExp {
     public final boolean b;
 
@@ -7,11 +14,11 @@ public final class AstBool extends AstExp {
         this.b = b;
     }
 
-    public void accept(Visitor v) {
+    public void accept(@Nonnull Visitor v) {
         v.visit(this);
     }
 
-    public <T, U> T accept(Visitor2<T, U> v, U a) {
+    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 

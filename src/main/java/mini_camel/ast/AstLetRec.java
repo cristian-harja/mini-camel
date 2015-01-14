@@ -2,20 +2,30 @@ package mini_camel.ast;
 
 import mini_camel.Id;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
+
+/**
+ * A "let rec" expression, allowing the definition of a function.
+ */
+@Immutable
 public final class AstLetRec extends AstExp {
     public final AstFunDef fd;
     public final AstExp e;
 
-    public AstLetRec(AstFunDef fd, AstExp e) {
+    public AstLetRec(
+            @Nonnull AstFunDef fd,
+            @Nonnull AstExp e
+    ) {
         this.fd = fd;
         this.e = e;
     }
 
-    public void accept(Visitor v) {
+    public void accept(@Nonnull Visitor v) {
         v.visit(this);
     }
 
-    public <T, U> T accept(Visitor2<T, U> v, U a) {
+    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 
