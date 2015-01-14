@@ -5,6 +5,7 @@ import mini_camel.ErrMsg;
 import mini_camel.Pair;
 import mini_camel.PrintVisitor;
 import mini_camel.ast.AstExp;
+import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.transform.AlphaConv;
@@ -16,18 +17,26 @@ import mini_camel.type.Type;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
 
-    private final List<ErrMsg> messageLog = new ArrayList<>(100);
+    private final Set<ErrMsg> messageLog = new TreeSet<>();
 
     private boolean parseBegun, parseSuccessful, parseErrors;
+    private boolean freeVarsBegun, freeVarsSuccessful;
     private boolean typingBegun, typingSuccessful;
+
+    private static Set<String> PREDEFS = new LinkedHashSet<>();
+    static {
+        Collections.addAll(PREDEFS,
+                "print_newline", "print_int", "abs_float", "sqrt", "sin",
+                "cos", "float_of_int", "int_of_float", "truncate"
+        );
+    }
 
     public MyCompiler(@Nonnull Reader input) {
         inputReader = input;
@@ -90,6 +99,22 @@ public class MyCompiler {
 
     public AstExp getParseTree() {
         return parseCode() ? parsedAst : null;
+    }
+
+    public boolean freeCheck() {
+        if (freeVarsBegun) return freeVarsSuccessful;
+        freeVarsBegun = true;
+
+        FreeVarVisitor fvv = new FreeVarVisitor(PREDEFS);
+        parsedAst.accept(fvv);
+
+        Set<Id> freeVars = fvv.getFreeVariables();
+
+        for (Id i : freeVars) {
+            error(i.getSymbol(), "Unknown symbol: " + i.id + ".");
+        }
+
+        return freeVarsSuccessful = freeVars.isEmpty();
     }
 
     public boolean typeCheck() {

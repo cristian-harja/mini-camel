@@ -22,7 +22,7 @@ public class ConsoleMain {
 
     private Reader in;
     private PrintStream out;
-    MyCompiler comp;
+    private MyCompiler comp;
 
 
     static public void main(String argv[]) {
@@ -162,6 +162,7 @@ public class ConsoleMain {
         }
 
         // Type check
+        if (!comp.freeCheck()) return false;
         if (!comp.typeCheck()) return false;
         if (onlyTypeCheck) return true;
 
