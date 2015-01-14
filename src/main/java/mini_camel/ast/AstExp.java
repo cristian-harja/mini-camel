@@ -5,7 +5,7 @@ import javax.annotation.Nonnull;
 /**
  * Base class for all (or most of the) AST nodes.
  */
-public abstract class AstExp {
+public abstract class AstExp extends AstNode {
 
     /**
      * Implements part of the "visitor" design pattern. Calls the appropriate

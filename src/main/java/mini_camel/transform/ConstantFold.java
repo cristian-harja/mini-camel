@@ -1,6 +1,6 @@
 package mini_camel.transform;
 
-import mini_camel.Id;
+import mini_camel.ast.Id;
 import mini_camel.SymTable;
 import mini_camel.ast.*;
 /**

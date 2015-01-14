@@ -1,7 +1,5 @@
 package mini_camel.ast;
 
-import mini_camel.Id;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
