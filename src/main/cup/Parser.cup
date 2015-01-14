@@ -1,11 +1,36 @@
 package mini_camel.gen;
 
-import mini_camel.Id;
 import mini_camel.Pair;
 import mini_camel.ast.*;
+import mini_camel.comp.MyCompiler;
 import mini_camel.type.*;
 
+import ldf.java_cup.runtime.Symbol;
 import java.util.*;
+
+parser code {:
+
+    private MyCompiler comp;
+
+    public Parser(
+            MyCompiler comp,
+            ldf.java_cup.runtime.SymbolFactory sf,
+            ldf.java_cup.runtime.Scanner s
+    ) {
+        this(s, sf);
+        this.comp = comp;
+    }
+
+    @Override
+    public void syntax_error(ldf.java_cup.runtime.Symbol curToken) {
+        if (comp != null) {
+            comp.parseError(curToken);
+            return;
+        }
+        super.syntax_error(curToken);
+    }
+
+:}
 
 terminal Boolean BOOL;
 

@@ -1,6 +1,11 @@
 package mini_camel.gen;
-import java_cup.runtime.*;
-import mini_camel.Id;
+import ldf.java_cup.runtime.TokenFactory;
+import ldf.java_cup.runtime.Symbol;
+
+import mini_camel.ast.AstExp;
+import mini_camel.ast.Id;
+
+import java.io.Reader;
 
 %%
    
@@ -8,6 +13,109 @@ import mini_camel.Id;
    
 %public
 %class Lexer
+%implements sym
+%implements ldf.java_cup.runtime.Scanner
+%unicode
+%line
+%column
+%char
+%type ldf.java_cup.runtime.Symbol
+%function next_token
+
+%eofval{
+    return eof();
+%eofval}
+
+%{
+    private TokenFactory tokenFactory;
+
+    public Lexer(Reader isr, TokenFactory tf){
+        this(isr);
+        tokenFactory = tf;
+    }
+
+    public Symbol symbol(String name, int code){
+        return symbol(name, code, null);
+    }
+
+    public Symbol symbol(String name, int code, Object value){
+
+        Symbol tok = tokenFactory.newToken(
+            name, code,
+            yyline + 1,
+            yycolumn + 1,
+            yychar
+        );
+
+        if (value instanceof AstExp) {
+            ((AstExp)value).setSymbol(tok);
+        }
+
+        tok.value = value;
+        return tok;
+
+    }
+
+    public Symbol eof() {
+        return tokenFactory.newEOF(
+            "EOF",sym.EOF,
+            yyline + 1,
+            yycolumn + 1,
+            yychar
+        );
+    }
+
+    public void comment() {
+        tokenFactory.newComment(
+            yyline + 1,
+            yycolumn + 1,
+            yychar
+        );
+    }
+    public void whitespace() {
+        tokenFactory.signalWhitespace(
+            yyline + 1,
+            yycolumn + 1,
+            yychar
+        );
+    }
+
+    public Symbol symbol(int symCode) {
+        return symbol(ParserHelper.getSymName(symCode), symCode);
+    }
+
+    public Symbol symbol(int symCode, Object value) {
+        return symbol(ParserHelper.getSymName(symCode), symCode, value);
+    }
+
+    private Symbol symbolInteger(int radix) {
+        return symbolInteger(yytext(), radix);
+    }
+
+    private Symbol symbolInteger(String lexeme, int radix) {
+        try {
+            return symbol(INT, Integer.parseInt(lexeme, radix));
+        } catch (NumberFormatException e) {
+            return symbol(error, "Invalid number format");
+        }
+    }
+
+    private Symbol symbolFloat() {
+        return symbolFloat(yytext());
+    }
+
+    private Symbol symbolFloat(String lexeme) {
+        try {
+            return symbol(FLOAT, Float.parseFloat(lexeme));
+        } catch (NumberFormatException e) {
+            return symbol(error, "Invalid number format");
+        }
+    }
+    private Symbol symbolBoolean(boolean value) {
+        return symbol(BOOL, value);
+    }
+
+%}
 
 /*
   The current line number can be accessed with the variable yyline
@@ -15,35 +123,6 @@ import mini_camel.Id;
 */
 %line
 %column
-    
-/* 
-   Will switch to a CUP compatibility mode to interface with a CUP
-   generated parser.
-*/
-%cup
-   
-/*
-  Declarations
-   
-  Code between %{ and %}, both of which must be at the beginning of a
-  line, will be copied letter to letter into the lexer class source.
-  Here you declare member variables and functions that are used inside
-  scanner actions.  
-*/
-%{   
-    /* To create a new java_cup.runtime.Symbol with information about
-       the current token, the token will have no value in this
-       case. */
-    private Symbol symbol(int type) {
-        return new Symbol(type, yyline, yycolumn);
-    }
-    
-    /* Also creates a new java_cup.runtime.Symbol with information
-       about the current token, but this object has a value. */
-    private Symbol symbol(int type, Object value) {
-        return new Symbol(type, yyline, yycolumn, value);
-    }
-%}
    
 
 /*
@@ -72,17 +151,17 @@ comment =  "(*" [^*] ~"*)"
    
 <YYINITIAL> {
 
-{space}+  { }
-{comment}   {  }
+{space}+    { whitespace(); }
+{comment}   { comment(); }
 "("     { return symbol(sym.LPAREN); }
 ")"     { return symbol(sym.RPAREN); }
-"true"  { return symbol(sym.BOOL, true); }
-"false" { return symbol(sym.BOOL, false); }
+"true"  { return symbolBoolean(true); }
+"false" { return symbolBoolean(false); }
 "not"   { return symbol(sym.NOT); }
 
-{digit}+  { return symbol(sym.INT, new Integer(yytext())); }
+{digit}+  { return symbolInteger(10); }
 {digit}+ ("." {digit}*)? (["e" "E"] ["+" "-"]? digit+)?  
-        { return symbol(sym.FLOAT, new Float(yytext())); }
+        { return symbolFloat(); }
 
 "-"     { return symbol(sym.MINUS); }
 "+"     { return symbol(sym.PLUS); }

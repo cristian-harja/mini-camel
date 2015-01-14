@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import mini_camel.Id;
+import mini_camel.ast.Id;
 import mini_camel.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;

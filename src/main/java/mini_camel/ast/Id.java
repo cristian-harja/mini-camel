@@ -1,11 +1,11 @@
-package mini_camel;
+package mini_camel.ast;
 
 import javax.annotation.Nonnull;
 
 /**
  * Represents an identifier in the source code.
  */
-public final class Id {
+public final class Id extends AstNode {
     public final String id;
 
     public Id(@Nonnull String id) {
