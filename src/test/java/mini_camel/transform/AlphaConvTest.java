@@ -48,6 +48,7 @@ public class AlphaConvTest {
         testOnCode("let x = y in x");
     }
 
+
     @Test
     public void test5() throws Exception {
         testOnCode("let rec f x = f x in f");
@@ -57,6 +58,43 @@ public class AlphaConvTest {
     public void test6() throws Exception {
         testOnCode("let rec fact x = if (x <= 1.0) " +
                 "then 1.0 else (x *. (fact (x -. 1.0))) in fact 7.0"
+        );
+    }
+
+
+   @Test
+    public void test7() throws Exception {
+        testOnCode("let x = x + 4 - z in z = x"
+        );
+    }
+
+    @Test
+    public void test8() throws Exception {
+        testOnCode("let rec f x y = x *. y in 5."
+        );
+    }
+
+    @Test
+    public void test9() throws Exception {
+        testOnCode("let rec sum x =" +
+                        "  if (x <= 0) then 0 else " +
+                        "((sum (x - 1)) + x) in sum 10000"
+        );
+    }
+
+    @Test
+    public void test10() throws Exception {
+        testOnCode("let rec gcd m n =" +
+                        "            if (m = 0) then n else(" +
+                        "            if (m <= n) then (gcd m (n - m)) else(" +
+                        "    (gcd n (m - n)))) in" +
+                        "    gcd 21600 337500"
+        );
+    }
+
+    @Test
+    public void test11() throws Exception {
+        testOnCode("let x = 1.23 in let x = 7 in 2"
         );
     }
 
