@@ -14,4 +14,5 @@ public abstract class AstNode {
             throw new IllegalStateException();
         }
         this.symbol = symbol;
-    }}
+    }
+}

@@ -1,11 +1,13 @@
-package mini_camel;
+package mini_camel.comp;
 
 import mini_camel.ast.AstExp;
+import mini_camel.ast.Id;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -15,10 +17,32 @@ public class FreeVarVisitorTest extends TestHelper {
     private void assertFreeVars(String sourceCode, String ... vars) throws Exception {
         AstExp root = parse(sourceCode);
         FreeVarVisitor visitor = new FreeVarVisitor();
-        root.accept(visitor);
         Set<String> expectedFreeSet = new LinkedHashSet<>();
+        Set<String> returnedFreeSet = new LinkedHashSet<>();
+
         Collections.addAll(expectedFreeSet, vars);
-        assertEquals(expectedFreeSet, visitor.free);
+
+        root.accept(visitor);
+        for (Id var : visitor.getFreeVariables()) {
+            returnedFreeSet.add(var.id);
+        }
+
+        assertEquals(expectedFreeSet, returnedFreeSet);
+    }
+
+    @Test
+    public void testAllSamples() throws Exception {
+        FreeVarVisitor visitor = new FreeVarVisitor(
+                "print_newline", "print_int", "abs_float", "sqrt", "sin",
+                "cos", "float_of_int", "int_of_float", "truncate"
+        );
+        for (Map.Entry<String, AstExp> e: allSamples().entrySet()) {
+            e.getValue().accept(visitor);
+            assertEquals(e.getKey(), // name of the sample
+                    Collections.<Id>emptySet(), // expecting no free vars
+                    visitor.getFreeVariables() // actual result
+            );
+        }
     }
 
     @Test

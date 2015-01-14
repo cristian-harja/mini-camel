@@ -1,6 +1,5 @@
 package mini_camel.ir;
 
-import mini_camel.Id;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
@@ -275,5 +274,9 @@ public class CodeGenerator implements Visitor3{
     public Couple visit(AstFunDef e) {
         return null;
     }
-    
+
+    public Couple visit(AstErr e) {
+        return null;
+    }
+
 }
