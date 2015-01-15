@@ -23,6 +23,16 @@ public class FunDef extends Instr
 
     public void addOp(Operation op) {body.add(op);}
 
+    @Override
+    public Type getType() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return null;
+    }
+
     public void printInfo()
     {
         super.printInfo();

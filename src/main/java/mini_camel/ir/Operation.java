@@ -7,6 +7,16 @@ public class Operation extends Instr
 {
     public Operation(){}
 
+    @Override
+    public Type getType() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return null;
+    }
+
     public void printInfo()
     {
         super.printInfo();

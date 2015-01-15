@@ -3,12 +3,30 @@ package mini_camel.ir;
 /**
  * Created by yassine tout seul on 1/12/15.
  */
-public class Instr
+public abstract class Instr
 {
     private int label;
+
+    public static enum Type {
+        ADD_I, // int
+        ADD_F, // float
+        SUB_I, // int
+        SUB_F, // float
+        EQ,    //equality
+        ASSIGN,//assignement
+        MUL_F,  // multiplication
+        DIV_F,
+        FUNC,   // function
+
+    }
+
     public Instr()
     {
     }
+
+    public abstract Type getType();//Regarder ADD
+    public abstract String toString();// Regarder ADD
+
 
     void setLabel(int label)
     {
@@ -19,12 +37,4 @@ public class Instr
     {
         System.out.println("Label : "+label);
     }
-
-    public static class Eq{}
-    public static class Leq{}
-    public static class Geq{}
-
-    public static class Get{}
-    public static class Set{}
-
 }

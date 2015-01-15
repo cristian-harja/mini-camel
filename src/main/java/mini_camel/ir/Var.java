@@ -13,4 +13,14 @@ public class Var extends Op
     {
         System.out.println("Variable value : "+varName);
     }
+
+    @Override
+    public Type getType() {
+        return Type.VAR;
+    }
+
+    @Override
+    public String toString() {
+        return varName;
+    }
 }
