@@ -1,6 +1,5 @@
 package mini_camel;
 
-
 import mini_camel.comp.*;
 
 import java.io.*;

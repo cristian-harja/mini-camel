@@ -11,8 +11,8 @@ public class Couple {
     private List<Instr> code;
     private Var var;
 
-    public Couple() {
-        code = new ArrayList<Instr>();
+    public Couple () {
+        code = new ArrayList<>();
     }
 
     public Couple(List<Instr> l, Var t) {
