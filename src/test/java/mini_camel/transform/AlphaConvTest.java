@@ -1,7 +1,7 @@
 package mini_camel.transform;
 
-import mini_camel.Lexer;
-import mini_camel.Parser;
+import mini_camel.gen.Lexer;
+import mini_camel.gen.Parser;
 import mini_camel.ast.*;
 import org.junit.Test;
 

@@ -12,7 +12,7 @@ public class Couple {
     private Var var;
 
     public Couple () {
-        code = new ArrayList<Instr>();
+        code = new ArrayList<>();
     }
 
     public Couple (List<Instr> l, Var t) {
@@ -36,12 +36,6 @@ public class Couple {
     Var getVar()
     {
         return  var;
-    }
-
-    public void addListInstr(List<Instr> l)
-    {
-        for(Instr i : code)
-            l.add(i);
     }
 
     void printCouple() {
