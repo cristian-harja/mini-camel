@@ -25,19 +25,20 @@ public class Call extends Instr
 
     @Override
     public Type getType() {
-        return Type.FUNC;
+        return Type.CALL;
     }
+
 
     @Override
     public String toString() {
-        return name+ args;
+        return name + "(" + args + ")";
     }
+
 
     public String getName()
     {
         return name;
     }
-
 
     public List<Op> getArgs() {
         return args;

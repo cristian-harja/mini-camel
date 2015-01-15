@@ -37,12 +37,6 @@ public class Block
         i.setLabel(label);
     }
 
-    public void printInfo()
-    {
-        for (Instr i : sequence) {
-            i.printInfo();
-            System.out.println("------------------------------");
-        }
-    }
+
 
 }

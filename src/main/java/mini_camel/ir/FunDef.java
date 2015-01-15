@@ -33,16 +33,6 @@ public class FunDef extends Instr
         return null;
     }
 
-    public void printInfo()
-    {
-        super.printInfo();
-        System.out.println("Name of function f :"+f.varName);
-        for (Var i : args) {
-            i.printInfo();
-        }
-        for (Operation i : body) {
-            i.printInfo();
-        }
-    }
+
 
 }

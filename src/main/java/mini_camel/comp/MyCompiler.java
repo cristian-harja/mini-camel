@@ -8,6 +8,9 @@ import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
+import mini_camel.ir.CodeGenerator;
+import mini_camel.ir.Couple;
+import mini_camel.ir.Instr;
 import mini_camel.transform.AlphaConv;
 import mini_camel.transform.BetaReduc;
 import mini_camel.transform.ConstantFold;
@@ -23,6 +26,7 @@ public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
+    private List<Instr> ir_code;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
 
@@ -166,34 +170,24 @@ public class MyCompiler {
     // virtual code generation, immediate optimisation and register allocation
     // build 3-adress code ??
     public boolean codeGeneration() {
-
+        CodeGenerator cg = new CodeGenerator();
+        Couple c = cg.recursiveVisit(transformedAst);
+        ir_code = c.getInstr();
         return true;
     }
 
     //from 3-adress code to Assembly code
     public void outputAssembly(PrintStream file_out) {
+        AssemblyGenerator ag = new AssemblyGenerator(System.out);
 
-        //headers for .data and .text sections
-        StringBuilder data = new StringBuilder();
-        data.append("\t.data\n");
-        StringBuilder text = new StringBuilder();
-        text.append("\n\t.text\n\t.global _start\n_start:\n");
-
-        AssemblyVisitor v = new AssemblyVisitor(data, text);
-        transformedAst.accept(v);
-
-        //footer for .text section and printing everything in the output_file
-        text.append("\tbl min_caml_exit\n\n");
-        if (data.length() > 7) {
-            file_out.print(data.toString());
-        }
-        file_out.print(text.toString());
-        file_out.close();
-
+        ag.generateAssembly(ir_code);
+        ag.writeAssembly();
     }
 
     public void outputIR(PrintStream out) {
-        throw new RuntimeException("Not implemented");
+        for(Instr i : ir_code){
+            out.println(i.toString());
+        }
     }
 
     public void printErrors(PrintStream err) {

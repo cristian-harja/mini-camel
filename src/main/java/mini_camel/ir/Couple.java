@@ -11,40 +11,38 @@ public class Couple {
     private List<Instr> code;
     private Var var;
 
-    public Couple () {
+    public Couple() {
         code = new ArrayList<Instr>();
     }
 
-    public Couple (List<Instr> l, Var t) {
+    public Couple(List<Instr> l, Var t) {
         code = l;
         var = t;
     }
 
-    public void setInstr(Instr i)
-    {
+    public void addInstr(Instr i) {
         code.add(i);
     }
 
-    public void setVar(Var v)
-    {
+    public void setVar(Var v) {
         var = v;
     }
-    List<Instr> getInstr()
-    {
+
+    public List<Instr> getInstr() {
         return code;
     }
-    Var getVar()
-    {
-        return  var;
+
+    public Var getVar() {
+        return var;
     }
 
-    public void addListInstr(List<Instr> l)
-    {
-        for(Instr i : code)
+    public void addListInstr(List<Instr> l) {
+        for (Instr i : code)
             l.add(i);
     }
 
-    void printCouple() {
-        System.out.println("Mon contenu est: "+ code.toString()+"\n" +"Var is "+var);
+    public String toString() {
+        return "Mon contenu est: " + code.toString() + " Var is " + var;
     }
+
 }

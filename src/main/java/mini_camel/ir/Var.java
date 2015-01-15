@@ -19,6 +19,10 @@ public class Var extends Op
         return Type.VAR;
     }
 
+    public String getName(){
+        return varName;
+    }
+
     @Override
     public String toString() {
         return varName;

@@ -16,7 +16,7 @@ public abstract class Instr
         ASSIGN,//assignement
         MUL_F,  // multiplication
         DIV_F,
-        FUNC,   // function
+        CALL,   // function call
 
     }
 
@@ -33,8 +33,6 @@ public abstract class Instr
         this.label = label;
     }
 
-    public void printInfo()
-    {
-        System.out.println("Label : "+label);
-    }
+    public int getLabel(){return label;}
+
 }

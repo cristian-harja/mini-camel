@@ -10,20 +10,19 @@ public class TestAssemblyCode {
 
         Reader r;
         //r = new StringReader("let x = 1 in print_newline");
-        r = new StringReader("let x = 1 in 5");
+        r = new StringReader("let x = 5 in print_int(x)");
 
         MyCompiler c = new MyCompiler(r);
 
         c.parseCode();
         c.preProcessCode();
 
-        System.out.println("starting code gen\n");
         c.codeGeneration();
 
-        System.out.println("starting assembly gen\n");
+        //c.outputIR(System.out);
 
-        PrintStream s = System.out;
-        c.outputAssembly(s);
+
+        c.outputAssembly(System.out);
     }
 }
 
