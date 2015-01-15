@@ -2,8 +2,7 @@ package mini_camel.gen;
 import ldf.java_cup.runtime.TokenFactory;
 import ldf.java_cup.runtime.Symbol;
 
-import mini_camel.ast.AstExp;
-import mini_camel.ast.Id;
+import mini_camel.ast.*;
 
 import java.io.Reader;
 
@@ -47,8 +46,8 @@ import java.io.Reader;
             yychar
         );
 
-        if (value instanceof AstExp) {
-            ((AstExp)value).setSymbol(tok);
+        if (value instanceof AstNode) {
+            ((AstNode)value).setSymbol(tok);
         }
 
         tok.value = value;
