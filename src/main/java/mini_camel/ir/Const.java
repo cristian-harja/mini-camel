@@ -26,6 +26,16 @@ public class Const extends Op
         this.constType = "float"; valueF = (float)value;
     }
 
+    @Override
+    public Type getType() {
+        return Type.CONST;
+    }
+
+    @Override
+    public String toString() {
+        return Integer.toString(valueI);
+    }
+
     public void printInfo()
     {
         if(constType.equals("int"))
