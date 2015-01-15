@@ -13,10 +13,10 @@ public abstract class Instr
         SUB_I, // int
         SUB_F, // float
         EQ,    //equality
-        ASSIGN,//assignement
+        ASSIGN, //assignment
         MUL_F,  // multiplication
         DIV_F,
-        FUNC,   // function
+        CALL,   // function
 
     }
 
