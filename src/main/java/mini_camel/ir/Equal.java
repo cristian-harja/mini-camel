@@ -7,7 +7,6 @@ public class Equal extends Operation
 {
     Var leq;
     Op op;
-    Operation operation;
 
     public Equal(Var v, Op o)
     {
@@ -15,10 +14,9 @@ public class Equal extends Operation
         op = o;
     }
 
-    public Equal(Var v, Operation operation)
+    public Equal(Var v)
     {
         leq = v;
-        this.operation = operation;
     }
 
     public void printInfo()

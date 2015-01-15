@@ -1,6 +1,6 @@
 package mini_camel.ir;
 
-import mini_camel.Id;
+import mini_camel.ir.Const;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
@@ -220,7 +220,7 @@ public class CodeGenerator implements Visitor3{
         Couple cou2 = recursiveVisit(e.e2);
         va++;
         Var v = new Var("V"+va);
-        Instr i = new Let(v,cou1.getVar());
+        Instr i = new Assign(v,cou1.getVar());
 
         List<Instr> l = new ArrayList<Instr>();
         cou1.addListInstr(l);
@@ -235,7 +235,7 @@ public class CodeGenerator implements Visitor3{
         List<Instr> l = new ArrayList<Instr>();
         if(e.id.id.equals("print_newline"))
         {
-            i = new Routine(e.id.id);
+            i = new Call(e.id.id);
             l.add(i);
             return new Couple(l,null);
         }

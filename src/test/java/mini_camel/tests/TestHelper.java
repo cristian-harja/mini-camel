@@ -2,8 +2,8 @@ package mini_camel.tests;
 
 import ldf.java_cup.runtime.Symbol;
 import mini_camel.ast.AstExp;
-import mini_camel.gen.Lexer;
-import mini_camel.gen.Parser;
+import mini_camel.Lexer;
+import mini_camel.Parser;
 
 import javax.annotation.Nonnull;
 import java.io.InputStreamReader;
