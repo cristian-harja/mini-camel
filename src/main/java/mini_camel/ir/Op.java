@@ -9,7 +9,6 @@ public abstract class Op
         VAR,
         CONST
     }
-    public void printInfo(){}
 
     public abstract Type getType();
 }

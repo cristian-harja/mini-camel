@@ -26,6 +26,12 @@ public class Const extends Op
         this.constType = "float"; valueF = (float)value;
     }
 
+    public String getConstType(){return constType;}
+
+    public int getValueI(){return valueI;}
+
+    public float getValueF(){return valueF;}
+
     @Override
     public Type getType() {
         return Type.CONST;
@@ -36,15 +42,5 @@ public class Const extends Op
         return Integer.toString(valueI);
     }
 
-    public void printInfo()
-    {
-        if(constType.equals("int"))
-        {
-            System.out.println("Variable value : " + valueI);
-        }
-        else
-        {
-            System.out.println("Variable value : " + valueF);
-        }
-    }
+
 }

@@ -17,8 +17,5 @@ public class Operation extends Instr
         return null;
     }
 
-    public void printInfo()
-    {
-        super.printInfo();
-    }
+
 }

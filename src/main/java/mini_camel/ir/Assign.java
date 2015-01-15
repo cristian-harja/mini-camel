@@ -19,15 +19,14 @@ public class Assign extends Operation
         return Type.ASSIGN;
     }
 
+    public Var getVar(){return leq;}
+
+    public Op getOp(){return op;}
+
     @Override
     public String toString() {
         return leq + " := " + op;
     }
 
-    public void printInfo()
-    {
-        super.printInfo();
-        System.out.println("Variable : "+leq.varName);
-        op.printInfo();
-    }
+
 }

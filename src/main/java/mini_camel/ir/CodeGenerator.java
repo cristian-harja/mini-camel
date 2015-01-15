@@ -11,6 +11,7 @@ import java.util.List;
 /**
  * CodeGenerator
  */
+
 public class CodeGenerator implements Visitor3{
 
     private int va;
@@ -34,7 +35,7 @@ public class CodeGenerator implements Visitor3{
         Var v = new Var("V"+va);
         List<Instr> l = new ArrayList<Instr>();
         Op o = new Const(e.i);
-        Instr i = new Equal(v,o);
+        Instr i = new Assign(v,o);
         l.add(i);
         Couple c = new Couple(l, v);
         return c;
@@ -46,7 +47,7 @@ public class CodeGenerator implements Visitor3{
         Var v = new Var("V"+va);
         List<Instr> l = new ArrayList<Instr>();
         Op o = new Const(e.f);
-        Instr i = new Equal(v,o);
+        Instr i = new Assign(v,o);
         l.add(i);
         Couple c = new Couple(l, v);
         return c;
@@ -202,7 +203,7 @@ public class CodeGenerator implements Visitor3{
     }*/
 
 
-    protected Couple recursiveVisit(@Nonnull AstExp e) {
+    public Couple recursiveVisit(@Nonnull AstExp e) {
         return e.accept(this);
     }
     
@@ -215,20 +216,22 @@ public class CodeGenerator implements Visitor3{
         return null;
     }
 
+
     public Couple visit(AstLet e) {
         Couple cou1 = recursiveVisit(e.e1);
         Couple cou2 = recursiveVisit(e.e2);
-        va++;
-        Var v = new Var("V"+va);
-        Instr i = new Assign(v,cou1.getVar());
+        //va++;
+        //Var v = new Var("V"+va);
+        //Instr i = new Assign(v,cou1.getVar());
 
         List<Instr> l = new ArrayList<Instr>();
         cou1.addListInstr(l);
-        l.add(i);
+        //l.add(i);
         cou2.addListInstr(l);
 
         return new Couple(l,cou2.getVar());
     }
+
 
     public Couple visit(AstVar e) {
         Instr i;
@@ -249,7 +252,22 @@ public class CodeGenerator implements Visitor3{
     }
 
     public Couple visit(AstApp e) {
-        return null;
+        Instr i;
+        Couple c;
+        List<Instr> l = new ArrayList<Instr>();
+        List<Op> lop = new ArrayList<Op>();
+
+        for(AstExp arg : e.es){
+            c = recursiveVisit(arg);
+            c.addListInstr(l);
+            lop.add(c.getVar());
+        }
+
+        i = new Call(((AstVar)e.e).id.id, lop);
+        l.add(i);
+        va++;
+        Var v = new Var("V"+va);
+        return new Couple(l,v);
     }
 
     public Couple visit(AstTuple e) {
@@ -275,5 +293,10 @@ public class CodeGenerator implements Visitor3{
     public Couple visit(AstFunDef e) {
         return null;
     }
-    
+
+    @Override
+    public Couple visit(AstErr e) {
+        return null;
+    }
+
 }

@@ -22,12 +22,15 @@ public class Add extends Operation
         return var + " := " + op1 + " + " + op2;
     }
 
-    public void printInfo()
-    {
-        super.printInfo();
-        var.printInfo();
-        op1.printInfo();
-        op2.printInfo();
+    public Var getVar() {
+        return var;
     }
 
+    public Op getOp1() {
+        return op1;
+    }
+
+    public Op getOp2() {
+        return op2;
+    }
 }

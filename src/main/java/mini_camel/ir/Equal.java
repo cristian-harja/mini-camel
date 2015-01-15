@@ -5,7 +5,7 @@ package mini_camel.ir;
  */
 public class Equal extends Operation
 {
-    Var leq;
+    /*Var leq;
     Op op;
 
     public Equal(Var v, Op o)
@@ -18,11 +18,6 @@ public class Equal extends Operation
     {
         leq = v;
     }
+*/
 
-    public void printInfo()
-    {
-        super.printInfo();
-        System.out.println("Variable : "+leq.varName);
-        op.printInfo();
-    }
 }
