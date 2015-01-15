@@ -221,4 +221,8 @@ public class MyCompiler {
             msg.ex.printStackTrace(err);
         }
     }
+
+    public AstExp getParsedAst() {
+        return parsedAst;
+    }
 }
