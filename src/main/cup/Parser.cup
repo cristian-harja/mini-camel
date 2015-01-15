@@ -165,9 +165,7 @@ exp
       %prec prec_app
 
   |   error
-      {:
-        RESULT = null; // TODO
-      :}
+      {: RESULT = new AstErr(); :}
 ;
 
 fundef

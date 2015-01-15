@@ -7,7 +7,7 @@ import java.io.*;
 public class ConsoleMain {
 
     private static final int EXIT_ERROR = 1;
-    private static final int EXIT_SUCCESS = 1;
+    private static final int EXIT_SUCCESS = 0;
 
     private int optionsSelected;
     private String outputFileName;
@@ -18,10 +18,11 @@ public class ConsoleMain {
     private boolean onlyTypeCheck;
     private boolean printAST;
     private boolean printIR;
+    private boolean printASM;
 
     private Reader in;
     private PrintStream out;
-    MyCompiler comp;
+    private MyCompiler comp;
 
 
     static public void main(String argv[]) {
@@ -104,8 +105,7 @@ public class ConsoleMain {
         }
 
         if (optionsSelected == 0) {
-            serr("You must select one action. Try the -h option.");
-            return false;
+            printASM = true;
         }
 
         if (inputFileName == null) {
@@ -150,16 +150,19 @@ public class ConsoleMain {
 
     private boolean executeCompiler() {
         // Parse the code
-        if (!comp.parseCode()) return false;
+        boolean parseOk = comp.parseCode();
+        if (!parseOk && !printAST) return false;
         if (onlyParse) return true;
 
         // Print the AST (if requested)
         if (printAST) {
             comp.outputAST(out);
-            return true;
+            out.println();
+            return parseOk;
         }
 
         // Type check
+        if (!comp.freeCheck()) return false;
         if (!comp.typeCheck()) return false;
         if (onlyTypeCheck) return true;
 
