@@ -5,6 +5,7 @@ import mini_camel.ErrMsg;
 import mini_camel.Pair;
 import mini_camel.PrintVisitor;
 import mini_camel.ast.AstExp;
+import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.transform.AlphaConv;
@@ -16,42 +17,60 @@ import mini_camel.type.Type;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
 
-    private final List<ErrMsg> messageLog = new ArrayList<>(100);
+    private final Set<ErrMsg> messageLog = new TreeSet<>();
 
     private boolean parseBegun, parseSuccessful, parseErrors;
+    private boolean freeVarsBegun, freeVarsSuccessful;
     private boolean typingBegun, typingSuccessful;
+
+    private static Set<String> PREDEFS = new LinkedHashSet<>();
+    static {
+        Collections.addAll(PREDEFS,
+                "print_newline", "print_int", "abs_float", "sqrt", "sin",
+                "cos", "float_of_int", "int_of_float", "truncate"
+        );
+    }
 
     public MyCompiler(@Nonnull Reader input) {
         inputReader = input;
     }
 
-    public void error(@Nonnull String msg, @Nullable Exception e) {
+    public void error(
+            @Nullable LocationAwareEntity loc,
+            @Nonnull String msg,
+            @Nullable Exception e
+    ) {
         ErrMsg m = new ErrMsg();
         m.type = ErrMsg.Type.ERROR;
+        m.loc = loc;
         m.message = msg;
         m.ex = e;
         messageLog.add(m);
     }
 
+    public void error(LocationAwareEntity loc, @Nonnull String msg) {
+        error(loc, msg, null);
+    }
+
+    private void error(String s, Exception e) {
+        error(null, s, e);
+    }
+
     public void error(@Nonnull String s) {
-        error(s, null);
+        error(null, s, null);
     }
 
     public void parseError(Symbol s) {
         parseErrors = true;
 
-        error(s.getLineL() +
-                ": Syntax error. Unexpected " +
-                s.getSymbolName()
-        );
+        error(s, "Syntax error. Unexpected " + s.getSymbolName() + ".");
     }
 
     public boolean parseCode() {
@@ -76,6 +95,26 @@ public class MyCompiler {
 
         transformedAst = parsedAst;
         return parseSuccessful = !parseErrors;
+    }
+
+    public AstExp getParseTree() {
+        return parseCode() ? parsedAst : null;
+    }
+
+    public boolean freeCheck() {
+        if (freeVarsBegun) return freeVarsSuccessful;
+        freeVarsBegun = true;
+
+        FreeVarVisitor fvv = new FreeVarVisitor(PREDEFS);
+        parsedAst.accept(fvv);
+
+        Set<Id> freeVars = fvv.getFreeVariables();
+
+        for (Id i : freeVars) {
+            error(i.getSymbol(), "Unknown symbol: " + i.id + ".");
+        }
+
+        return freeVarsSuccessful = freeVars.isEmpty();
     }
 
     public boolean typeCheck() {
@@ -163,7 +202,22 @@ public class MyCompiler {
             sb.setLength(0);
             sb.append('[');
             sb.append(msg.type);
-            sb.append("]: ");
+            sb.append("]");
+
+            LocationAwareEntity loc = msg.loc;
+            if (loc != null) {
+                sb.append(" (");
+                sb.append(loc.getLineL());
+                sb.append(':');
+                sb.append(loc.getColumnL());
+                sb.append(")-(");
+                sb.append(loc.getLineR());
+                sb.append(':');
+                sb.append(loc.getColumnR());
+                sb.append(")");
+            }
+
+            sb.append(": ");
             sb.append(msg.message);
             err.println(sb.toString());
 

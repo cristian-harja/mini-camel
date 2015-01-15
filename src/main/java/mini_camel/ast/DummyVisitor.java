@@ -35,6 +35,11 @@ public abstract class DummyVisitor implements Visitor {
     }
 
     @Override
+    public void visit(@Nonnull AstErr e) {
+        // do nothing
+    }
+
+    @Override
     public void visit(@Nonnull AstNot e) {
         e.e.accept(this);
     }
@@ -101,6 +106,7 @@ public abstract class DummyVisitor implements Visitor {
     public void visit(@Nonnull AstIf e) {
         e.e1.accept(this);
         e.e2.accept(this);
+        e.e3.accept(this);
     }
 
     @Override

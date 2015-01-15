@@ -50,6 +50,11 @@ public abstract class AstTransformHelper<T> implements Visitor2<AstExp, T> {
      */
 
     @Override
+    public AstExp visit(T ctx, @Nonnull AstErr e) {
+        return e;
+    }
+
+    @Override
     public AstExp visit(T ctx, @Nonnull AstUnit e) {
         return e;
     }
