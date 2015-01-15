@@ -58,6 +58,11 @@ public class EquationGenerator {
             }
 
             @Override
+            public void visit(@Nonnull AstErr e) {
+                // TODO: the error type
+            }
+
+            @Override
             public void visit(@Nonnull AstUnit e) {
                 typeEquals(type, UNIT);
             }

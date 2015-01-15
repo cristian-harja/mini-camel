@@ -38,7 +38,7 @@ public interface Visitor3{
     Couple visit( AstGet e);
     Couple visit( AstPut e);
     Couple visit( AstFunDef e);
-    
+    Couple visit( AstErr e);
 }
 
 

@@ -34,6 +34,7 @@ public interface Visitor {
     void visit(@Nonnull AstGet e);
     void visit(@Nonnull AstPut e);
     void visit(@Nonnull AstFunDef e);
+    void visit(@Nonnull AstErr e);
 }
 
 

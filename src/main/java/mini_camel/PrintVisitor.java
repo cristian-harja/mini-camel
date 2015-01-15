@@ -228,6 +228,11 @@ public final class PrintVisitor implements Visitor {
     public void visit(@Nonnull AstFunDef e) {
 
     }
+
+    @Override
+    public void visit(@Nonnull AstErr astErr) {
+        out.print("<error>");
+    }
 }
 
 

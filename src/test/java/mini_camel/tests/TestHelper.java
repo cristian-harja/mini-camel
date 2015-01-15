@@ -1,9 +1,7 @@
 package mini_camel.tests;
 
-import ldf.java_cup.runtime.Symbol;
 import mini_camel.ast.AstExp;
-import mini_camel.gen.Lexer;
-import mini_camel.gen.Parser;
+import mini_camel.comp.MyCompiler;
 
 import javax.annotation.Nonnull;
 import java.io.InputStreamReader;
@@ -20,18 +18,12 @@ public abstract class TestHelper {
 
     @Nonnull
     public static AstExp parse(@Nonnull Reader r) {
-        AstExp result;
         try {
-            Parser p = new Parser(new Lexer(r));
-            Symbol parsed = p.parse();
-            result = (AstExp) parsed.value;
+            MyCompiler comp = new MyCompiler(r);
+            return comp.getParseTree();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        if (result == null) {
-            throw new RuntimeException("Parse error");
-        }
-        return result;
     }
 
     /**
