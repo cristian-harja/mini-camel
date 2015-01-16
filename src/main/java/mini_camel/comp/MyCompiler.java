@@ -8,8 +8,7 @@ import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
-import mini_camel.ir.CodeGenerator;
-import mini_camel.ir.Couple;
+import mini_camel.ir.FunDef;
 import mini_camel.ir.Instr;
 import mini_camel.transform.AlphaConv;
 import mini_camel.transform.BetaReduc;
@@ -22,11 +21,13 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
+import static mini_camel.ir.CodeGenerator.*;
+
 public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
-    private List<Instr> ir_code;
+    private List<FunDef> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
 
@@ -88,7 +89,7 @@ public class MyCompiler {
             p = new Parser(this, tf, new Lexer(inputReader, tf));
             parsedAst = (AstExp) p.parse().value;
         } catch (Exception e) {
-            error("An exception has occurred.", e);
+            error("An exception has occurred while parsing.", e);
             return false;
         }
 
@@ -144,7 +145,6 @@ public class MyCompiler {
         parsedAst.accept(new PrintVisitor(out));
     }
 
-
     private void transformAlphaConversion() {
         AlphaConv ac = new AlphaConv();
         transformedAst = ac.applyTransform(transformedAst);
@@ -170,23 +170,38 @@ public class MyCompiler {
     // virtual code generation, immediate optimisation and register allocation
     // build 3-adress code ??
     public boolean codeGeneration() {
-        CodeGenerator cg = new CodeGenerator();
-        Couple c = cg.recursiveVisit(transformedAst);
-        ir_code = c.getInstr();
+        try {
+            funDefs = generateIR(transformedAst, "_main");
+        } catch (RuntimeException e) {
+            error("An exception has occurred while generating the IR.", e);
+            return false;
+        }
         return true;
     }
 
-    //from 3-adress code to Assembly code
-    public void outputAssembly(PrintStream file_out) {
-        AssemblyGenerator ag = new AssemblyGenerator(System.out);
-
-        ag.generateAssembly(ir_code);
-        ag.writeAssembly();
+    //from 3-address code to Assembly code
+    public boolean outputAssembly(PrintStream out) {
+        try {
+            AssemblyGenerator ag = new AssemblyGenerator();
+            ag.generateAssembly(funDefs);
+            ag.writeAssembly(out);
+        }catch (RuntimeException e) {
+            error("An exception has occurred while generating assembly.", e);
+            return false;
+        }
+        return true;
     }
 
     public void outputIR(PrintStream out) {
-        for(Instr i : ir_code){
-            out.println(i.toString());
+        for(FunDef fd : funDefs){
+            out.println("# Function: " + fd.name.getName());
+            out.println("# Arguments: " + fd.args);
+            out.println("# Locals: " + fd.locals);
+            for (Instr i : fd.body) {
+                out.print('\t');
+                out.println(i.toString());
+            }
+            out.println();
         }
     }
 
@@ -222,7 +237,4 @@ public class MyCompiler {
         }
     }
 
-    public AstExp getParsedAst() {
-        return parsedAst;
-    }
 }

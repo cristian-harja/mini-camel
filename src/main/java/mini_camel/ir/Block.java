@@ -3,11 +3,7 @@ package mini_camel.ir;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by lina on 1/12/15.
- */
-public class Block
-{
+public class Block {
     Block lBranch; //Left
     Block rBranch; //Right
     List<Instr> sequence;
@@ -29,14 +25,6 @@ public class Block
     {
         rBranch = b;
     }
-
-    public void addInstr(Instr i)
-    {
-        sequence.add(i);
-        label ++;
-        i.setLabel(label);
-    }
-
 
 
 }

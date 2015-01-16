@@ -1,15 +1,9 @@
 package mini_camel.ir;
 
-/**
- * Created by lina on 1/12/15.
- */
-public class SubF extends Operation
+public class SubF extends Instr
 {
     Var var;
     Op op1;
-
-
-
     Op op2;
 
     public SubF(Var v, Op operand1, Op operand2)

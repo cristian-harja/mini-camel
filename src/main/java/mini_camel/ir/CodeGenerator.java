@@ -1,5 +1,6 @@
 package mini_camel.ir;
 
+import mini_camel.Pair;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
@@ -8,24 +9,44 @@ import java.util.*;
 /**
  * CodeGenerator
  */
-public class CodeGenerator implements Visitor3{
+@SuppressWarnings("UnusedParameters")
+public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
-    private int va;
+    private static int va = 0;
 
-    Queue<AstFunDef> functions = new LinkedList<>();
+    private Queue<AstFunDef> functions = new LinkedList<>();
+    private List<Var> locals = new ArrayList<>();
 
-    Couple result = null;
+    private Couple result = null;
 
     public CodeGenerator() {
-        va = 0;
+    }
+
+    public Op getVar() {
+        return result.getVar();
+    }
+
+    public List<Var> getLocals() {
+        return locals;
+    }
+
+    private Var genVar() {
+        Var v = new Var("V" + ++va);
+        locals.add(v);
+        return v;
+    }
+
+    public List<Instr> getCode() {
+        return result.getInstr();
     }
 
     public void generateCode(AstExp e) {
-        result = e.accept(this);
+        result = e.accept(this, null);
     }
 
-    public static Queue<FunDef> generateIR(AstExp root, String mainFunName) {
-        Queue<FunDef> functions = new LinkedList<>();
+    public static List<FunDef> generateIR(AstExp root, String mainFunName) {
+        HashSet<String> compiled = new LinkedHashSet<>();
+        List<FunDef> functions = new LinkedList<>();
         Queue<AstFunDef> pending = new LinkedList<>();
         List<Var> args = Collections.emptyList();
         CodeGenerator cg;
@@ -35,15 +56,28 @@ public class CodeGenerator implements Visitor3{
         while (true) {
             cg = new CodeGenerator();
             cg.generateCode(node);
-            functions.add(new FunDef(new Var(name), args, cg.getCode()));
+
+            List<Instr> body = cg.getCode();
+            body.add(new Ret(cg.getVar())); // fixme
+
+            functions.add(new FunDef(
+                    new Label(name),
+                    args,
+                    cg.getLocals(),
+                    body
+            ));
 
             pending.addAll(cg.functions);
 
             if (pending.isEmpty()) break;
             AstFunDef fd = pending.remove();
 
-            node = fd.e;
             name = fd.id.id;
+
+            if (compiled.contains(name)) break;
+            compiled.add(name);
+
+            node = fd.e;
             args = new ArrayList<>(fd.args.size());
             for (Id id : fd.args) {
                 args.add(new Var(id.id));
@@ -54,214 +88,220 @@ public class CodeGenerator implements Visitor3{
 
     }
 
-    public List<Instr> getCode() {
-        return result.getInstr();
+    public class Branches extends Pair<Label, Label> {
+
+        public Branches(Label ifTrue, Label ifFalse) {
+            super(ifTrue, ifFalse);
+        }
+
+        public Label ifTrue() {
+            return left;
+        }
+
+        public Label ifFalse() {
+            return right;
+        }
     }
 
-    public Couple visit(AstUnit e) {
+    public Couple visit(Branches b, @Nonnull AstUnit e) {
         return new Couple(Collections.<Instr>emptyList(), null);
     }
 
-    @Override
-    public Couple visit(AstBool e) {
-        return null; // todo
+    public Couple visit(Branches b, @Nonnull AstBool e) {
+        ArrayList<Instr> l = new ArrayList<>(1);
+        l.add(new Jump(e.b ? b.ifTrue() : b.ifFalse()));
+        return new Couple(l, null);
     }
 
-    public Couple visit(AstInt e) {
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Op o = new Const(e.i);
-        Instr i = new Assign(v, o);
-        l.add(i);
-        return new Couple(l, v);
-    }
-
-
-    public Couple visit(AstFloat e) {
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Op o = new Const(e.f);
-        Instr i = new Assign(v, o);
-        l.add(i);
-        return new Couple(l, v);
-    }
-
-    @Override
-    public Couple visit(AstNot e) {
-        return null; // TODO
-    }
-
-    public Couple visit(AstNeg e) {
-        Op zero = new Const(0);
-        Couple c = visit((AstInt) e.e);
-        Var v = new Var("V" + ++va);
-        List<Instr> l = new ArrayList<Instr>();
-        l.addAll(c.getInstr());
-        l.add(new Sub(v, zero, c.getVar()));
-        return new Couple(l, v);
-    }
-
-    public Couple visit(AstAdd e) {
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
+    public Couple visit(Branches b, @Nonnull AstInt e) {
+        Var v = genVar();
         List<Instr> l = new ArrayList<>();
-        Instr i = new Add(v, cou1.getVar(), cou2.getVar());
-        l.addAll(cou1.getInstr());
-        l.addAll(cou2.getInstr());
-        l.add(i);
+        l.add(new Assign(v, new Const(e.i)));
         return new Couple(l, v);
     }
 
-    public Couple visit(AstSub e) {
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new Sub(v, cou1.getVar(), cou2.getVar());
-        l.addAll(cou1.getInstr());
-        l.addAll(cou2.getInstr());
-        l.add(i);
+
+    public Couple visit(Branches b, @Nonnull AstFloat e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        l.add(new Assign(v, new Const(e.f)));
         return new Couple(l, v);
     }
 
-    public Couple visit(AstFNeg e) {
-        Op zero = new Const(0.0);
-        Couple c = visit((AstInt) e.e);
-        Var v = new Var("V" + ++va);
-        List<Instr> l = new ArrayList<Instr>();
+    public Couple visit(Branches b, @Nonnull AstNot e) {
+        return e.e.accept(this, new Branches(b.ifFalse(), b.ifTrue()));
+    }
+
+    public Couple visit(Branches b, @Nonnull AstNeg e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple c = e.e.accept(this, null);
         l.addAll(c.getInstr());
-        l.add(new SubF(v, zero, c.getVar()));
+        l.add(new SubI(v, new Const(0), c.getVar()));
+        return new Couple(l, v);
+    }
+
+    public Couple visit(Branches b, @Nonnull AstAdd e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
+        l.addAll(cou1.getInstr());
+        l.addAll(cou2.getInstr());
+        l.add(new AddI(v, cou1.getVar(), cou2.getVar()));
+        return new Couple(l, v);
+    }
+
+    public Couple visit(Branches b, @Nonnull AstSub e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
+        l.addAll(cou1.getInstr());
+        l.addAll(cou2.getInstr());
+        l.add(new SubI(v, cou1.getVar(), cou2.getVar()));
+        return new Couple(l, v);
+    }
+
+    public Couple visit(Branches b, @Nonnull AstFNeg e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple c = e.e.accept(this, null);
+        l.addAll(c.getInstr());
+        l.add(new SubF(v, new Const(0.0), c.getVar()));
         return new Couple(l, v);
     }
 
 
-    public Couple visit(AstFAdd e) {
-        // todo: fix this
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new AddF(v, cou1.getVar(), cou2.getVar());
+    public Couple visit(Branches b, @Nonnull AstFAdd e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(i);
+        l.add(new AddF(v, cou1.getVar(), cou2.getVar()));
         return new Couple(l, v);
     }
 
-    public Couple visit(AstFSub e) {
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new SubF(v, cou1.getVar(), cou2.getVar());
+    public Couple visit(Branches b, @Nonnull AstFSub e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(i);
+        l.add(new SubF(v, cou1.getVar(), cou2.getVar()));
         return new Couple(l, v);
     }
 
-    public Couple visit(AstFMul e) {
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new MultF(v, cou1.getVar(), cou2.getVar());
+    public Couple visit(Branches b, @Nonnull AstFMul e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(i);
+        l.add(new MultF(v, cou1.getVar(), cou2.getVar()));
         return new Couple(l, v);
     }
 
-    public Couple visit(AstFDiv e) {
-        Couple cou1 = e.e1.accept(this);
-        Couple cou2 = e.e2.accept(this);
-        va++;
-        Var v = new Var("V" + va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new DivF(v, cou1.getVar(), cou2.getVar());
+    public Couple visit(Branches b, @Nonnull AstFDiv e) {
+        Var v = genVar();
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(i);
+        l.add(new DivF(v, cou1.getVar(), cou2.getVar()));
         return new Couple(l, v);
     }
 
     @Override
-    public Couple visit(AstEq e) {
-        return null; // todo
+    public Couple visit(Branches b, @Nonnull AstEq e) {
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
+        l.addAll(cou1.getInstr());
+        l.addAll(cou2.getInstr());
+        l.add(new Compare(cou1.getVar(), cou2.getVar()));
+        l.add(new BranchEq(b.ifTrue()));
+        l.add(new Jump(b.ifFalse()));
+        return new Couple(l, null);
     }
 
-    /*public Couple visit(AstEq e) {
-        AstInt tmp1 = (AstInt)e.e1;
-        AstInt tmp2 = (AstInt)e.e2;
-        Couple cou1 = visit(tmp1);
-        Couple cou2 = visit(tmp2);
-        va++;
-        Var v = new Var("V"+va);
-        List<Instr> l = new ArrayList<Instr>();
-        Instr i = new Equal(v,cou1.getVar(),cou2.getVar());
-        l.add(i);
-        Couple c = new Couple(l,v);
-        return c;
-    }*/
-
-
+    
     public Couple recursiveVisit(@Nonnull AstExp e) {
-        return e.accept(this);
+        return e.accept(this, null);
     }
 
-    public Couple visit(AstLE e) {
-
-        return null;
+    public Couple visit(Branches b, @Nonnull AstLE e) {
+        List<Instr> l = new ArrayList<>();
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
+        l.addAll(cou1.getInstr());
+        l.addAll(cou2.getInstr());
+        l.add(new Compare(cou1.getVar(), cou2.getVar()));
+        l.add(new BranchLe(b.ifTrue()));
+        l.add(new Jump(b.ifFalse()));
+        return new Couple(l, null);
     }
 
-    public Couple visit(AstIf e) {
-        return null;
+    public Couple visit(Branches b, @Nonnull AstIf e) {
+        Var result = genVar();
+        List<Instr> l = new ArrayList<>();
+        Label lThen = Label.gen();
+        Label lElse = Label.gen();
+        Label lEndIf = Label.gen();
+        Couple cou1 = e.e1.accept(this, new Branches(lThen, lElse));
+        Couple cou2 = e.e2.accept(this, null);
+        Couple cou3 = e.e3.accept(this, null);
+        l.addAll(cou1.getInstr());
+        l.add(lThen);
+        l.addAll(cou2.getInstr());
+        l.add(new Assign(result, cou2.getVar()));
+        l.add(new Jump(lEndIf));
+        l.add(lElse);
+        l.addAll(cou3.getInstr());
+        l.add(new Assign(result, cou3.getVar()));
+        l.add(lEndIf);
+
+        return new Couple(l, result);
     }
 
-    public Couple visit(AstLet e) {
+    public Couple visit(Branches b, @Nonnull AstLet e) {
+        List<Instr> l = new ArrayList<>();
         Couple cou1 = recursiveVisit(e.e1);
         Couple cou2 = recursiveVisit(e.e2);
-        Var v = new Var(e.id.id);
-        Instr i = new Assign(v, cou1.getVar());
 
-        List<Instr> l = new ArrayList<>();
         l.addAll(cou1.getInstr());
-        l.add(i);
+        l.add(new Assign(new Var(e.id.id), cou1.getVar()));
         l.addAll(cou2.getInstr());
 
         return new Couple(l, cou2.getVar());
     }
 
-    public Couple visit(AstVar e) {
-        Var v = new Var(e.id.id);
-        return new Couple(Collections.<Instr>emptyList(), v);
+    public Couple visit(Branches b, @Nonnull AstVar e) {
+        return new Couple(Collections.<Instr>emptyList(), new Var(e.id.id));
     }
 
-    public Couple visit(AstLetRec e) {
+    public Couple visit(Branches b, @Nonnull AstLetRec e) {
         functions.add(e.fd);
-        return e.e.accept(this);
+        return e.e.accept(this, null);
     }
 
-    public Couple visit(AstApp e) {
+    public Couple visit(Branches b, @Nonnull AstApp e) {
         List<Instr> code = new LinkedList<>();
         List<Op> args = new LinkedList<>();
 
         for (AstExp arg : e.es) {
-            Couple argCode = arg.accept(this);
+            Couple argCode = arg.accept(this, null);
             code.addAll(argCode.getInstr());
             if (argCode.getVar() == null) continue;
             args.add(argCode.getVar());
         }
 
-        Couple fCode = e.e.accept(this);
+        Couple fCode = e.e.accept(this, null);
 
         code.addAll(fCode.getInstr());
         code.add(new Call(fCode.getVar().varName, args));
@@ -269,39 +309,42 @@ public class CodeGenerator implements Visitor3{
         return new Couple(code, new Var("ret"));
     }
 
-    public Couple visit(AstTuple e) {
-        // TODO: throw exception
-        return null;
+    public Couple visit(Branches b, @Nonnull AstTuple e) {
+        return throwNoTuple();
     }
 
-    public Couple visit(AstLetTuple e) {
-        // TODO: throw exception
-        return null;
+    public Couple visit(Branches b, @Nonnull AstLetTuple e) {
+        return throwNoTuple();
     }
 
-    public Couple visit(AstArray e) {
-        // TODO: throw exception
-        return null;
+    public Couple visit(Branches b, @Nonnull AstArray e) {
+        return throwNoArrays();
     }
 
-    public Couple visit(AstGet e) {
-        // TODO: throw exception
-        return null;
+    public Couple visit(Branches b, @Nonnull AstGet e) {
+        return throwNoArrays();
     }
 
-    public Couple visit(AstPut e) {
-        // TODO: throw exception
-        return null;
+    public Couple visit(Branches b, @Nonnull AstPut e) {
+        return throwNoArrays();
     }
 
-    public Couple visit(AstFunDef e) {
+    private Couple throwNoTuple() {
+        throw new RuntimeException("Sorry, tuples are not implemented yet");
+    }
+
+    private Couple throwNoArrays() {
+        throw new RuntimeException("Sorry, arrays are not implemented yet");
+    }
+
+    public Couple visit(Branches b, @Nonnull AstFunDef e) {
         // handled somewhere else
         return null;
     }
 
     @Override
-    public Couple visit(AstErr e) {
-        return null;
+    public Couple visit(Branches b, @Nonnull AstErr e) {
+        throw new RuntimeException("Compiling an `AstErr`??");
     }
 
 }

@@ -1,9 +1,6 @@
 package mini_camel.ir;
 
-/**
- * Created by lina and Yassine on 1/12/15.
- */
-public class MultF extends Operation
+public class MultF extends Instr
 {
     Var var;
     Op op1;
