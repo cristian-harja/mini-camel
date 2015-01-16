@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+
+    <groupId>les-quatre-mousquetengineers</groupId>
+    <artifactId>mini-camel</artifactId>
+    <version>0.1</version>
+
+    <properties>
+        <!-- Miscellaneous -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Source files -->
+        <src.dir>${basedir}/src</src.dir>
+        <src_cup.dir>${src.dir}/main/cup</src_cup.dir>
+        <src_flex.dir>${src.dir}/main/flex</src_flex.dir>
+        <src_java.dir>${src.dir}/main/java</src_java.dir>
+
+        <!-- Output directories -->
+        <out.dir>${basedir}/target</out.dir>
+        <out_java.dir>${out.dir}/classes</out_java.dir>
+
+        <!-- Generated sources -->
+        <gen.dir>${out.dir}/generated-sources</gen.dir>
+        <gen_cup.dir>${gen.dir}/cup</gen_cup.dir>
+        <gen_flex.dir>${gen.dir}/flex</gen_flex.dir>
+
+    </properties>
+
+    <dependencies>
+
+        <!-- @Nonnull, @Nullable ...-->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+        <!-- A number of useful (and well-designed)
+             classes for working with collections -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-collections</artifactId>
+            <version>r03</version>
+        </dependency>
+
+        <!-- Unit Testing Library -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <!-- Source Directories -->
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+
+        <!-- Resource Directories -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
+
+        <plugins>
+
+            <!-- Specify the Java language level -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.2</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+
+            </plugin>
+
+            <!-- Use Ant to run JFlex and CUP (to generate sources) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+
+                <executions>
+                    <execution>
+                        <id>default-cli</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef name="cup"
+                                         classname="ldf.java_cup.anttask.CUPTask"
+                                         classpath="bin/ldf-java_cup-cc.jar"/>
+
+                                <taskdef name="jflex"
+                                         classname="jflex.anttask.JFlexTask"
+                                         classpath="bin/jflex-1.6.0.jar"/>
+
+                                <cup
+                                        srcfile="${src_cup.dir}/Parser.cup"
+                                        interface="on"
+                                        destdir="${gen_cup.dir}"
+                                        parser="Parser"
+                                        expect="150"
+                                        symbols="sym"
+                                        quiet="false"
+                                        nonterms="true"
+                                        nopositions="false"/>
+
+                                <jflex
+                                        file="${src_flex.dir}/Lexer.flex"
+                                        destdir="${gen_flex.dir}"/>
+
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Add the generated sources to the classpath -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>add-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${gen_cup.dir}</source>
+                                <source>${gen_flex.dir}</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- JavaDoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.1</version>
+                <configuration>
+                    <failOnError>false</failOnError>
+                    <show>protected</show>
+                    <nohelp>true</nohelp>
+                </configuration>
+            </plugin>
+
+            <!-- Make this jar executable and include dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>create-my-bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${project.name}</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>
+                                        mini_camel.ConsoleMain
+                                    </mainClass>
+                                    <addDefaultSpecificationEntries>
+                                        true
+                                    </addDefaultSpecificationEntries>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>
+                                    jar-with-dependencies
+                                </descriptorRef>
+                            </descriptorRefs>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>

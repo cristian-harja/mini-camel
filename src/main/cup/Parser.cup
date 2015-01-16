@@ -1,0 +1,229 @@
+package mini_camel.gen;
+
+import mini_camel.Pair;
+import mini_camel.ast.*;
+import mini_camel.comp.MyCompiler;
+import mini_camel.type.*;
+
+import ldf.java_cup.runtime.Symbol;
+import java.util.*;
+
+parser code {:
+
+    private MyCompiler comp;
+
+    public Parser(
+            MyCompiler comp,
+            ldf.java_cup.runtime.SymbolFactory sf,
+            ldf.java_cup.runtime.Scanner s
+    ) {
+        this(s, sf);
+        this.comp = comp;
+    }
+
+    @Override
+    public void syntax_error(ldf.java_cup.runtime.Symbol curToken) {
+        if (comp != null) {
+            comp.parseError(curToken);
+            return;
+        }
+        super.syntax_error(curToken);
+    }
+
+:}
+
+terminal Boolean BOOL;
+
+terminal Integer INT;
+terminal Float FLOAT;
+terminal Id IDENT;
+terminal NOT, MINUS, PLUS, MINUS_DOT, PLUS_DOT, AST_DOT, SLASH_DOT, EQUAL,
+ LESS_GREATER, LESS_EQUAL, GREATER_EQUAL, LESS, GREATER, IF, THEN, ELSE,
+ LET, IN, REC, COMMA, ARRAY_CREATE, DOT, LESS_MINUS, SEMICOLON, LPAREN, RPAREN;
+terminal prec_let, prec_if, prec_unary_minus, prec_app;
+
+non terminal List<AstExp> elems;
+non terminal List<AstExp> actual_args;
+non terminal List<Id> formal_args;
+non terminal Pair<List<Id>, List<Type>>  pat;
+non terminal AstFunDef fundef;
+non terminal AstExp simple_exp;
+non terminal AstExp exp;
+
+precedence right prec_let;
+precedence right SEMICOLON;
+precedence right prec_if;
+precedence right LESS_MINUS;
+precedence left  COMMA;
+precedence left  EQUAL, LESS_GREATER, LESS, GREATER, LESS_EQUAL, GREATER_EQUAL;
+precedence left  PLUS, MINUS, PLUS_DOT, MINUS_DOT;
+precedence left  AST_DOT, SLASH_DOT;
+precedence right prec_unary_minus;
+precedence left  prec_app;
+precedence left  DOT;
+
+precedence nonassoc INT, FLOAT, IDENT, LPAREN;
+
+start with exp;
+
+simple_exp
+  ::= LPAREN exp:e RPAREN {: RESULT = e; :}
+  |   LPAREN RPAREN {: RESULT = new AstUnit(); :}
+  |   BOOL:b        {: RESULT = new AstBool(b); :}
+  |   INT:i         {: RESULT = new AstInt(i); :}
+  |   FLOAT:f       {: RESULT = new AstFloat(f); :}
+  |   IDENT:id      {: RESULT = new AstVar(id); :}
+  |   simple_exp:e1 DOT LPAREN exp:e2 RPAREN
+      {:  RESULT = new AstGet(e1, e2);  :}
+;
+
+exp
+  ::= simple_exp:e          {: RESULT = e; :}
+  |   NOT exp:e             {: RESULT = new AstNot(e); :}
+      %prec prec_app
+
+  |   MINUS exp:e
+      {:
+        if (e instanceof AstFloat) {
+          RESULT = new AstFloat(-((AstFloat) e).f);
+        } else {
+          RESULT = new AstNeg(e);
+        }
+      :}
+      %prec prec_unary_minus
+
+  |   exp:e1 PLUS exp:e2
+      {:  RESULT = new AstAdd(e1, e2); :}
+
+  |   exp:e1 MINUS exp:e2
+      {:  RESULT = new AstSub(e1, e2); :}
+
+  |   exp:e1 EQUAL exp:e2
+      {: RESULT = new AstEq(e1, e2); :}
+
+  |   exp:e1 LESS_GREATER exp:e2
+      {: RESULT = new AstNot(new AstEq(e1, e2)); :}
+
+  |   exp:e1 LESS exp:e2
+      {: RESULT = new AstNot(new AstLE(e2, e1)); :}
+
+  |   exp:e1 GREATER exp:e2
+      {: RESULT = new AstNot(new AstLE(e1, e2)); :}
+
+  |   exp:e1 LESS_EQUAL exp:e2
+      {: RESULT = new AstLE(e1, e2); :}
+
+  |   exp:e1 GREATER_EQUAL exp:e2
+      {: RESULT = new AstLE(e2, e1); :}
+
+  |   IF exp:e1 THEN exp:e2 ELSE exp:e3
+      {: RESULT = new AstIf(e1, e2, e3); :}
+      %prec prec_if
+
+  |   MINUS_DOT exp:e
+      {: RESULT = new AstFNeg(e); :}
+      %prec prec_unary_minus
+
+  |   exp:e1 PLUS_DOT exp:e2
+      {: RESULT = new AstFAdd(e1, e2); :}
+
+  |   exp:e1 MINUS_DOT exp:e2
+      {: RESULT = new AstFSub(e1, e2); :}
+
+  |   exp:e1 AST_DOT exp:e2
+      {: RESULT = new AstFMul(e1, e2); :}
+
+  |   exp:e1 SLASH_DOT exp:e2
+      {: RESULT = new AstFDiv(e1, e2); :}
+
+  |   LET IDENT:id EQUAL exp:e1 IN exp:e2
+      {: RESULT = new AstLet(id, Type.gen(), e1, e2); :}
+      %prec prec_let
+
+  |   LET REC fundef:fd IN exp:e
+      {: RESULT = new AstLetRec(fd,  e); :}
+      %prec prec_let
+
+  |   exp:e actual_args:es
+      {: RESULT = new AstApp(e, es); :}
+      %prec prec_app
+
+  |   elems:es
+      {: RESULT = new AstTuple(es); :}
+
+  |   LET LPAREN pat:p RPAREN EQUAL exp:e1 IN exp:e2
+      {: RESULT = new AstLetTuple(p.left, p.right, e1, e2); :}
+
+  |   simple_exp:e1 DOT LPAREN exp:e2 RPAREN LESS_MINUS exp:e3
+      {: RESULT = new AstPut(e1, e2, e3); :}
+
+  |   exp:e1 SEMICOLON exp:e2
+      {: RESULT = new AstLet(Id.gen(), TUnit.INSTANCE, e1, e2); :}
+
+  |   ARRAY_CREATE simple_exp:e1 simple_exp:e2
+      {: RESULT = new AstArray(e1, e2); :}
+      %prec prec_app
+
+  |   error
+      {: RESULT = new AstErr(); :}
+;
+
+fundef
+  ::= IDENT:name formal_args:args EQUAL exp:e
+      {: RESULT = new AstFunDef(name, args, e); :}
+;
+
+formal_args
+  ::= IDENT:id formal_args:args
+      {: args.add(0, id); RESULT = args; :}
+
+  |   IDENT:id
+      {:
+        List l = new LinkedList<Id>();
+        l.add(0, id);
+        RESULT = l;
+      :}
+;
+
+actual_args
+  ::= actual_args:es simple_exp:e
+      {: es.add(e); RESULT = es; :}
+      %prec prec_app
+
+  |   simple_exp:e
+      {:
+        List l = new LinkedList<AstExp>();
+        l.add(0, e);
+        RESULT = l;
+      :}
+      %prec prec_app
+;
+
+elems
+  ::= elems:es COMMA exp:e
+      {: es.add(e); RESULT = es; :}
+
+  |   exp:e1 COMMA exp:e2
+      {:
+        List l = new LinkedList<AstExp>();
+        l.add(0, e2);
+        l.add(0, e1);
+        RESULT = l;
+      :}
+;
+
+pat
+  ::= pat:is COMMA IDENT:i
+      {: is.left.add(i); is.right.add(Type.gen()); RESULT = is; :}
+
+  |   IDENT:i1 COMMA IDENT:i2
+      {:
+        List<Id> l = new LinkedList<Id>();
+        List<Type> t = new LinkedList<Type>(); 
+        t.add(0, Type.gen());
+        t.add(0, Type.gen());
+        l.add(0, i2); 
+        l.add(0, i1);
+        RESULT = new Pair<List<Id>, List<Type>>(l, t);
+      :}
+;
