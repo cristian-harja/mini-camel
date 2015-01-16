@@ -1,31 +1,30 @@
 package mini_camel.ir;
 
+import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by yassine on 1/13/15.
- */
 public class FunDef
 {
-    public final Var f;
+    public final Label name;
     public final List<Var> args;
+    public final List<Var> locals;
     public final List<Instr> body;
 
-
-    public FunDef(Var name, List<Var> l, List<Instr> body)
-    {
-        f = name;
-        args = l;
-        this.body = body;
+    public FunDef(
+            Label name,
+            List<Var> args,
+            List<Var> locals,
+            List<Instr> body
+    ) {
+        this.name = name;
+        this.args = Collections.unmodifiableList(args);
+        this.locals = Collections.unmodifiableList(locals);
+        this.body = Collections.unmodifiableList(body);
     }
-
-    public void addArg(Var v) {args.add(v);}
-
-    public void addOp(Operation op) {body.add(op);}
 
     @Override
     public String toString() {
-        return f.toString() + "(" + args + ")";
+        return name.toString() + "(" + args + ")";
     }
 
 }

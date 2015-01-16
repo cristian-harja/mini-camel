@@ -2,9 +2,6 @@ package mini_camel.ir;
 
 import java.util.List;
 
-/**
- * Created by lina on 1/14/15.
- */
 public class Call extends Instr {
     private String name;
     private List<Op> args;

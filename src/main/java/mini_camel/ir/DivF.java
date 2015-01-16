@@ -1,9 +1,6 @@
 package mini_camel.ir;
 
-/**
- * Created by lina and Yassine on 1/12/15.
- */
-public class DivF extends Operation
+public class DivF extends Instr
 {
     Var var;
     Op op1;

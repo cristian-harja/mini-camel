@@ -3,9 +3,6 @@ package mini_camel.ir;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by lina on 1/13/15.
- */
 public class Couple {
 
     private List<Instr> code;

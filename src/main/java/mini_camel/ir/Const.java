@@ -1,10 +1,5 @@
 package mini_camel.ir;
 
-import mini_camel.ir.Op;
-
-/**
- * Created by lina on 1/12/15.
- */
 public class Const extends Op
 {
     String constType;

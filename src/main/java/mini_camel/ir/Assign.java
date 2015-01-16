@@ -1,15 +1,10 @@
 package mini_camel.ir;
 
-/**
- * Created by lina on 1/13/15.
- */
-public class Assign extends Operation
-{
+public class Assign extends Instr {
     Var leq;
     Op op;
 
-    public Assign(Var v, Op o)
-    {
+    public Assign(Var v, Op o) {
         leq = v;
         op = o;
     }
@@ -19,9 +14,13 @@ public class Assign extends Operation
         return Type.ASSIGN;
     }
 
-    public Var getVar(){return leq;}
+    public Var getVar() {
+        return leq;
+    }
 
-    public Op getOp(){return op;}
+    public Op getOp() {
+        return op;
+    }
 
     @Override
     public String toString() {

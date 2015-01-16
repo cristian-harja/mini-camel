@@ -18,7 +18,7 @@ public class TestAssemblyCode {
 
         c.codeGeneration();
 
-        //c.outputIR(System.out);
+        c.outputIR(System.out);
 
 
         c.outputAssembly(System.out);
