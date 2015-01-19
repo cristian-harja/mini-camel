@@ -1,4 +1,6 @@
-package mini_camel.ir;
+package mini_camel.ir.instr;
+
+import mini_camel.ir.op.Var;
 
 import java.util.ArrayList;
 import java.util.List;
