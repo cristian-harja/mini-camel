@@ -1,4 +1,4 @@
-package mini_camel.ir;
+package mini_camel.ir.op;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;

@@ -1,4 +1,4 @@
-package mini_camel.ir;
+package mini_camel.ir.instr;
 
 public interface Instr  {
 

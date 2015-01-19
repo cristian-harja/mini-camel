@@ -1,14 +1,17 @@
-package mini_camel.ir;
+package mini_camel.ir.instr;
+
+import mini_camel.ir.op.Operand;
+import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public final class SubI implements Instr {
+public final class MultF implements Instr {
     public final Var var;
     public final Operand op1, op2;
 
-    public SubI(
+    public MultF(
             @Nonnull Var v,
             @Nonnull Operand operand1,
             @Nonnull Operand operand2
@@ -20,11 +23,12 @@ public final class SubI implements Instr {
 
     @Override
     public Type getInstrType() {
-        return Type.SUB_I;
+        return Type.MUL_F;
     }
 
     @Override
     public String toString() {
-        return var + " := " + op1 + " - " + op2;
+        return var + " := " + op1 + " *. " + op2;
     }
+
 }

@@ -1,9 +1,7 @@
 package mini_camel.ast;
 
 
-import mini_camel.ir.Couple;
-
-import javax.annotation.Nonnull;
+import mini_camel.ir.instr.Couple;
 
 /**
  * A implementation of the "visitor" pattern for AST nodes, using generics.

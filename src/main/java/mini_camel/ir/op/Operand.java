@@ -1,4 +1,4 @@
-package mini_camel.ir;
+package mini_camel.ir.op;
 
 public interface Operand {
     enum Type {

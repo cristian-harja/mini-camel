@@ -8,8 +8,8 @@ import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
-import mini_camel.ir.FunDef;
-import mini_camel.ir.Instr;
+import mini_camel.ir.Function;
+import mini_camel.ir.instr.Instr;
 import mini_camel.transform.AlphaConv;
 import mini_camel.transform.BetaReduc;
 import mini_camel.transform.ConstantFold;
@@ -27,7 +27,7 @@ public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
-    private List<FunDef> funDefs;
+    private List<Function> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
 
@@ -193,7 +193,7 @@ public class MyCompiler {
     }
 
     public void outputIR(PrintStream out) {
-        for(FunDef fd : funDefs){
+        for(Function fd : funDefs){
             out.println("# Function: " + fd.name.name);
             out.println("# Arguments: " + fd.args);
             out.println("# Locals: " + fd.locals);

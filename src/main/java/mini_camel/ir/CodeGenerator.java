@@ -2,6 +2,12 @@ package mini_camel.ir;
 
 import mini_camel.Pair;
 import mini_camel.ast.*;
+import mini_camel.ir.instr.*;
+import mini_camel.ir.instr.Compare;
+import mini_camel.ir.op.ConstFloat;
+import mini_camel.ir.op.ConstInt;
+import mini_camel.ir.op.Operand;
+import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -44,9 +50,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         result = e.accept(this, null);
     }
 
-    public static List<FunDef> generateIR(AstExp root, String mainFunName) {
+    public static List<Function> generateIR(AstExp root, String mainFunName) {
         HashSet<String> compiled = new LinkedHashSet<>();
-        List<FunDef> functions = new LinkedList<>();
+        List<Function> functions = new LinkedList<>();
         Queue<AstFunDef> pending = new LinkedList<>();
         List<Var> args = Collections.emptyList();
         CodeGenerator cg;
@@ -60,7 +66,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
             List<Instr> body = cg.getCode();
             body.add(new Ret(cg.getVar())); // fixme
 
-            functions.add(new FunDef(
+            functions.add(new Function(
                     new Label(name),
                     args,
                     cg.getLocals(),
@@ -275,7 +281,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple cou2 = recursiveVisit(e.e2);
 
         l.addAll(cou1.getInstr());
-        l.add(new Assign(new Var(e.id.id), cou1.getVar()));
+        Var v = new Var(e.id.id);
+        l.add(new Assign(v, cou1.getVar()));
+        locals.add(v);
         l.addAll(cou2.getInstr());
 
         return new Couple(l, cou2.getVar());

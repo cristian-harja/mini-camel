@@ -1,10 +1,10 @@
 package mini_camel.comp;
 
 
-import mini_camel.ir.*;
-import mini_camel.ir.ConstInt;
-import mini_camel.ir.Operand;
-import mini_camel.ir.Var;
+import mini_camel.ir.Function;
+import mini_camel.ir.instr.Label;
+import mini_camel.ir.instr.*;
+import mini_camel.ir.op.*;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
@@ -48,13 +48,13 @@ public class AssemblyGenerator {
         registers = new boolean[13];
     }
 
-    public void generateAssembly(List<FunDef> functions) {
-        for (FunDef fd : functions) {
+    public void generateAssembly(List<Function> functions) {
+        for (Function fd : functions) {
             generateAssembly(fd);
         }
     }
 
-    private void generateAssembly(FunDef funDef) {
+    private void generateAssembly(Function funDef) {
         int i, n;
         List<Var> args = funDef.args;
         List<Var> locals = funDef.locals;

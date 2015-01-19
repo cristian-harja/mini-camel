@@ -1,23 +1,23 @@
-package mini_camel.ir;
+package mini_camel.ir.instr;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public final class BranchLe implements Instr {
+public final class BranchEq implements Instr {
     public final Label label;
 
-    public BranchLe(@Nonnull Label l) {
+    public BranchEq(@Nonnull Label l) {
         label = l;
     }
 
     @Override
     public Type getInstrType() {
-        return Type.BLE;
+        return Type.BEQ;
     }
 
     @Override
     public String toString() {
-        return "BLE " + label.name;
+        return "BEQ " + label.name;
     }
 }
