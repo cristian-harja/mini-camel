@@ -19,11 +19,11 @@ public class Compare extends Instr {
 
     @Override
     public Type getType() {
-        return null;
+        return Type.CMP;
     }
 
     @Override
     public String toString() {
-        return null;
+        return "CMP " + op1.toString() + " " + op2.toString();
     }
 }
