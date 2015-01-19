@@ -1,27 +1,23 @@
 package mini_camel.ir;
 
-public class Var extends Op
-{
-    public String varName;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public Var (String varName){this.varName = varName;}
+@Immutable
+public final class Var implements Operand {
+    public final String name;
 
-    public void printInfo()
-    {
-        System.out.println("Variable value : "+varName);
+    public Var(@Nonnull String name) {
+        this.name = name;
     }
 
     @Override
-    public Type getType() {
+    public Type getOperandType() {
         return Type.VAR;
-    }
-
-    public String getName(){
-        return varName;
     }
 
     @Override
     public String toString() {
-        return varName;
+        return name;
     }
 }

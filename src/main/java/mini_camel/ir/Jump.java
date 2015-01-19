@@ -1,23 +1,23 @@
 package mini_camel.ir;
 
-public class Jump extends Instr {
-    private Label label;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public Jump(Label l) {
+@Immutable
+public final class Jump implements Instr {
+    public final Label label;
+
+    public Jump(@Nonnull Label l) {
         label = l;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.JUMP;
     }
 
     @Override
     public String toString() {
-        return "JMP " + label.getName();
-    }
-
-    public Label getLabel() {
-        return label;
+        return "JMP " + label.name;
     }
 }

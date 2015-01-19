@@ -22,7 +22,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public CodeGenerator() {
     }
 
-    public Op getVar() {
+    public Operand getVar() {
         return result.getVar();
     }
 
@@ -116,7 +116,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public Couple visit(Branches b, @Nonnull AstInt e) {
         Var v = genVar();
         List<Instr> l = new ArrayList<>();
-        l.add(new Assign(v, new Const(e.i)));
+        l.add(new Assign(v, new ConstInt(e.i)));
         return new Couple(l, v);
     }
 
@@ -124,7 +124,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public Couple visit(Branches b, @Nonnull AstFloat e) {
         Var v = genVar();
         List<Instr> l = new ArrayList<>();
-        l.add(new Assign(v, new Const(e.f)));
+        l.add(new Assign(v, new ConstFloat(e.f)));
         return new Couple(l, v);
     }
 
@@ -137,7 +137,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         List<Instr> l = new ArrayList<>();
         Couple c = e.e.accept(this, null);
         l.addAll(c.getInstr());
-        l.add(new SubI(v, new Const(0), c.getVar()));
+        l.add(new SubI(v, new ConstInt(0), c.getVar()));
         return new Couple(l, v);
     }
 
@@ -168,7 +168,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         List<Instr> l = new ArrayList<>();
         Couple c = e.e.accept(this, null);
         l.addAll(c.getInstr());
-        l.add(new SubF(v, new Const(0.0), c.getVar()));
+        l.add(new SubF(v, new ConstFloat(0.0f), c.getVar()));
         return new Couple(l, v);
     }
 
@@ -292,7 +292,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     public Couple visit(Branches b, @Nonnull AstApp e) {
         List<Instr> code = new LinkedList<>();
-        List<Op> args = new LinkedList<>();
+        List<Operand> args = new LinkedList<>();
 
         for (AstExp arg : e.es) {
             Couple argCode = arg.accept(this, null);
@@ -304,7 +304,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple fCode = e.e.accept(this, null);
 
         code.addAll(fCode.getInstr());
-        code.add(new Call(fCode.getVar().varName, args));
+        code.add(new Call(fCode.getVar().name, args));
 
         return new Couple(code, new Var("ret"));
     }

@@ -2,6 +2,9 @@ package mini_camel.comp;
 
 
 import mini_camel.ir.*;
+import mini_camel.ir.ConstInt;
+import mini_camel.ir.Operand;
+import mini_camel.ir.Var;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
@@ -67,7 +70,7 @@ public class AssemblyGenerator {
         if (n > 0) {
             text.append("\n\t@ arguments");
             for (i = 0; i < n; i++) {
-                varName = args.get(i).getName();
+                varName = args.get(i).name;
                 varOffset = 4 * i + 8;
                 text.append("\n\t@   ").append(varName);
                 text.append(" -> ").append(FP_REG);
@@ -83,7 +86,7 @@ public class AssemblyGenerator {
         if (n > 0) {
             text.append("\n\t@ local variables");
             for (i = 0, n = locals.size(); i < n; i++) {
-                varName = locals.get(i).getName();
+                varName = locals.get(i).name;
                 varOffset = 4 * i + 4; // negative offset
                 text.append("\n\t@   ").append(varName);
                 text.append(" -> ").append(FP_REG);
@@ -109,7 +112,7 @@ public class AssemblyGenerator {
 
         // Body of the function
         for (Instr instr : funDef.body) {
-            Instr.Type t = instr.getType();
+            Instr.Type t = instr.getInstrType();
             if (t != Instr.Type.LABEL) {
                 text.append("\n\n\t@ ").append(instr.toString());
             }
@@ -147,13 +150,12 @@ public class AssemblyGenerator {
                     break;
 
                 default:
-                    text.append("\nDEFAULT GLAG\n");
-
-                    /*throw new RuntimeException(
-                            "Generating assembly for " + instr.getType() +
+                    throw new RuntimeException(
+                            "Generating assembly for " +
+                                    instr.getInstrType() +
                                     " instructions not supported yet (" +
                                     instr.toString() + ")."
-                    );*/
+                    );
             }
         }
 
@@ -170,60 +172,73 @@ public class AssemblyGenerator {
         text.append('\n');
     }
 
-    private String locateVar(StringBuilder sb, String name) {
+    private String locateVar(
+            @Nonnull StringBuilder out_sb,
+            @Nonnull String name
+    ) {
         Integer offset = varOffsets.get(name);
         if (offset == null) {
-            text.append("\nGLAG\n");
-            /*throw new RuntimeException(
+            throw new RuntimeException(
                     "Sorry, dynamic links & closures not supported yet."
-            );*/
+            );
         }
-        sb.append("[").append(FP_REG).append(", #");
-        text.append((int) offset).append("]");
-        return sb.toString();
+        out_sb.append("[").append(FP_REG).append(", #");
+        text.append(offset).append("]");
+        return out_sb.toString();
     }
 
-    private void emitAssign(Var v, Op op) {
+    private void emitAssign(@Nonnull Var v, @Nonnull Operand op) {
         emitAssign("r0", op);
         emitAssign(v, "r0");
     }
 
-    private void emitAssign(Var v, String register) {
-        if (v.getName().equals(RET_VAR.getName())) {
+    private void emitAssign(@Nonnull Var v, @Nonnull String register) {
+        if (v.name.equals(RET_VAR.name)) {
             text.append("\n\tLDR r0, =ret");
             text.append("\n\tSTR ").append(register).append(", [r0]");
             return;
         }
         text.append("\n\tSTR ").append(register).append(", ");
-        locateVar(text, v.getName());
+        locateVar(text, v.name);
     }
 
-    private void emitAssign(String register, Op op) {
-        if (op instanceof Const) {
-            if (!((Const) op).getConstType().equals("int")) {
+    private void emitAssign(@Nonnull String register, @Nonnull Operand op) {
+        switch (op.getOperandType()) {
+            case CONST_INT:
+                text.append("\n\tLDR ").append(register);
+                text.append(", =").append(((ConstInt) op).value);
+                return;
+
+            case CONST_FLOAT:
+                // TODO: floats
                 throw new RuntimeException(
                         "floating point constants not supported yet."
                 );
-            }
 
-            text.append("\n\tMOV ").append(register);
-            text.append(", #").append(((Const) op).getValueI());
-            return;
-        }
-        if (op instanceof Var) {
-            String varName = ((Var) op).getName();
-            if (varName.equals(RET_VAR.getName())) {
-                // fixme
-                text.append("\n\tLDR r0, =ret");
-                text.append("\n\tLDR ").append(register).append(", [r0]");
+            case LABEL:
+                text.append("\n\tLDR ").append(register);
+                text.append(", =").append(((Label)op).name);
                 return;
-            }
-            text.append("\n\tLDR ").append(register).append(", ");
-            locateVar(text, varName);
+
+            case VAR:
+                String varName = ((Var) op).name;
+                if (varName.equals(RET_VAR.name)) {
+                    // fixme
+                    text.append("\n\tLDR r0, =ret");
+                    text.append("\n\tLDR ").append(register).append(", [r0]");
+                    return;
+                }
+                text.append("\n\tLDR ").append(register).append(", ");
+                locateVar(text, varName);
         }
     }
 
-    private void genBinaryOp(String mnemonic, Var var, Op op1, Op op2) {
+    private void genBinaryOp(
+            @Nonnull String mnemonic,
+            @Nonnull Var var,
+            @Nonnull Operand op1,
+            @Nonnull Operand op2
+    ) {
         emitAssign("r1", op1); // r1 <- op1
         emitAssign("r2", op2); // r2 <- op2
 
@@ -234,23 +249,23 @@ public class AssemblyGenerator {
     }
 
     private void genLabel(@Nonnull Label i) {
-        text.append("\n").append(i.getName() + ":");
+        text.append("\n").append(i.name).append(":");
     }
 
-    private void genCall(Call instr) {
-        String name = instr.getName();
+    private void genCall(@Nonnull Call instr) {
+        String name = instr.name;
         String newName = IMPORTS.get(name);
         if (newName != null) name = newName;
 
         // EXCEPTION: print_int
         if (name.equals("min_caml_print_int")) {
-            emitAssign("r0", instr.getArgs().get(0)); // r0 <- only argument
+            emitAssign("r0", instr.args.get(0)); // r0 <- only argument
             text.append("\n\tBL ").append(name); // just call
 
             return;
         }
 
-        List<Op> args = instr.getArgs();
+        List<Operand> args = instr.args;
         for (int i = args.size() - 1; i >= 0; i--) {
             text.append("\n\t@ push argument ").append(i);
             text.append("\n\tSUB sp, #4");
@@ -261,51 +276,52 @@ public class AssemblyGenerator {
         text.append("\n\t@ call, then free stack");
         text.append("\n\tBL ").append(name);
 
-        int popSize = 4 * instr.getArgs().size();
+        int popSize = 4 * instr.args.size();
         text.append("\n\tADD sp, #").append(Integer.toString(popSize));
         text.append("\n\t@ end call");
     }
 
-    private void genAssign(Assign i) {
-        emitAssign(i.getVar(), i.getOp()); // r0 <- op
+    private void genAssign(@Nonnull Assign i) {
+        emitAssign(i.var, i.op); // r0 <- op
     }
 
-    private void genAddI(AddI i) {
-        genBinaryOp("ADD", i.getVar(), i.getOp1(), i.getOp2());
+    private void genAddI(@Nonnull AddI i) {
+        genBinaryOp("ADD", i.var, i.op1, i.op2);
     }
 
-    private void genSubI(SubI i) {
-        genBinaryOp("SUB", i.getVar(), i.getOp1(), i.getOp2());
+    private void genSubI(@Nonnull SubI i) {
+        genBinaryOp("SUB", i.var, i.op1, i.op2);
     }
 
-    private void genCmp(Compare i) {
-        emitAssign("r1", i.getOp1()); // r1 <- op1
-        emitAssign("r2", i.getOp2()); // r2 <- op2
+    private void genCmp(@Nonnull Compare i) {
+        emitAssign("r1", i.op1); // r1 <- op1
+        emitAssign("r2", i.op2); // r2 <- op2
 
         text.append("\n\tCMP r1, r2");
     }
 
 
-    private void genBle(BranchLe i) {
-        text.append("\n\tBLE ").append(i.getLabel().getName());
+    private void genBle(@Nonnull BranchLe i) {
+        text.append("\n\tBLE ").append(i.label.name);
     }
 
 
-    private void genBeq(BranchEq i) {
-        text.append("\n\tBEQ ").append(i.getLabel().getName());
+    private void genBeq(@Nonnull BranchEq i) {
+        text.append("\n\tBEQ ").append(i.label.name);
     }
 
 
-    private void genJump(Jump i) {
-        text.append("\n\tBAL ").append(i.getLabel().getName());
+    private void genJump(@Nonnull Jump i) {
+        text.append("\n\tBAL ").append(i.label.name);
     }
 
-    private void genReturn(Ret i) {
-        emitAssign("r11", i.getOperand());
+    private void genReturn(@Nonnull Ret i) {
+        if (i.op == null) return;
+        emitAssign("r11", i.op);
         emitAssign(RET_VAR, "r11"); // fixme
     }
 
-    public void writeAssembly(PrintStream out) {
+    public void writeAssembly(@Nonnull PrintStream out) {
         //footer for .text section and printing everything in the output_file
         if (data.length() > 7) {
             out.println(data.toString());

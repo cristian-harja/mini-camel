@@ -1,30 +1,26 @@
 package mini_camel.ir;
 
-public class Assign extends Instr {
-    Var leq;
-    Op op;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public Assign(Var v, Op o) {
-        leq = v;
+@Immutable
+public final class Assign implements Instr {
+    public final Var var;
+    public final Operand op;
+
+    public Assign(@Nonnull Var v, @Nonnull Operand o) {
+        var = v;
         op = o;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.ASSIGN;
-    }
-
-    public Var getVar() {
-        return leq;
-    }
-
-    public Op getOp() {
-        return op;
     }
 
     @Override
     public String toString() {
-        return leq + " := " + op;
+        return var + " := " + op;
     }
 
 

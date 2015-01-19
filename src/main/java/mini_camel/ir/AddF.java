@@ -1,35 +1,30 @@
 package mini_camel.ir;
 
-public class AddF extends Instr {
-    Var var;
-    Op op1;
-    Op op2;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public AddF(Var v, Op operand1, Op operand2) {
-        this.var = v;
-        this.op1 = operand1;
-        this.op2 = operand2;
+@Immutable
+public final class AddF implements Instr {
+    public final Var var;
+    public final Operand op1, op2;
+
+    public AddF(
+            @Nonnull Var v,
+            @Nonnull Operand operand1,
+            @Nonnull Operand operand2
+    ) {
+        var = v;
+        op1 = operand1;
+        op2 = operand2;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.ADD_F;
     }
 
     @Override
     public String toString() {
         return var + " := " + op1 + " +. " + op2;
-    }
-
-    public Var getVar() {
-        return var;
-    }
-
-    public Op getOp1() {
-        return op1;
-    }
-
-    public Op getOp2() {
-        return op2;
     }
 }

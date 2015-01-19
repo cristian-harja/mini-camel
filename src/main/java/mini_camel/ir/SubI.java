@@ -1,35 +1,30 @@
 package mini_camel.ir;
 
-public class SubI extends Instr {
-    private Var var;
-    private Op op1;
-    private Op op2;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public SubI(Var v, Op operand1, Op operand2) {
-        this.var = v;
-        this.op1 = operand1;
-        this.op2 = operand2;
+@Immutable
+public final class SubI implements Instr {
+    public final Var var;
+    public final Operand op1, op2;
+
+    public SubI(
+            @Nonnull Var v,
+            @Nonnull Operand operand1,
+            @Nonnull Operand operand2
+    ) {
+        var = v;
+        op1 = operand1;
+        op2 = operand2;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.SUB_I;
     }
 
     @Override
     public String toString() {
         return var + " := " + op1 + " - " + op2;
-    }
-
-    public Var getVar() {
-        return var;
-    }
-
-    public Op getOp1() {
-        return op1;
-    }
-
-    public Op getOp2() {
-        return op2;
     }
 }

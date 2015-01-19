@@ -17,10 +17,6 @@ public class Couple {
         var = t;
     }
 
-    public void addInstr(Instr i) {
-        code.add(i);
-    }
-
     public void setVar(Var v) {
         var = v;
     }
@@ -31,11 +27,6 @@ public class Couple {
 
     public Var getVar() {
         return var;
-    }
-
-    public void addListInstr(List<Instr> l) {
-        for (Instr i : code)
-            l.add(i);
     }
 
     public String toString() {

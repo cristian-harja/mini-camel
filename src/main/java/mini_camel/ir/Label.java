@@ -1,11 +1,16 @@
 package mini_camel.ir;
 
-public class Label extends Instr {
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
+
+@Immutable
+public final class Label implements Instr, Operand {
 
     private static int x = 0;
-    private String name;
 
-    public Label(String name) {
+    public final String name;
+
+    public Label(@Nonnull String name) {
         this.name = name;
     }
 
@@ -13,13 +18,14 @@ public class Label extends Instr {
         return new Label("l"+x++);
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public Instr.Type getInstrType() {
+        return Instr.Type.LABEL;
     }
 
     @Override
-    public Type getType() {
-        return Type.LABEL;
+    public Operand.Type getOperandType() {
+        return Operand.Type.LABEL;
     }
 
     @Override
