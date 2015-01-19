@@ -1,26 +1,26 @@
 package mini_camel.ir;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.CheckForNull;
+import javax.annotation.concurrent.Immutable;
 
-public class Ret extends Instr {
+@Immutable
+public final class Ret implements Instr {
 
-    Op operand;
+    @CheckForNull
+    public final Operand op;
 
-    public Ret(@Nonnull Op operand) {
-        this.operand = operand;
-    }
-
-    public Op getOperand() {
-        return operand;
+    public Ret(@Nullable Operand op) {
+        this.op = op;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.RETURN;
     }
 
     @Override
     public String toString() {
-        return "RET " + operand;
+        return "RET " + op;
     }
 }

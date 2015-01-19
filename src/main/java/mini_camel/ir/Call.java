@@ -1,39 +1,30 @@
 package mini_camel.ir;
 
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.List;
 
-public class Call extends Instr {
-    private String name;
-    private List<Op> args;
+@Immutable
+public final class Call implements Instr {
+    public final String name;
+    public final List<Operand> args;
 
-    public Call(String s, List<Op> l) {
+    public Call(
+            @Nonnull String s,
+            @Nonnull List<Operand> l
+    ) {
         name = s;
-        args = l;
+        args = Collections.unmodifiableList(l);
     }
-
-    public Call(String s) {
-        name = s;
-    }
-
-    public Call() {
-    }
-
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.CALL;
     }
 
     @Override
     public String toString() {
-        return "call " + name + args;
+        return "CALL " + name + args;
     }
 
-    public String getName() {
-        return name;
-    }
-
-
-    public List<Op> getArgs() {
-        return args;
-    }
 }

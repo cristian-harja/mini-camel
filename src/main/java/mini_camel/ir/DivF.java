@@ -1,16 +1,23 @@
 package mini_camel.ir;
 
-public class DivF extends Instr
-{
-    Var var;
-    Op op1;
-    Op op2;
+import javax.annotation.Nonnull;
 
-    public DivF(Var v, Op operand1, Op operand2)
-    { this.var = v; this.op1 = operand1; this.op2 = operand2;}
+public final class DivF implements Instr {
+    public final Var var;
+    public final Operand op1, op2;
+
+    public DivF(
+            @Nonnull Var v,
+            @Nonnull Operand operand1,
+            @Nonnull Operand operand2
+    ) {
+        var = v;
+        op1 = operand1;
+        op2 = operand2;
+    }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.DIV_F;
     }
 
@@ -19,15 +26,4 @@ public class DivF extends Instr
         return var + " := " + op1 + " /. " + op2;
     }
 
-    public Var getVar() {
-        return var;
-    }
-
-    public Op getOp1() {
-        return op1;
-    }
-
-    public Op getOp2() {
-        return op2;
-    }
 }

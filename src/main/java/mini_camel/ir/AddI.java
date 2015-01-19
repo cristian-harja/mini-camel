@@ -1,18 +1,25 @@
 package mini_camel.ir;
 
-public class AddI extends Instr {
-    Var var;
-    Op op1;
-    Op op2;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
-    public AddI(Var v, Op operand1, Op operand2) {
+@Immutable
+public final class AddI implements Instr {
+    public final Var var;
+    public final Operand op1, op2;
+
+    public AddI(
+            @Nonnull Var v,
+            @Nonnull Operand operand1,
+            @Nonnull Operand operand2
+    ) {
         this.var = v;
         this.op1 = operand1;
         this.op2 = operand2;
     }
 
     @Override
-    public Type getType() {
+    public Type getInstrType() {
         return Type.ADD_I;
     }
 
@@ -21,15 +28,4 @@ public class AddI extends Instr {
         return var + " := " + op1 + " + " + op2;
     }
 
-    public Var getVar() {
-        return var;
-    }
-
-    public Op getOp1() {
-        return op1;
-    }
-
-    public Op getOp2() {
-        return op2;
-    }
 }
