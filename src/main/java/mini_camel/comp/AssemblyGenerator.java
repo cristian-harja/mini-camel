@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public class AssemblyGenerator {
-    private static final Var RET_VAR = new Var("ret");
-
     StringBuilder data;
     StringBuilder text;
 
@@ -21,7 +19,8 @@ public class AssemblyGenerator {
 
     private Map<String, Integer> varOffsets;
 
-    private static final String FP_REG = "r7";
+    private static final String FP_REG = "r12";
+    private static final Var RET_VAR = new Var("ret");
 
     static {
         IMPORTS.put("print_newline", "min_caml_print_newline");
@@ -35,11 +34,11 @@ public class AssemblyGenerator {
         text = new StringBuilder();
 
         // TODO: use register for return value
-        data.append("\nret\t: .word @ ugly\n");
+        data.append("\nret\t: .word @ ugly");
 
         text.append("\n\t.text");
         text.append("\n\t.global _start");
-        text.append("\n\n_start:");
+        text.append("\n_start:");
         text.append("\n\tBL _main");
         text.append("\n\tBL min_caml_exit\n");
 
@@ -148,11 +147,13 @@ public class AssemblyGenerator {
                     break;
 
                 default:
-                    throw new RuntimeException(
+                    text.append("\nDEFAULT GLAG\n");
+
+                    /*throw new RuntimeException(
                             "Generating assembly for " + instr.getType() +
                                     " instructions not supported yet (" +
                                     instr.toString() + ")."
-                    );
+                    );*/
             }
         }
 
@@ -172,9 +173,10 @@ public class AssemblyGenerator {
     private String locateVar(StringBuilder sb, String name) {
         Integer offset = varOffsets.get(name);
         if (offset == null) {
-            throw new RuntimeException(
+            text.append("\nGLAG\n");
+            /*throw new RuntimeException(
                     "Sorry, dynamic links & closures not supported yet."
-            );
+            );*/
         }
         sb.append("[").append(FP_REG).append(", #");
         text.append((int) offset).append("]");
@@ -232,7 +234,7 @@ public class AssemblyGenerator {
     }
 
     private void genLabel(@Nonnull Label i) {
-        text.append("\n").append(i.getName()).append(":");
+        text.append("\n").append(i.getName() + ":");
     }
 
     private void genCall(Call instr) {
@@ -277,28 +279,30 @@ public class AssemblyGenerator {
     }
 
     private void genCmp(Compare i) {
-        Op op1 = i.getOp1(), op2 = i.getOp2();
-        text.append("\n\tCMP ").append(op1).append(", ").append(op2);
+        emitAssign("r1", i.getOp1()); // r1 <- op1
+        emitAssign("r2", i.getOp2()); // r2 <- op2
+
+        text.append("\n\tCMP r1, r2");
     }
 
 
     private void genBle(BranchLe i) {
-        text.append("\n\tBLE ").append(i.getLabel());
+        text.append("\n\tBLE ").append(i.getLabel().getName());
     }
 
 
     private void genBeq(BranchEq i) {
-        text.append("\n\tBEQ ").append(i.getLabel());
+        text.append("\n\tBEQ ").append(i.getLabel().getName());
     }
 
 
     private void genJump(Jump i) {
-        text.append("\n\tBAL ").append(i.getLabel());
+        text.append("\n\tBAL ").append(i.getLabel().getName());
     }
 
     private void genReturn(Ret i) {
-        emitAssign("r12", i.getOperand());
-        emitAssign(RET_VAR, "r12"); // fixme
+        emitAssign("r11", i.getOperand());
+        emitAssign(RET_VAR, "r11"); // fixme
     }
 
     public void writeAssembly(PrintStream out) {
