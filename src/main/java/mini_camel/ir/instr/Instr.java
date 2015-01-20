@@ -1,6 +1,6 @@
-package mini_camel.ir;
+package mini_camel.ir.instr;
 
-public abstract class Instr  {
+public interface Instr  {
 
     public static enum Type {
         ADD_I,  // int
@@ -19,7 +19,7 @@ public abstract class Instr  {
         RETURN  // return from function call
     }
 
-    public abstract Type getType();
-    public abstract String toString();
+    Type getInstrType();
+    String toString();
 
 }

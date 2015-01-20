@@ -2,7 +2,7 @@ package mini_camel.transform;
 
 import mini_camel.SymTable;
 import mini_camel.ast.*;
-import mini_camel.ir.Var;
+import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

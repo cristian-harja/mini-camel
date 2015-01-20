@@ -2,6 +2,12 @@ package mini_camel.ir;
 
 import mini_camel.Pair;
 import mini_camel.ast.*;
+import mini_camel.ir.instr.*;
+import mini_camel.ir.instr.Compare;
+import mini_camel.ir.op.ConstFloat;
+import mini_camel.ir.op.ConstInt;
+import mini_camel.ir.op.Operand;
+import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -22,7 +28,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public CodeGenerator() {
     }
 
-    public Op getVar() {
+    public Operand getVar() {
         return result.getVar();
     }
 
@@ -44,9 +50,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         result = e.accept(this, null);
     }
 
-    public static List<FunDef> generateIR(AstExp root, String mainFunName) {
+    public static List<Function> generateIR(AstExp root, String mainFunName) {
         HashSet<String> compiled = new LinkedHashSet<>();
-        List<FunDef> functions = new LinkedList<>();
+        List<Function> functions = new LinkedList<>();
         Queue<AstFunDef> pending = new LinkedList<>();
         List<Var> args = Collections.emptyList();
         CodeGenerator cg;
@@ -60,7 +66,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
             List<Instr> body = cg.getCode();
             body.add(new Ret(cg.getVar())); // fixme
 
-            functions.add(new FunDef(
+            functions.add(new Function(
                     new Label(name),
                     args,
                     cg.getLocals(),
@@ -116,7 +122,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public Couple visit(Branches b, @Nonnull AstInt e) {
         Var v = genVar();
         List<Instr> l = new ArrayList<>();
-        l.add(new Assign(v, new Const(e.i)));
+        l.add(new Assign(v, new ConstInt(e.i)));
         return new Couple(l, v);
     }
 
@@ -124,7 +130,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public Couple visit(Branches b, @Nonnull AstFloat e) {
         Var v = genVar();
         List<Instr> l = new ArrayList<>();
-        l.add(new Assign(v, new Const(e.f)));
+        l.add(new Assign(v, new ConstFloat(e.f)));
         return new Couple(l, v);
     }
 
@@ -137,7 +143,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         List<Instr> l = new ArrayList<>();
         Couple c = e.e.accept(this, null);
         l.addAll(c.getInstr());
-        l.add(new SubI(v, new Const(0), c.getVar()));
+        l.add(new SubI(v, new ConstInt(0), c.getVar()));
         return new Couple(l, v);
     }
 
@@ -168,7 +174,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         List<Instr> l = new ArrayList<>();
         Couple c = e.e.accept(this, null);
         l.addAll(c.getInstr());
-        l.add(new SubF(v, new Const(0.0), c.getVar()));
+        l.add(new SubF(v, new ConstFloat(0.0f), c.getVar()));
         return new Couple(l, v);
     }
 
@@ -275,7 +281,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple cou2 = recursiveVisit(e.e2);
 
         l.addAll(cou1.getInstr());
-        l.add(new Assign(new Var(e.id.id), cou1.getVar()));
+        Var v = new Var(e.id.id);
+        l.add(new Assign(v, cou1.getVar()));
+        locals.add(v);
         l.addAll(cou2.getInstr());
 
         return new Couple(l, cou2.getVar());
@@ -292,7 +300,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     public Couple visit(Branches b, @Nonnull AstApp e) {
         List<Instr> code = new LinkedList<>();
-        List<Op> args = new LinkedList<>();
+        List<Operand> args = new LinkedList<>();
 
         for (AstExp arg : e.es) {
             Couple argCode = arg.accept(this, null);
@@ -304,7 +312,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple fCode = e.e.accept(this, null);
 
         code.addAll(fCode.getInstr());
-        code.add(new Call(fCode.getVar().varName, args));
+        code.add(new Call(fCode.getVar().name, args));
 
         return new Couple(code, new Var("ret"));
     }
