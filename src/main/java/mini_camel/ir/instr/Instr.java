@@ -13,9 +13,7 @@ public interface Instr  {
         CALL,   // function call
         LABEL,  // label
         JUMP,   // unconditional branch
-        CMP,    // compare two values / registers
-        BEQ,    // branch if equal
-        BLE,    // branch if lesser than or equal
+        BRANCH, // branch (if equal / if less than or equal)
         RETURN  // return from function call
     }
 
