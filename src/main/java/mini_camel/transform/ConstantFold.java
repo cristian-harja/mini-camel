@@ -40,7 +40,10 @@ public class ConstantFold extends AstTransformHelper<ConstantFold.Ctx> {
         ctx.reMapping.push();
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
-            ctx.reMapping.put(old_id.id, new_e1);
+            if(new_e1 instanceof AstUnit || new_e1 instanceof AstVar || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
+                ctx.reMapping.put(old_id.id, new_e1);
+            }
+
             new_e2 = recursiveVisit(ctx, e.e2);
         }
         ctx.reMapping.pop();
