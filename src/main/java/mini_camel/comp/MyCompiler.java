@@ -10,9 +10,7 @@ import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.FunDef;
 import mini_camel.ir.Instr;
-import mini_camel.transform.AlphaConv;
-import mini_camel.transform.BetaReduc;
-import mini_camel.transform.ConstantFold;
+import mini_camel.transform.*;
 import mini_camel.type.Checker;
 import mini_camel.type.Type;
 
@@ -160,10 +158,21 @@ public class MyCompiler {
         transformedAst = cf.applyTransform(transformedAst);
     }
 
+    private void transformElimination() {
+        UnusedVar cff = new UnusedVar();
+        Set<String> unused = cff.applyTransform(transformedAst);
+
+        Elim cf = new Elim();
+        cf.applyTransform(transformedAst, unused);
+    }
+
     public boolean preProcessCode() {
+        System.out.println("ETAPE 1 : "+transformedAst.toString());
         transformAlphaConversion();
-        transformBetaReduction();
-        transformConstantFolding();
+        System.out.println("ETAPE 2 : "+transformedAst.toString());
+        /*transformBetaReduction();
+        transformConstantFolding();*/
+        transformElimination();
         return true;
     }
 
