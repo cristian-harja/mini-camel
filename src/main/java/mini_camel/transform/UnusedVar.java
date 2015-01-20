@@ -66,19 +66,7 @@ public class UnusedVar extends DummyVisitor {
 
     @Override
     public void visit(@Nonnull AstLetRec e) {
-
-    }
-
-
-    @Override
-    public void visit(@Nonnull AstFunDef e) {
-    }
-
-
-    @Override
-    public void visit(@Nonnull AstApp e) {
-    }
-
+        System.out.println("je suis unused"); e.e.accept(this); }
 
 
 }
