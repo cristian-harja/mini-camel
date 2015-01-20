@@ -2,7 +2,7 @@ package mini_camel.transform;
 
 import mini_camel.SymTable;
 import mini_camel.ast.*;
-import mini_camel.ir.Var;
+import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -40,12 +40,12 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
         for(String iterator : ctx.right)
         {
             System.out.println("Elements à droite : "+iterator.toString());
-        }*/
+        }
         ctx.left.removeAll(ctx.right);
         for(String iterator : ctx.left)
         {
             System.out.println("Unused : "+iterator.toString());
-        }
+        }*/
 
     }
 
@@ -55,7 +55,7 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
      */
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLet e) {
-        ctx.left.add(e.id.id);
+        //ctx.left.add(e.id.id);
         recursiveVisit(ctx, e.e1);
         recursiveVisit(ctx, e.e2);
         return null;
@@ -67,7 +67,7 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
      */
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstVar e) {
-        ctx.right.add(e.id.id);
+        //ctx.right.add(e.id.id);
         return null;
     }
 

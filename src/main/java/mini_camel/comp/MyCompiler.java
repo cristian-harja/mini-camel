@@ -8,9 +8,12 @@ import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
-import mini_camel.ir.FunDef;
-import mini_camel.ir.Instr;
 import mini_camel.transform.*;
+import mini_camel.ir.Function;
+import mini_camel.ir.instr.Instr;
+import mini_camel.transform.AlphaConv;
+import mini_camel.transform.BetaReduc;
+import mini_camel.transform.ConstantFold;
 import mini_camel.type.Checker;
 import mini_camel.type.Type;
 
@@ -25,7 +28,7 @@ public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
-    private List<FunDef> funDefs;
+    private List<Function> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
 
@@ -202,8 +205,8 @@ public class MyCompiler {
     }
 
     public void outputIR(PrintStream out) {
-        for(FunDef fd : funDefs){
-            out.println("# Function: " + fd.name.getName());
+        for(Function fd : funDefs){
+            out.println("# Function: " + fd.name.name);
             out.println("# Arguments: " + fd.args);
             out.println("# Locals: " + fd.locals);
             for (Instr i : fd.body) {
@@ -215,12 +218,10 @@ public class MyCompiler {
     }
 
     public void printErrors(PrintStream err) {
-        StringBuilder sb = new StringBuilder(200);
+        StringBuilder sb = new StringBuilder(1000);
         for (ErrMsg msg : messageLog) {
             sb.setLength(0);
-            sb.append('[');
-            sb.append(msg.type);
-            sb.append("]");
+            sb.append('[').append(msg.type).append("]");
 
             LocationAwareEntity loc = msg.loc;
             if (loc != null) {
@@ -232,17 +233,16 @@ public class MyCompiler {
                 sb.append(loc.getLineR());
                 sb.append(':');
                 sb.append(loc.getColumnR());
-                sb.append(")");
+                sb.append("):");
             }
 
-            sb.append(": ");
+            sb.append(' ');
             sb.append(msg.message);
             err.println(sb.toString());
 
-            if (msg.ex == null) {
-                continue;
+            if (msg.ex != null) {
+                msg.ex.printStackTrace(err);
             }
-            msg.ex.printStackTrace(err);
         }
     }
 
