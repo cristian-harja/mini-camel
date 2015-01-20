@@ -164,9 +164,13 @@ public class MyCompiler {
     private void transformElimination() {
         UnusedVar cff = new UnusedVar();
         Set<String> unused = cff.applyTransform(transformedAst);
-
+        for(String s : unused)
+        {
+            System.out.println("Unused : "+s);
+        }
         Elim cf = new Elim();
-        cf.applyTransform(transformedAst, unused);
+        transformedAst = cf.applyTransform(transformedAst, unused);
+        System.out.println("L'ast final est : "+transformedAst.toString());
     }
 
     public boolean preProcessCode() {

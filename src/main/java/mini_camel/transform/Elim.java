@@ -1,13 +1,9 @@
 package mini_camel.transform;
 
-import mini_camel.SymTable;
 import mini_camel.ast.*;
-import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,22 +26,10 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
      * @param astNode input AST
      * @return transformed AST
      */
-    public void applyTransform(@Nonnull AstExp astNode, @Nonnull Set<String> s) {
+    public AstExp applyTransform(@Nonnull AstExp astNode, @Nonnull Set<String> s) {
         Ctx ctx = new Ctx(s);
-        recursiveVisit(ctx, astNode);
-        /*for(String iterator : ctx.left)
-        {
-            System.out.println("Elements à gauche : "+iterator.toString());
-        }
-        for(String iterator : ctx.right)
-        {
-            System.out.println("Elements à droite : "+iterator.toString());
-        }
-        ctx.left.removeAll(ctx.right);
-        for(String iterator : ctx.left)
-        {
-            System.out.println("Unused : "+iterator.toString());
-        }*/
+        AstExp e = recursiveVisit(ctx, astNode);
+        return e;
 
     }
 
@@ -55,10 +39,11 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
      */
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLet e) {
-        //ctx.left.add(e.id.id);
-        recursiveVisit(ctx, e.e1);
-        recursiveVisit(ctx, e.e2);
-        return null;
+        if(ctx.unused.contains(e.id.id))
+        {
+            return recursiveVisit(ctx, e.e2);
+        }
+        return super.visit(ctx, e);
     }
 
     /**
@@ -67,29 +52,19 @@ public class Elim extends AstTransformHelper<Elim.Ctx> {
      */
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstVar e) {
-        //ctx.right.add(e.id.id);
-        return null;
+        if(ctx.unused.contains(e.toString()))
+        {
+            return null;
+        }
+        return e;
     }
 
 
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
-        return null;
+        return recursiveVisit(ctx, e.e);
 
     }
-
-
-    @Override
-    public AstExp visit(Ctx ctx, @Nonnull AstFunDef e) {
-        return null;
-    }
-
-
-    @Override
-    public AstExp visit(Ctx ctx, @Nonnull AstApp e) {
-         return null;
-    }
-
 
 
 }
