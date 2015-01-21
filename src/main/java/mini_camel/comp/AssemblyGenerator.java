@@ -23,13 +23,14 @@ public class AssemblyGenerator {
     private Map<String, Integer> varOffsets;
 
     private static final String FP_REG = "r12";
-    private static final Var RET_VAR = new Var("ret");
 
     static {
         IMPORTS.put("print_newline", "min_caml_print_newline");
         IMPORTS.put("print_int", "min_caml_print_int");
 
     }
+
+    private String RET_KEYWORD = "ret";
 
     public AssemblyGenerator() {
         //headers for .data and .text sections
@@ -43,6 +44,7 @@ public class AssemblyGenerator {
         text.append("\n\t.global _start");
         text.append("\n_start:");
         text.append("\n\tBL _main");
+        text.append("\n\tBL min_caml_print_newline");
         text.append("\n\tBL min_caml_exit\n");
 
         registers = new boolean[13];
@@ -193,11 +195,6 @@ public class AssemblyGenerator {
     }
 
     private void emitAssign(@Nonnull Var v, @Nonnull String register) {
-        if (v.name.equals(RET_VAR.name)) {
-            text.append("\n\tLDR r0, =ret");
-            text.append("\n\tSTR ").append(register).append(", [r0]");
-            return;
-        }
         text.append("\n\tSTR ").append(register).append(", ");
         locateVar(text, v.name);
     }
@@ -221,16 +218,19 @@ public class AssemblyGenerator {
                 return;
 
             case VAR:
-                String varName = ((Var) op).name;
-                if (varName.equals(RET_VAR.name)) {
-                    // fixme
-                    text.append("\n\tLDR r0, =ret");
-                    text.append("\n\tLDR ").append(register).append(", [r0]");
+                Var var = (Var) op;
+                String varName = var.name;
+                if (varName.equals(RET_KEYWORD)) {
+                    emitAssign(register, "r11");
                     return;
                 }
                 text.append("\n\tLDR ").append(register).append(", ");
                 locateVar(text, varName);
         }
+    }
+
+    private void emitAssign(String destRegister, String srcRegister) {
+        text.append("\n\tMOV ").append(destRegister).append(", ").append(srcRegister);
     }
 
     private void genBinaryOp(
@@ -317,8 +317,12 @@ public class AssemblyGenerator {
 
     private void genReturn(@Nonnull Ret i) {
         if (i.op == null) return;
+        if (i.op instanceof Var) {
+            if (((Var) i.op).name.equals(RET_KEYWORD)) {
+                return;
+            }
+        }
         emitAssign("r11", i.op);
-        emitAssign(RET_VAR, "r11"); // fixme
     }
 
     public void writeAssembly(@Nonnull PrintStream out) {

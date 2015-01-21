@@ -13,7 +13,6 @@ public class ConstantFold extends AstTransformHelper<ConstantFold.Ctx> {
 
     public static class Ctx {
         private SymTable<AstExp> reMapping = new SymTable<>();
-
         private Ctx() {}
 
     }
@@ -41,6 +40,7 @@ public class ConstantFold extends AstTransformHelper<ConstantFold.Ctx> {
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
             if(new_e1 instanceof AstUnit || new_e1 instanceof AstVar || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
+             //if(new_e1 instanceof AstVar){
                 ctx.reMapping.put(old_id.id, new_e1);
             }
 
@@ -153,6 +153,78 @@ public class ConstantFold extends AstTransformHelper<ConstantFold.Ctx> {
         }
 
         return new AstFAdd(new_e1, new_e2);
+    }
+
+    public AstExp visit(Ctx ctx, AstNot e){
+        AstExp new_e = recursiveVisit(ctx, e.e);
+
+        if(new_e instanceof AstBool){
+            return new AstBool(!((AstBool)new_e).b);
+        }
+        return new AstNot(new_e);
+    }
+
+    public AstExp visit(Ctx ctx,AstIf e){
+        AstExp new_e1 = recursiveVisit(ctx, e.e1);
+        if(new_e1 instanceof AstBool){
+            if(((AstBool)new_e1).b){
+                return recursiveVisit(ctx, e.e2);
+            }
+            else {
+                return recursiveVisit(ctx, e.e3);
+            }
+        }
+
+        AstExp new_e2 = recursiveVisit(ctx, e.e2);
+        AstExp new_e3 = recursiveVisit(ctx, e.e3);
+        return new AstIf(new_e1, new_e2, new_e3);
+
+    }
+
+    public AstExp visit(Ctx ctx, AstEq e){
+        AstExp new_e1 = recursiveVisit(ctx, e.e1);
+        AstExp new_e2 = recursiveVisit(ctx, e.e2);
+
+        if(new_e1 instanceof AstInt && new_e2 instanceof AstInt){
+            if(((AstInt)new_e1).i == ((AstInt)new_e2).i){
+                return new AstBool(true);
+            }
+            else {
+                return new AstBool(false);
+            }
+        }
+        else if (new_e1 instanceof AstBool && new_e2 instanceof AstBool){
+            if(((AstBool)new_e1).b == ((AstBool)new_e2).b){
+                return new AstBool(true);
+            }
+            else {
+                return new AstBool(false);
+            }
+        }
+
+        // TODO float
+
+
+        return new AstEq(new_e1, new_e2);
+    }
+
+    public AstExp visit(Ctx ctx, AstLE e){
+        AstExp new_e1 = recursiveVisit(ctx, e.e1);
+        AstExp new_e2 = recursiveVisit(ctx, e.e2);
+
+        if(new_e1 instanceof AstInt && new_e2 instanceof AstInt){
+            if(((AstInt)new_e1).i <= ((AstInt)new_e2).i){
+                return new AstBool(true);
+            }
+            else {
+                return new AstBool(false);
+            }
+        }
+
+        // TODO float
+
+
+        return new AstLE(new_e1, new_e2);
     }
 
 }
