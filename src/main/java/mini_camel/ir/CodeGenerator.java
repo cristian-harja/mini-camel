@@ -130,9 +130,11 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return new Couple(l, v);
     }
 
+
     public Couple visit(Branches b, @Nonnull AstNot e) {
         return e.e.accept(this, new Branches(b.ifFalse(), b.ifTrue()));
     }
+
 
     public Couple visit(Branches b, @Nonnull AstNeg e) {
         Var v = genVar();
@@ -142,6 +144,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         l.add(new SubI(v, new ConstInt(0), c.getVar()));
         return new Couple(l, v);
     }
+
 
     public Couple visit(Branches b, @Nonnull AstAdd e) {
         Var v = genVar();
@@ -218,6 +221,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         l.add(new DivF(v, cou1.getVar(), cou2.getVar()));
         return new Couple(l, v);
     }
+
 
     @Override
     public Couple visit(Branches b, @Nonnull AstEq e) {
