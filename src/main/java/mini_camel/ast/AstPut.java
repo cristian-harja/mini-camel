@@ -1,7 +1,5 @@
 package mini_camel.ast;
 
-import mini_camel.ir.instr.Couple;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
@@ -26,16 +24,19 @@ public final class AstPut extends AstExp {
         v.visit(this);
     }
 
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
-        return v.visit(this);
-    }
-
     public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
     }
 
-    public String toString(){
+    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
+        return v.visit(a, this,
+                ((AstVar) e1).id,
+                ((AstVar) e2).id,
+                ((AstVar) e3).id
+        );
+    }
+
+    public String toString() {
         return "(" + e1.toString() + ".(" + e2.toString() + ") <- " + e3.toString() + ")";
     }
 }
