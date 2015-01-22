@@ -145,6 +145,10 @@ public class MyCompiler {
         parsedAst.accept(new PrintVisitor(out));
     }
 
+    public void outputTransformedAst(PrintStream out) {
+        transformedAst.accept(new PrintVisitor(out));
+    }
+
     private void transformAlphaConversion() {
         AlphaConv ac = new AlphaConv();
         transformedAst = ac.applyTransform(transformedAst);
