@@ -1,9 +1,8 @@
 package mini_camel.ast;
 
-import mini_camel.ir.instr.Couple;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,13 +21,16 @@ public final class AstTuple extends AstExp {
         v.visit(this);
     }
 
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
-        return v.visit(this);
-    }
-
     public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
         return v.visit(a, this);
+    }
+
+    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
+        List<Id> ids = new ArrayList<>(es.size());
+        for (AstExp e : es) {
+            ids.add(((AstVar) e).id);
+        }
+        return v.visit(a, this, ids);
     }
 
     public String toString(){
