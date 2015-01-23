@@ -143,10 +143,12 @@ public class MyCompiler {
 
     public void outputAST(PrintStream out) {
         parsedAst.accept(new PrintVisitor(out));
+        out.print("\n");
     }
 
     public void outputTransformedAst(PrintStream out) {
         transformedAst.accept(new PrintVisitor(out));
+        out.print("\n");
     }
 
     private void transformAlphaConversion() {
