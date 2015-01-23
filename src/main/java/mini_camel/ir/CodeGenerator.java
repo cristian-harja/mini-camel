@@ -2,12 +2,8 @@ package mini_camel.ir;
 
 import mini_camel.Pair;
 import mini_camel.ast.*;
+import mini_camel.ir.op.*;
 import mini_camel.ir.instr.*;
-import mini_camel.ir.instr.Compare;
-import mini_camel.ir.op.ConstFloat;
-import mini_camel.ir.op.ConstInt;
-import mini_camel.ir.op.Operand;
-import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -234,15 +230,12 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(new Compare(cou1.getVar(), cou2.getVar()));
-        l.add(new BranchEq(b.ifTrue()));
-        l.add(new Jump(b.ifFalse()));
+        l.add(new Branch(
+                // false -> strict equality
+                false, cou1.getVar(), cou2.getVar(), // operand1 = operand2
+                b.ifTrue(), b.ifFalse()
+        ));
         return new Couple(l, null);
-    }
-
-    
-    public Couple recursiveVisit(@Nonnull AstExp e) {
-        return e.accept(this, null);
     }
 
     public Couple visit(Branches b, @Nonnull AstLE e) {
@@ -251,9 +244,11 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple cou2 = e.e2.accept(this, null);
         l.addAll(cou1.getInstr());
         l.addAll(cou2.getInstr());
-        l.add(new Compare(cou1.getVar(), cou2.getVar()));
-        l.add(new BranchLe(b.ifTrue()));
-        l.add(new Jump(b.ifFalse()));
+        l.add(new Branch(
+                // true -> less or equal
+                true, cou1.getVar(), cou2.getVar(), // operand1 <= operand2
+                b.ifTrue(), b.ifFalse()
+        ));
         return new Couple(l, null);
     }
 
@@ -281,8 +276,8 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     public Couple visit(Branches b, @Nonnull AstLet e) {
         List<Instr> l = new ArrayList<>();
-        Couple cou1 = recursiveVisit(e.e1);
-        Couple cou2 = recursiveVisit(e.e2);
+        Couple cou1 = e.e1.accept(this, null);
+        Couple cou2 = e.e2.accept(this, null);
 
         l.addAll(cou1.getInstr());
         Var v = new Var(e.id.id);

@@ -145,14 +145,8 @@ public class AssemblyGenerator {
                 case SUB_I:
                     genSubI((SubI) instr);
                     break;
-                case CMP:
-                    genCmp((Compare) instr);
-                    break;
-                case BEQ:
-                    genBeq((BranchEq) instr);
-                    break;
-                case BLE:
-                    genBle((BranchLe) instr);
+                case BRANCH:
+                    genBranch((Branch) instr);
                     break;
                 case JUMP:
                     genJump((Jump) instr);
@@ -414,21 +408,15 @@ public class AssemblyGenerator {
         genBinaryOp("SUB", i.var, i.op1, i.op2);
     }
 
-    private void genCmp(@Nonnull Compare i) {
+    private void genBranch(@Nonnull Branch i) {
         emitAssign("r1", i.op1); // r1 <- op1
         emitAssign("r2", i.op2); // r2 <- op2
 
+        String mnemonic = i.lessOrEqual ? "\n\tBLE " : "\n\tBEQ ";
+
         text.append("\n\tCMP r1, r2");
-    }
-
-
-    private void genBle(@Nonnull BranchLe i) {
-        text.append("\n\tBLE ").append(i.label.name);
-    }
-
-
-    private void genBeq(@Nonnull BranchEq i) {
-        text.append("\n\tBEQ ").append(i.label.name);
+        text.append(mnemonic).append(i.ifTrue.name);
+        text.append("\n\tJMP ").append(i.ifFalse.name);
     }
 
 

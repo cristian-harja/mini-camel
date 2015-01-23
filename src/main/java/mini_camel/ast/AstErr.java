@@ -1,7 +1,5 @@
 package mini_camel.ast;
 
-import mini_camel.ir.instr.Couple;
-
 import javax.annotation.Nonnull;
 
 /**
@@ -13,11 +11,6 @@ public final class AstErr extends AstExp {
     @Override
     public void accept(@Nonnull Visitor v) {
         v.visit(this);
-    }
-
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
-        return v.visit(this);
     }
 
     @Override
