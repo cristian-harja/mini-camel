@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import mini_camel.Pair;
+import mini_camel.util.Pair;
 
 import java.util.*;
 

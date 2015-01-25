@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import mini_camel.Pair;
+import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
