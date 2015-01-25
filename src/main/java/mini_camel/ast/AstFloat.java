@@ -1,5 +1,6 @@
 package mini_camel.ast;
 
+import mini_camel.visit.*;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
@@ -16,6 +17,10 @@ public final class AstFloat extends AstExp {
 
     public void accept(@Nonnull Visitor v) {
         v.visit(this);
+    }
+
+    public <T> T accept(@Nonnull Visitor1<T> v) {
+        return v.visit(this);
     }
 
     public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {

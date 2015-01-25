@@ -1,4 +1,4 @@
-package mini_camel;
+package mini_camel.visit;
 
 import mini_camel.ast.*;
 

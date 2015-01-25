@@ -1,18 +1,18 @@
 package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
-import mini_camel.ErrMsg;
-import mini_camel.Pair;
-import mini_camel.PrintVisitor;
+import mini_camel.util.Pair;
+import mini_camel.visit.PrintVisitor;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
+import mini_camel.visit.FreeVars;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.Function;
 import mini_camel.ir.instr.Instr;
-import mini_camel.transform.AlphaConv;
-import mini_camel.transform.BetaReduc;
-import mini_camel.transform.ConstantFold;
+import mini_camel.visit.AlphaConv;
+import mini_camel.visit.BetaReduction;
+import mini_camel.visit.ConstantFold;
 import mini_camel.type.Checker;
 import mini_camel.type.Type;
 
@@ -110,8 +110,7 @@ public class MyCompiler {
         if (freeVarsBegun) return freeVarsSuccessful;
         freeVarsBegun = true;
 
-        FreeVarVisitor fvv = new FreeVarVisitor(PREDEFS);
-        parsedAst.accept(fvv);
+        FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS);
 
         Set<Id> freeVars = fvv.getFreeVariables();
 
@@ -150,18 +149,15 @@ public class MyCompiler {
     }
 
     private void transformAlphaConversion() {
-        AlphaConv ac = new AlphaConv();
-        transformedAst = ac.applyTransform(transformedAst);
+        transformedAst = AlphaConv.compute(transformedAst);
     }
 
     private void transformBetaReduction() {
-        BetaReduc br = new BetaReduc();
-        transformedAst = br.applyTransform(transformedAst);
+        transformedAst = BetaReduction.compute(transformedAst);
     }
 
     private void transformConstantFolding() {
-        ConstantFold cf = new ConstantFold();
-        transformedAst = cf.applyTransform(transformedAst);
+        transformedAst = ConstantFold.compute(transformedAst);
     }
 
     public boolean preProcessCode() {

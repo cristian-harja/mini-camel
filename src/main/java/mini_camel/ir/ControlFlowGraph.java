@@ -1,6 +1,6 @@
 package mini_camel.ir;
 
-import mini_camel.Pair;
+import mini_camel.util.Pair;
 import mini_camel.ir.instr.*;
 
 import javax.annotation.Nonnull;

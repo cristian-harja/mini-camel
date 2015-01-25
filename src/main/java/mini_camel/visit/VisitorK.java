@@ -1,5 +1,6 @@
-package mini_camel.ast;
+package mini_camel.visit;
 
+import mini_camel.ast.*;
 import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
@@ -9,14 +10,14 @@ import java.util.List;
  * <p><b>Assuming the AST is K-normalized</b>, this interface helps implement
  * the "visitor" pattern, but with a twist.
  * </p>
- * <p>Some AST nodes (such as {@link AstAdd} for example) declare their
- * children as being of type {@link AstExp}, which can be really anything.
+ * <p>Some AST nodes (such as {@link mini_camel.ast.AstAdd} for example) declare their
+ * children as being of type {@link mini_camel.ast.AstExp}, which can be really anything.
  * This allows for arbitrarily complex expressions in the source code.
  * </p>
  * <pHowever, after K-normalization, the AST gets a very specific structure,
  * where some AST nodes always have children of a very specific type. For
  * example, an {@code AstAdd}, after K-normalization, will have its both
- * children of type {@link AstVar}, instead of the generic {@code AstExp}.
+ * children of type {@link mini_camel.ast.AstVar}, instead of the generic {@code AstExp}.
  * </p>
  * <p>In order to represent the normalized ASTs in a type-safe way, we could
  * have created a new set of classes (mostly identical to the set of "Ast*"
@@ -26,12 +27,12 @@ import java.util.List;
  * methods in such a way that the children which are guaranteed to have a
  * certain type are exposed as arguments of these methods.
  * </p>
- * <p>For example, the {@link #visit(ArgT, AstAdd, Id, Id) visit} method
+ * <p>For example, the {@link #visit(ArgT, mini_camel.ast.AstAdd, mini_camel.ast.Id, mini_camel.ast.Id) visit} method
  * corresponding to the {@code AstAdd} class has two extra parameters, which
  * will contain the two operands of the addition, but cast to their actual
  * type.
  * </p>
- * <p>The casts performed by the {@link AstExp#accept(VisitorK, ArgT)} method
+ * <p>The casts performed by the {@link mini_camel.ast.AstExp#accept(VisitorK, ArgT)} method
  * in each AST node are safe <p>if and only if the AST was K-normalized before
  * attempting to visit it</p>. Since the child nodes will simply be cast to
  * their expected types, attempting to visit an incorrect AST will yield a

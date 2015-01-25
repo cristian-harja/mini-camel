@@ -1,9 +1,11 @@
-package mini_camel.ast;
+package mini_camel.visit;
+
+import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
 
 /**
- * A implementation of the "visitor" pattern for AST nodes, using generics.
+ * An implementation of the "visitor" pattern for AST nodes, using generics.
  * The {@code visit} method returns a value of type {@code RetT}, and also
  * takes an extra (user-defined) argument of type {@code ArgT}.
  *

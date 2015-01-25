@@ -4,12 +4,9 @@ import java.io.*;
 import mini_camel.ast.*;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
-import mini_camel.transform.*;
+import mini_camel.visit.*;
 
 
-/**
- * Created by mommess on 11/01/15.
- */
 public class TestTransform {
     static public void main(String argv[]) {
         try {
@@ -29,15 +26,11 @@ public class TestTransform {
 
 
 
-            AlphaConv ac = new AlphaConv();
-            AstExp res2 = ac.applyTransform(result);
+            AstExp res2 = AlphaConv.compute(result);
 
+            AstExp res3 = BetaReduction.compute(res2);
 
-            BetaReduc br = new BetaReduc();
-            AstExp res3 = br.applyTransform(res2);
-
-            ConstantFold cf = new ConstantFold();
-            AstExp res4 = cf.applyTransform(res3);
+            AstExp res4 = ConstantFold.compute(res3);
 
 
 
