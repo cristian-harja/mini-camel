@@ -1,4 +1,4 @@
-package mini_camel;
+package mini_camel.util;
 
 import java.util.Map;
 import java.util.Stack;

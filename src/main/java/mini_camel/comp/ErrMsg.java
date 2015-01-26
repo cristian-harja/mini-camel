@@ -1,4 +1,4 @@
-package mini_camel;
+package mini_camel.comp;
 
 import ldf.java_cup.runtime.LocationAwareEntity;
 

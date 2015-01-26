@@ -1,7 +1,8 @@
 package mini_camel.ir;
 
-import mini_camel.Pair;
+import mini_camel.util.Pair;
 import mini_camel.ast.*;
+import mini_camel.visit.Visitor2;
 import mini_camel.ir.op.*;
 import mini_camel.ir.instr.*;
 
