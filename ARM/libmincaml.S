@@ -8,10 +8,10 @@ min_caml_exit:
 
 	.globl min_caml_print_newline
 min_caml_print_newline:
-	stmfd	sp!, {r0, lr}
+	stmfd	sp!, {r0 - r12, lr}
 	mov	r0, #10
 	bl	min_caml_print_char
-	ldmfd	sp!, {r0, lr}
+	ldmfd	sp!, {r0  - r12, lr}
         bx	lr
         .size	min_caml_print_newline, .-min_caml_print_newline
 
@@ -132,9 +132,11 @@ stringofint:
 
         .globl min_caml_print_int
 min_caml_print_int:
-	stmfd	sp!, {r0, lr}
+	stmfd	sp!, {r0 - r12, lr}
 	bl	stringofint
 	bl	min_caml_print_string
-	ldmfd	sp!, {r0, lr}
+	@bl min_caml_print_newline
+	
+	ldmfd	sp!, {r0 - r12, lr}
         bx	lr
         .size min_caml_print_int, .-min_caml_print_int
