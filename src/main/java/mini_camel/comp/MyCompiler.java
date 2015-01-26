@@ -2,17 +2,13 @@ package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
 import mini_camel.util.Pair;
-import mini_camel.visit.PrintVisitor;
+import mini_camel.visit.*;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
-import mini_camel.visit.FreeVars;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.Function;
 import mini_camel.ir.instr.Instr;
-import mini_camel.visit.AlphaConv;
-import mini_camel.visit.BetaReduction;
-import mini_camel.visit.ConstantFold;
 import mini_camel.type.Checker;
 import mini_camel.type.Type;
 
@@ -159,11 +155,39 @@ public class MyCompiler {
     private void transformConstantFolding() {
         transformedAst = ConstantFold.compute(transformedAst);
     }
+    private void transformInlining() {
+        /*NumberOperation no = new NumberOperation();
+        int tmp = no.applyTransform(transformedAst);
+        System.out.println("Le nombre d'opérations est : "+tmp);
+        FunNumOp in = new FunNumOp();
+        List<mini_camel.transform.Pair> l = in.applyTransform(transformedAst);*/
+        Inlining cf = new Inlining();
+        transformedAst = cf.applyTransform(transformedAst);
+        /*RecursiveCheck rc = new RecursiveCheck();
+        List<String> l = rc.applyTransform(transformedAst);
+        for(String i : l)
+        {
+            System.out.println("Fonction recursive : "+i);
+        }*/
+
+    }
+
+    private void transformElimination() {
+        UnusedVar cff = new UnusedVar();
+        Set<String> unused = cff.applyTransform(transformedAst);
+        Elim cf = new Elim();
+        transformedAst = cf.applyTransform(transformedAst, unused);
+    }
 
     public boolean preProcessCode() {
+        System.out.println("ETAPE 1 : " + transformedAst.toString());
         transformAlphaConversion();
-        transformBetaReduction();
+        System.out.println("ETAPE 2 : "+transformedAst.toString());
+        /*transformBetaReduction();
         transformConstantFolding();
+        transformElimination();*/
+        transformInlining();
+        System.out.println("ETAPE 3 : " + transformedAst.toString());
         return true;
     }
 
