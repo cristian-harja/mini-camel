@@ -109,10 +109,17 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return new Couple(Collections.<Instr>emptyList(), null);
     }
 
-    public Couple visit(Branches b, @Nonnull AstBool e) {
+    public Couple visit(Branches b, @Nonnull AstBool e) {//TODO if non null
         ArrayList<Instr> l = new ArrayList<>(1);
-        l.add(new Jump(e.b ? b.ifTrue() : b.ifFalse()));
-        return new Couple(l, null);
+        if (b != null){
+            l.add(new Jump(e.b ? b.ifTrue() : b.ifFalse()));
+            return new Couple(l, null);
+        }
+        else {
+            Var v = genVar();
+            l.add(new Assign(v, new ConstInt(e.b ? 1 : 0)));
+            return new Couple(l, v);
+        }
     }
 
     public Couple visit(Branches b, @Nonnull AstInt e) {
@@ -289,7 +296,18 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     }
 
     public Couple visit(Branches b, @Nonnull AstVar e) {
-        return new Couple(Collections.<Instr>emptyList(), new Var(e.id.id));
+        if(b == null){
+            return new Couple(Collections.<Instr>emptyList(), new Var(e.id.id));
+        }
+        else {
+            List<Instr> l = new ArrayList<>();
+            Var v = new Var(e.id.id);
+            Branch newb = new Branch(false, v, new ConstInt(1), b.ifTrue(), b.ifFalse());
+            l.add(newb);
+            return new Couple(l, null);
+
+        }
+
     }
 
     public Couple visit(Branches b, @Nonnull AstLetRec e) {
@@ -300,6 +318,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     public Couple visit(Branches b, @Nonnull AstApp e) {
         List<Instr> code = new LinkedList<>();
         List<Operand> args = new LinkedList<>();
+        Var ret = genVar();
 
         for (AstExp arg : e.es) {
             Couple argCode = arg.accept(this, null);
@@ -311,9 +330,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Couple fCode = e.e.accept(this, null);
 
         code.addAll(fCode.getInstr());
-        code.add(new Call(fCode.getVar().name, args));
+        code.add(new Call(ret, fCode.getVar().name, args));
 
-        return new Couple(code, new Var("ret"));
+        return new Couple(code, ret);
     }
 
     public Couple visit(Branches b, @Nonnull AstTuple e) {

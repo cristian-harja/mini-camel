@@ -47,9 +47,6 @@ public class AssemblyGenerator {
         text.append("\n\tBL min_caml_print_newline");
         text.append("\n\tBL min_caml_exit\n");
 
-        registers = new String[11];
-        memory = new ArrayList<String>();
-        cursor = 2;
 
 
     }
@@ -72,7 +69,7 @@ public class AssemblyGenerator {
         argOffsets = new LinkedHashMap<>();
         registers = new String[11];
         memory = new ArrayList<String>();
-        cursor = 2;
+        cursor = 3;
 
         // Function arguments
         n = args.size();
@@ -80,7 +77,7 @@ public class AssemblyGenerator {
             text.append("\n\t@ arguments");
             for (i = 0; i < n; i++) {
                 varName = args.get(i).name;
-                varOffset = 4 * i + 8;
+                varOffset = 4 * i + 40;
                 text.append("\n\t@   ").append(varName);
                 text.append(" -> ").append(FP_REG);
                 text.append("+").append(varOffset);
@@ -110,7 +107,7 @@ public class AssemblyGenerator {
         text.append("\n\t@ prologue");
         text.append("\n\tSUB sp, #4");
         text.append("\n\tSTR lr, [sp]");
-        text.append("\n\tstmfd	sp!, {r2 - r10}");
+        text.append("\n\tstmfd	sp!, {r3 - r10}");
 
 
         // Push frame pointer
@@ -119,7 +116,7 @@ public class AssemblyGenerator {
         text.append("\n\tMOV ").append(FP_REG).append(", sp");
 
         // Allocate local vars
-        text.append("\n\tSUB sp, sp, #").append(4 * locals.size());
+        //text.append("\n\tSUB sp, sp, #").append(4 * locals.size());
 
         // Body of the function
         for (Instr instr : funDef.body) {
@@ -174,7 +171,7 @@ public class AssemblyGenerator {
         text.append("\n\tMOV sp, ").append(FP_REG);
         text.append("\n\tLDR ").append(FP_REG).append(", [sp]");
         text.append("\n\tADD sp, #4");
-        text.append("\n\tldmfd	sp!, {r2 - r10}");
+        text.append("\n\tldmfd	sp!, {r3 - r10}");
         text.append("\n\tLDR lr, [sp]");
         text.append("\n\tADD sp, #4");
         text.append("\n\tMOV pc, lr");
@@ -199,9 +196,8 @@ public class AssemblyGenerator {
 
     private int getnewReg(){
 
-        for(int i = 2; i<=10; i++){
+        for(int i = 3; i<=10; i++){
             if(registers[i] == null){
-                //System.out.println("realloc " + i + " " + registers.size());
                 return i;
             }
         }
@@ -213,10 +209,7 @@ public class AssemblyGenerator {
         memory.add(tmp);
 
         int ret = cursor;
-        cursor = cursor > 9 ? 2 : ++cursor;
-        System.out.println("ret : " + ret + " cursor : " + cursor);
-
-        //System.out.println("spill " + ret + " " + registers.size());
+        cursor = cursor > 9 ? 3 : ++cursor;
 
         return ret;
     }
@@ -228,9 +221,8 @@ public class AssemblyGenerator {
             return 11;
         }
 
-        for (i = 2; i<11; i++){
+        for (i = 3; i<11; i++){
             if(registers[i] != null && registers[i].equals(var)){
-                System.out.println("give reg " + i + " for " + var);
                 return i;
             }
         }
@@ -242,13 +234,10 @@ public class AssemblyGenerator {
                 text.append("\n\tLDR r0, =").append(var);
                 text.append("\n\tLDR r").append(r).append(", [r0]");
 
-                System.out.println("give reg r0 to " + var + " from memory");
-
                 return r;
             }
         }
 
-        System.out.println(var + " not in reg or mem");
         return -1;
     }
 
@@ -358,9 +347,9 @@ public class AssemblyGenerator {
         emitAssign("r2", op2); // r2 <- op2
 
         // r3 <- op1 (?) op2
-        text.append("\n\t").append(mnemonic).append(" r3, r1, r2");
+        text.append("\n\t").append(mnemonic).append(" r0, r1, r2");
 
-        emitAssign(var, "r3"); // var <- r3
+        emitAssign(var, "r0"); // var <- r0
     }
 
     private void genLabel(@Nonnull Label i) {
@@ -372,13 +361,19 @@ public class AssemblyGenerator {
         String newName = IMPORTS.get(name);
         if (newName != null) name = newName;
 
+
         // EXCEPTION: print_int
         if (name.equals("min_caml_print_int")) {
             emitAssign("r0", instr.args.get(0)); // r0 <- only argument
             text.append("\n\tBL ").append(name); // just call
 
+            if(instr.ret != null){
+                emitAssign(instr.ret, "r11");
+            }
+
             return;
         }
+
 
         List<Operand> args = instr.args;
         for (int i = args.size() - 1; i >= 0; i--) {
@@ -388,11 +383,16 @@ public class AssemblyGenerator {
             text.append("\n\tSTR r0, [sp]");
 
         }
-        text.append("\n\t@ call, then free stack");
+        text.append("\n\t@ call, free stack and set the return value");
         text.append("\n\tBL ").append(name);
 
         int popSize = 4 * instr.args.size();
         text.append("\n\tADD sp, #").append(Integer.toString(popSize));
+
+        if(instr.ret != null){
+            emitAssign(instr.ret, "r11");
+        }
+
         text.append("\n\t@ end call");
     }
 
@@ -416,7 +416,7 @@ public class AssemblyGenerator {
 
         text.append("\n\tCMP r1, r2");
         text.append(mnemonic).append(i.ifTrue.name);
-        text.append("\n\tJMP ").append(i.ifFalse.name);
+        text.append("\n\tBAL ").append(i.ifFalse.name);
     }
 
 
