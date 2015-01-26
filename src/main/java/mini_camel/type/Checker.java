@@ -1,11 +1,11 @@
 package mini_camel.type;
 
 import mini_camel.ast.Id;
-import mini_camel.Pair;
+import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;
 import mini_camel.ast.AstLet;
-import mini_camel.ast.DummyVisitor;
+import mini_camel.visit.DummyVisitor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

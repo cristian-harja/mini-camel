@@ -1,7 +1,5 @@
-package mini_camel.transform;
+package mini_camel.visit;
 
-import mini_camel.gen.Lexer;
-import mini_camel.gen.Parser;
 import mini_camel.ast.*;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
@@ -13,8 +11,7 @@ import java.util.Set;
 public class AlphaConvTest extends TestHelper {
 
     private static void testOnCode(String s) throws Exception {
-        AlphaConv ac = new AlphaConv();
-        AstExp result = ac.applyTransform(parse(s));
+        AstExp result = AlphaConv.compute(parse(s));
         checkCorrectness(result);
     }
 

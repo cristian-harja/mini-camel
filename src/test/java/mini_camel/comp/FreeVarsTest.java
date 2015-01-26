@@ -2,45 +2,52 @@ package mini_camel.comp;
 
 import mini_camel.ast.AstExp;
 import mini_camel.ast.Id;
+import mini_camel.visit.FreeVars;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class FreeVarVisitorTest extends TestHelper {
+public class FreeVarsTest extends TestHelper {
 
-    private void assertFreeVars(String sourceCode, String ... vars) throws Exception {
+    private void assertFreeVars(
+            String sourceCode,
+            String ... vars
+    ) throws Exception {
         AstExp root = parse(sourceCode);
-        FreeVarVisitor visitor = new FreeVarVisitor();
         Set<String> expectedFreeSet = new LinkedHashSet<>();
         Set<String> returnedFreeSet = new LinkedHashSet<>();
 
         Collections.addAll(expectedFreeSet, vars);
 
-        root.accept(visitor);
-        for (Id var : visitor.getFreeVariables()) {
+        for (Id var : FreeVars.compute(root).getFreeVariables()) {
             returnedFreeSet.add(var.id);
         }
 
         assertEquals(expectedFreeSet, returnedFreeSet);
     }
 
-    @Test
-    public void testAllSamples() throws Exception {
-        FreeVarVisitor visitor = new FreeVarVisitor(
+    private static final Set<String> PREDEFS = new HashSet<>();
+
+    static {
+        PREDEFS.addAll(Arrays.asList(
                 "print_newline", "print_int", "abs_float", "sqrt", "sin",
                 "cos", "float_of_int", "int_of_float", "truncate"
-        );
+        ));
+    }
+
+
+    @Test
+    public void testAllSamples() throws Exception {
         for (Map.Entry<String, AstExp> e: allSamples().entrySet()) {
-            e.getValue().accept(visitor);
+            // compute free variables
+            FreeVars freeVars = FreeVars.compute(e.getValue(), PREDEFS);
+
             assertEquals(e.getKey(), // name of the sample
                     Collections.<Id>emptySet(), // expecting no free vars
-                    visitor.getFreeVariables() // actual result
+                    freeVars.getFreeVariables() // actual result
             );
         }
     }

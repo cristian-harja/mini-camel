@@ -1,34 +1,45 @@
-package mini_camel.comp;
+package mini_camel.visit;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FreeVarVisitor extends DummyVisitor {
+public final class FreeVars extends DummyVisitor {
 
     private Set<String> globals = new HashSet<>();
     private Multiset<String> bound = HashMultiset.create();
     private Set<Id> free = new HashSet<>();
-    private Set<Id> freeReadOnly = Collections.unmodifiableSet(free);
+    private Set<String> freeStr = new HashSet<>();
 
-    public FreeVarVisitor() {
+    private FreeVars() {
     }
 
-    public FreeVarVisitor(@Nonnull Set<String> globals) {
-        this.globals.addAll(globals);
+    public static FreeVars compute(@Nonnull AstExp root) {
+        return compute(root, Collections.<String>emptyList());
     }
 
-    public FreeVarVisitor(@Nonnull String ... globals) {
-        Collections.addAll(this.globals, globals);
+    public static FreeVars compute(
+            @Nonnull AstExp root,
+            @Nonnull Collection<String> globals
+    ) {
+        FreeVars fvv = new FreeVars();
+        fvv.globals.addAll(globals);
+        root.accept(fvv);
+        return fvv;
     }
 
     public Set<Id> getFreeVariables() {
-        return freeReadOnly;
+        return free;
+    }
+
+    public Set<String> getFreeNames() {
+        return freeStr;
     }
 
     @Override
@@ -45,6 +56,7 @@ public class FreeVarVisitor extends DummyVisitor {
         if (bound.contains(id)) return;
         if (globals.contains(id)) return;
         free.add(e.id);
+        freeStr.add(e.id.id);
     }
 
     @Override

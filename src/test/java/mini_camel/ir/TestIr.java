@@ -25,7 +25,7 @@ public class TestIr {
 
     private static void testOnCode(String s) throws Exception {
         AlphaConv ac = new AlphaConv();
-        AstExp result = ac.applyTransform(parse(s));
+        AstExp result = ac.compute(parse(s));
         checkCorrectness(result);
     }*/
 /*

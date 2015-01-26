@@ -1,4 +1,6 @@
-package mini_camel.ast;
+package mini_camel.visit;
+
+import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
 

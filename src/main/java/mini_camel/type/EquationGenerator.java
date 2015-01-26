@@ -1,8 +1,9 @@
 package mini_camel.type;
 
-import mini_camel.Pair;
-import mini_camel.SymTable;
+import mini_camel.util.Pair;
+import mini_camel.util.SymTable;
 import mini_camel.ast.*;
+import mini_camel.visit.Visitor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
