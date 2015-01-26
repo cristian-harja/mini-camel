@@ -11,14 +11,14 @@ import java.util.Set;
  */
 public class Elim extends AstTransformHelper<Elim.Ctx> {
 
+    public Elim(){}
+
     public static class Ctx {
         private Set<String> unused = new HashSet<>();
 
         private Ctx(Set<String> s) {unused = s;}
 
     }
-
-    public Elim(){}
 
     /**
      * This is the method that initiates the actual transformation.

@@ -160,17 +160,28 @@ public class MyCompiler {
         ConstantFold cf = new ConstantFold();
         transformedAst = cf.applyTransform(transformedAst);
     }
+    private void transformInlining() {
+        /*NumberOperation no = new NumberOperation();
+        int tmp = no.applyTransform(transformedAst);
+        System.out.println("Le nombre d'opérations est : "+tmp);
+        FunNumOp in = new FunNumOp();
+        List<mini_camel.transform.Pair> l = in.applyTransform(transformedAst);*/
+        Inlining cf = new Inlining();
+        transformedAst = cf.applyTransform(transformedAst);
+        /*RecursiveCheck rc = new RecursiveCheck();
+        List<String> l = rc.applyTransform(transformedAst);
+        for(String i : l)
+        {
+            System.out.println("Fonction recursive : "+i);
+        }*/
+
+    }
 
     private void transformElimination() {
         UnusedVar cff = new UnusedVar();
         Set<String> unused = cff.applyTransform(transformedAst);
-        for(String s : unused)
-        {
-            System.out.println("Unused : "+s);
-        }
         Elim cf = new Elim();
         transformedAst = cf.applyTransform(transformedAst, unused);
-        System.out.println("L'ast final est : "+transformedAst.toString());
     }
 
     public boolean preProcessCode() {
@@ -178,8 +189,10 @@ public class MyCompiler {
         transformAlphaConversion();
         System.out.println("ETAPE 2 : "+transformedAst.toString());
         /*transformBetaReduction();
-        transformConstantFolding();*/
-        transformElimination();
+        transformConstantFolding();
+        transformElimination();*/
+        transformInlining();
+        System.out.println("ETAPE 3 : " + transformedAst.toString());
         return true;
     }
 

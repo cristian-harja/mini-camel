@@ -1,13 +1,9 @@
 package mini_camel.transform;
 
-import mini_camel.SymTable;
 import mini_camel.ast.*;
-import mini_camel.ir.op.Var;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,7 +15,8 @@ public class UnusedVar extends DummyVisitor {
     private Set<String> left = new HashSet<>();
     private Set<String> unused = new HashSet<>();
 
-    public UnusedVar(){}
+    public UnusedVar() {
+    }
 
     /**
      * This is the method that initiates the actual transformation.
@@ -29,14 +26,6 @@ public class UnusedVar extends DummyVisitor {
      */
     public Set<String> applyTransform(@Nonnull AstExp astNode) {
         astNode.accept(this);
-        for(String iterator : left)
-        {
-            System.out.println("Elements à gauche : "+iterator.toString());
-        }
-        for(String iterator : right)
-        {
-            System.out.println("Elements à droite : "+iterator.toString());
-        }
         left.removeAll(right);
 
         return left;
@@ -66,7 +55,8 @@ public class UnusedVar extends DummyVisitor {
 
     @Override
     public void visit(@Nonnull AstLetRec e) {
-        System.out.println("je suis unused"); e.e.accept(this); }
+        e.e.accept(this);
+    }
 
 
 }
