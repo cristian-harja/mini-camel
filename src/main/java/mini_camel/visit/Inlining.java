@@ -11,9 +11,28 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
     public Inlining() {
     }
 
+    public static AstExp compute(AstExp astNode) {
+        FunNumOp in = new FunNumOp();
+        List<String> l = in.applyTransform(astNode);
+
+        RecursiveCheck r = new RecursiveCheck();
+        List<String> rf = r.applyTransform(astNode);
+
+        l.removeAll(rf);
+
+        if (l.size() == 0) {
+            return astNode;
+        }
+
+        Ctx ctx = new Ctx(l);
+        return astNode.accept(new Inlining(), ctx);
+    }
+
     public static class Ctx {
         private List<String> l;
         private List<AstFunDef> afd;
+
+        private Ctx(){}
 
         private Ctx(List<String> l) {
             this.l = l;
