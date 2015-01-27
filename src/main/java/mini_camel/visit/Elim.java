@@ -11,10 +11,19 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
 
     public Elim(){}
 
+    public static AstExp compute(AstExp astNode) {
+        UnusedVar cff = new UnusedVar();
+        Set<String> unused = cff.applyTransform(astNode);
+        Ctx ctx = new Ctx(unused);
+        return astNode.accept(new Elim(), ctx);
+    }
+
     public static class Ctx {
         private Set<String> unused = new HashSet<>();
 
         private Ctx(Set<String> s) {unused = s;}
+
+        private Ctx() {}
 
     }
 
