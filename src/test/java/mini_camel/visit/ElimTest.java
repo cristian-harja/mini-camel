@@ -124,7 +124,7 @@ public class ElimTest extends TestHelper {
 
             @Override
             public void visit(@Nonnull AstLet e) {
-                String id = e.id.id;
+                String id = e.decl.id;
                 bind(e, id);
                 super.visit(e);
                 unbind(id);
@@ -132,7 +132,7 @@ public class ElimTest extends TestHelper {
 
             @Override
             public void visit(@Nonnull AstLetRec e) {
-                String id = e.fd.id.id;
+                String id = e.fd.decl.id;
                 super.visit(e);
                 unbind(id);
             }

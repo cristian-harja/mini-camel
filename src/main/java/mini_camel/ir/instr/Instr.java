@@ -10,7 +10,9 @@ public interface Instr  {
         ASSIGN, // assignment
         MUL_F,  // multiplication
         DIV_F,  // division
-        CALL,   // function call
+        CALL,   // function call (apply direct)
+        MAKE_CLS, // make closure
+        APPLY_CLS, // apply closure
         LABEL,  // label
         JUMP,   // unconditional branch
         BRANCH, // branch (if equal / if less than or equal)
