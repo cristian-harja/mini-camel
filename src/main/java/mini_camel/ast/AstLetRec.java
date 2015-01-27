@@ -1,6 +1,10 @@
 package mini_camel.ast;
 
-import mini_camel.visit.*;
+import mini_camel.util.SymDef;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -47,7 +51,7 @@ public final class AstLetRec extends AstExp {
 
         boolean first = true;
         sb.append("(");
-        for (AstSymDef l : fd.args){
+        for (SymDef l : fd.args){
             if(!first){
                 sb.append(", ");
             }

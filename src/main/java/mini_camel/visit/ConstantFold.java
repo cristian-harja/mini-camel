@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
-import mini_camel.ast.AstSymDef;
+import mini_camel.util.SymDef;
+import mini_camel.util.SymRef;
 import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
@@ -20,14 +21,14 @@ public final class ConstantFold extends TransformHelper {
 
     //Example : if x = 5 is in the symbol table, it will return an AstInt of value 5
     // otherwise it does nothing
-    public AstExp visit(@Nonnull AstSymRef e) {
+    public AstExp visit(@Nonnull SymRef e) {
         AstExp new_e = reMapping.get(e.id);
         return (new_e == null) ? e : new_e;
     }
 
 
     public AstExp visit(@Nonnull AstLet e){
-        AstSymDef old_id = e.decl;
+        SymDef old_id = e.decl;
         AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
 
@@ -35,7 +36,7 @@ public final class ConstantFold extends TransformHelper {
         reMapping.push();
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
-            if(new_e1 instanceof AstUnit || new_e1 instanceof AstSymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
+            if(new_e1 instanceof AstUnit || new_e1 instanceof SymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
              //if(new_e1 instanceof AstVar){
                 reMapping.put(old_id.id, new_e1);
             }

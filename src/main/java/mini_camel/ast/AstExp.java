@@ -1,10 +1,9 @@
 package mini_camel.ast;
 
-import mini_camel.visit.Visitor;
-import mini_camel.visit.Visitor1;
-import mini_camel.visit.Visitor2;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**

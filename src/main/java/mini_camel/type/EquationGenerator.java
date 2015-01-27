@@ -1,9 +1,8 @@
 package mini_camel.type;
 
 import mini_camel.ast.*;
-import mini_camel.util.Pair;
-import mini_camel.util.SymTable;
-import mini_camel.visit.Visitor;
+import mini_camel.util.*;
+import mini_camel.util.SymDef;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -178,7 +177,7 @@ public class EquationGenerator {
             }
 
             @Override
-            public void visit(@Nonnull AstSymRef e) {
+            public void visit(@Nonnull SymRef e) {
                 typeEquals(type, env.get(e.id));
             }
 
@@ -198,7 +197,7 @@ public class EquationGenerator {
 
                 env.push();
                 {
-                    for (AstSymDef arg : e.args) {
+                    for (SymDef arg : e.args) {
                         env.put(arg.id, arg.type);
                     }
 
@@ -250,7 +249,7 @@ public class EquationGenerator {
 
                 env.push();
                 {
-                    for (AstSymDef sym : e.ids) {
+                    for (SymDef sym : e.ids) {
                         env.put(sym.id, sym.type);
                     }
 

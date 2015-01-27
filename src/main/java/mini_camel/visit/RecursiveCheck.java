@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class RecursiveCheck extends DummyVisitor {
         e.fd.accept(this);
     }
 
-    public void visit(@Nonnull AstSymRef e) {
+    public void visit(@Nonnull SymRef e) {
         if (recDef.contains(e.toString())) {
             recFunction.add(e.toString());
         }

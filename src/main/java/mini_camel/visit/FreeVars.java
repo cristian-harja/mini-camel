@@ -3,6 +3,8 @@ package mini_camel.visit;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import mini_camel.ast.*;
+import mini_camel.util.SymDef;
+import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -14,7 +16,7 @@ public final class FreeVars extends DummyVisitor {
 
     private Set<String> globals = new HashSet<>();
     private Multiset<String> bound = HashMultiset.create();
-    private Set<AstSymRef> free = new HashSet<>();
+    private Set<SymRef> free = new HashSet<>();
     private Set<String> freeStr = new HashSet<>();
 
     private FreeVars() {
@@ -34,7 +36,7 @@ public final class FreeVars extends DummyVisitor {
         return fvv;
     }
 
-    public Set<AstSymRef> getFreeVariables() {
+    public Set<SymRef> getFreeVariables() {
         return free;
     }
 
@@ -52,7 +54,7 @@ public final class FreeVars extends DummyVisitor {
     }
 
     @Override
-    public void visit(@Nonnull AstSymRef e) {
+    public void visit(@Nonnull SymRef e) {
         String id = e.id;
         if (bound.contains(id)) return;
         if (globals.contains(id)) return;
@@ -74,13 +76,21 @@ public final class FreeVars extends DummyVisitor {
         e.initializer.accept(this);
         bound.addAll(e.getIdentifierList());
         e.ret.accept(this);
-        bound.removeAll(e.getIdentifierList());
+        for (SymDef s : e.ids) {
+            // Can't use removeAll() because it removes all occurrences, not
+            // just one.
+            bound.remove(s.id);
+        }
     }
 
     @Override
     public void visit(@Nonnull AstFunDef e) {
         bound.addAll(e.getArgumentNames());
         e.body.accept(this);
-        bound.removeAll(e.getArgumentNames());
+        for (SymDef s : e.args) {
+            // Can't use removeAll() because it removes all occurrences, not
+            // just one.
+            bound.remove(s.id);
+        }
     }
 }

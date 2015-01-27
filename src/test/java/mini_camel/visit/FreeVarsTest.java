@@ -1,7 +1,7 @@
 package mini_camel.visit;
 
 import mini_camel.ast.AstExp;
-import mini_camel.ast.AstSymRef;
+import mini_camel.util.SymRef;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ public class FreeVarsTest extends TestHelper {
 
         Collections.addAll(expectedFreeSet, vars);
 
-        for (AstSymRef var : FreeVars.compute(root).getFreeVariables()) {
+        for (SymRef var : FreeVars.compute(root).getFreeVariables()) {
             returnedFreeSet.add(var.id);
         }
 

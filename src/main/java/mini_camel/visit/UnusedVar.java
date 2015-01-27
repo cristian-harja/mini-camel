@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
@@ -45,7 +46,7 @@ public class UnusedVar extends DummyVisitor {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public void visit(@Nonnull AstSymRef e) {
+    public void visit(@Nonnull SymRef e) {
         right.add(e.id);
     }
 

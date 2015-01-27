@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
-import mini_camel.ast.AstSymDef;
+import mini_camel.util.SymDef;
+import mini_camel.util.SymRef;
 import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
@@ -50,8 +51,8 @@ public final class AlphaConv extends TransformHelper {
     @Override
     public AstExp visit(@Nonnull AstLet e) {
         // Rename the identifier introduced by this `let` expression
-        AstSymDef old_id = e.decl;
-        AstSymDef new_id = old_id.rename(newId(old_id.id));
+        SymDef old_id = e.decl;
+        SymDef new_id = old_id.rename(newId(old_id.id));
 
         // Recursively perform any modifications on the body of the `let`
         AstExp new_e1 = e.initializer.accept(this);
@@ -72,7 +73,7 @@ public final class AlphaConv extends TransformHelper {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public AstExp visit(@Nonnull AstSymRef e) {
+    public AstExp visit(@Nonnull SymRef e) {
         // Locate (in the environment) the symbol being referenced here.
         String old_id = e.id;
         String new_id = reMapping.get(old_id);
@@ -81,7 +82,7 @@ public final class AlphaConv extends TransformHelper {
         if (new_id == null || new_id.equals(old_id)) return e;
 
         // If the name was changed, return the new AST node.
-        return new AstSymRef(new_id);
+        return new SymRef(new_id);
     }
 
 
@@ -108,21 +109,21 @@ public final class AlphaConv extends TransformHelper {
 
     @Override
     public AstExp visit(@Nonnull AstFunDef e) {
-        AstSymDef old_id = e.decl;
-        AstSymDef new_id = old_id.rename(newId(old_id.id));
+        SymDef old_id = e.decl;
+        SymDef new_id = old_id.rename(newId(old_id.id));
 
         AstExp old_e = e.body;
         AstExp new_e;
 
-        List<AstSymDef> old_args = e.args;
-        List<AstSymDef> new_args = new ArrayList<>();
+        List<SymDef> old_args = e.args;
+        List<SymDef> new_args = new ArrayList<>();
 
 
         reMapping.push();
         {
             reMapping.put(old_id.id, new_id.id);
-            for (AstSymDef old_arg : old_args) {
-                AstSymDef new_arg = old_arg.rename(newId(old_arg.id));
+            for (SymDef old_arg : old_args) {
+                SymDef new_arg = old_arg.rename(newId(old_arg.id));
                 new_args.add(new_arg);
                 reMapping.put(old_arg.id, new_arg.id);
             }

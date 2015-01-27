@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
@@ -50,7 +51,7 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public AstExp visit(Ctx ctx, @Nonnull AstSymRef e) {
+    public AstExp visit(Ctx ctx, @Nonnull SymRef e) {
         if(ctx.unused.contains(e.toString()))
         {
             return null;
