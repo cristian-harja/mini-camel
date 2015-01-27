@@ -25,8 +25,8 @@ public class AssemblyGenerator {
     private ArrayList<String> memory;
     private int cursor;
 
-    private static final String FP_REG = "r12";
     private String RET_KEYWORD = "ret"; // return value in r11
+    private int heap_size = 2048; // To have 2048 cells of 4 bytes
 
     static {
         IMPORTS.put("print_newline", "min_caml_print_newline");
@@ -35,16 +35,19 @@ public class AssemblyGenerator {
     }
 
 
-
     public AssemblyGenerator() {
         //headers for .data and .text sections
-        data = new StringBuilder("\t.data");
-        text = new StringBuilder("\n\t.text");
+        data = new StringBuilder("\t.data\n\t.balign 4");
+        data.append("\nlimit : .word 0");    // to store the limit of the heap (head + heap_size*4)
+        data.append("\nhead : .word 0");     // to have the head/top of the heap
+        data.append("\nheap : .skip ").append(heap_size * 4); // to have heap_size cells of 4 bytes
+        data.append("\nerror_message : .asciz\t\"Not enough space in the heap\\n\"");
 
+        text = new StringBuilder("\n\t.text");
         text.append("\n\t.global _start");
         text.append("\n_start:");
         text.append("\n\tBL _main");
-        text.append("\n\tBL min_caml_print_newline");
+        //text.append("\n\tBL min_caml_print_newline"); // for more clarity we print a new line before terminating correctly
         text.append("\n\tBL min_caml_exit\n");
 
 
@@ -60,63 +63,67 @@ public class AssemblyGenerator {
     private void generateAssembly(Function funDef) {
         int i, n;
         List<Var> args = funDef.args;
-        List<Var> locals = funDef.locals;
         String varName;
         int varOffset;
 
         genLabel(funDef.name);
 
         argOffsets = new LinkedHashMap<>();
+        // initialization for the register allocator
         registers = new String[11];
         memory = new ArrayList<String>();
         cursor = 3;
 
-        // Function arguments
-        n = args.size();
-        if (n > 0) {
-            text.append("\n\t@ arguments");
-            for (i = 0; i < n; i++) {
-                varName = args.get(i).name;
-                varOffset = 4 * i + 40;
-                text.append("\n\t@   ").append(varName);
-                text.append(" -> ").append(FP_REG);
-                text.append("+").append(varOffset);
 
-                argOffsets.put(varName, varOffset);
+        // initialization of the heap management
+        if(funDef.name.name.equals("_main")) {
+            //push lr in stack
+            text.append("\n\t@ prologue");
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR lr, [sp]");
+
+            //initialize the head of the heap in memory
+            text.append("\n\tLDR r0, =heap");
+            text.append("\n\tLDR r1, =head");
+            text.append("\n\tSTR r0, [r1]");
+
+            //initialize the limit of the heap in memory
+            text.append("\n\tLDR r2, =limit");
+            text.append("\n\tLDR r3, =").append(heap_size * 4);
+            text.append("\n\tADD r3, r0, r3");
+            text.append("\n\tSTR r3, [r2]");
+        }
+        else {
+            // Function arguments
+            n = args.size();
+            if (n > 0) {
+                text.append("\n\t@ arguments");
+                for (i = 0; i < n; i++) {
+                    varName = args.get(i).name;
+                    varOffset = 4 * i + 40;
+                    text.append("\n\t@   ").append(varName);
+                    text.append(" -> r12");
+                    text.append("+").append(varOffset);
+
+                    argOffsets.put(varName, varOffset);
+                }
+                text.append('\n');
             }
-            text.append('\n');
+
+            // Prologue
+            text.append("\n\t@ prologue");
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR lr, [sp]");
+            text.append("\n\tstmfd	sp!, {r3 - r10}");
+
+
+            // Push frame pointer
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR r12, [sp]");
+            text.append("\n\tMOV r12, sp");
         }
 
-        // Local variables
-        /*n = locals.size();
-        if (n > 0) {
-            text.append("\n\t@ local variables");
-            for (i = 0, n = locals.size(); i < n; i++) {
-                varName = locals.get(i).name;
-                varOffset = 4 * i + 4; // negative offset
-                text.append("\n\t@   ").append(varName);
-                text.append(" -> ").append(FP_REG);
-                text.append("-").append(varOffset);
 
-                argOffsets.put(varName, -varOffset);
-            }
-            text.append('\n');
-        }*/
-
-        // Prologue
-        text.append("\n\t@ prologue");
-        text.append("\n\tSUB sp, #4");
-        text.append("\n\tSTR lr, [sp]");
-        text.append("\n\tstmfd	sp!, {r3 - r10}");
-
-
-        // Push frame pointer
-        text.append("\n\tSUB sp, #4");
-        text.append("\n\tSTR ").append(FP_REG).append(", [sp]");
-        text.append("\n\tMOV ").append(FP_REG).append(", sp");
-
-        // Allocate local vars
-        //text.append("\n\tSUB sp, sp, #").append(4 * locals.size());
 
         // Body of the function
         for (Instr instr : funDef.body) {
@@ -132,6 +139,12 @@ public class AssemblyGenerator {
                     break;
                 case CALL:
                     genCall((Call) instr);
+                    break;
+                case MAKE_CLS :
+                    genMake((Make_cls)instr);
+                    break;
+                case APPLY_CLS :
+                    genApply((Apply_cls)instr);
                     break;
                 case ASSIGN:
                     genAssign((Assign) instr);
@@ -161,22 +174,19 @@ public class AssemblyGenerator {
                     );
             }
 
-
-
         }
 
         // Epilogue
-        text.append('\n');
         text.append("\n\t@epilogue");
-        text.append("\n\tMOV sp, ").append(FP_REG);
-        text.append("\n\tLDR ").append(FP_REG).append(", [sp]");
-        text.append("\n\tADD sp, #4");
-        text.append("\n\tldmfd	sp!, {r3 - r10}");
+        if(!funDef.name.name.equals("_main")){
+            text.append("\n\tMOV sp, r12");
+            text.append("\n\tLDR r12, [sp]");
+            text.append("\n\tADD sp, #4");
+            text.append("\n\tldmfd	sp!, {r3 - r10}");
+        }
         text.append("\n\tLDR lr, [sp]");
         text.append("\n\tADD sp, #4");
-        text.append("\n\tMOV pc, lr");
-        text.append('\n');
-        text.append('\n');
+        text.append("\n\tMOV pc, lr\n\n");
     }
 
 
@@ -242,6 +252,9 @@ public class AssemblyGenerator {
     }
 
 
+
+
+
     private void emitAssign(@Nonnull Var v, @Nonnull Operand op) {
         String var = v.name;
         int rd;
@@ -262,7 +275,7 @@ public class AssemblyGenerator {
                 Integer offset = locateVar(var);
                 if(offset != null) {
                     emitAssign("r0", op);
-                    text.append("\n\tSTR r0, [").append(FP_REG).append(", #").append(offset).append("]");
+                    text.append("\n\tSTR r0, [r12, #").append(offset).append("]");
                     return;
                 }
 
@@ -288,7 +301,7 @@ public class AssemblyGenerator {
 
         Integer offset = locateVar(var);
         if(offset != null) {
-            text.append("\n\tSTR ").append(register).append(", [").append(FP_REG).append(", #").append(offset).append("]");
+            text.append("\n\tSTR ").append(register).append(", [r12, #").append(offset).append("]");
             return;
         }
 
@@ -328,7 +341,7 @@ public class AssemblyGenerator {
                 }
 
                 int offset = locateVar(var);
-                text.append("\n\tLDR ").append(register).append(", [").append(FP_REG).append(", #").append(offset).append("]");
+                text.append("\n\tLDR ").append(register).append(", [r12, #").append(offset).append("]");
 
         }
     }
@@ -374,6 +387,15 @@ public class AssemblyGenerator {
             return;
         }
 
+        if (name.equals("min_caml_print_newline")) {
+            text.append("\n\tBL min_caml_print_newline");
+
+            if(instr.ret != null){
+                emitAssign(instr.ret, "r11");
+            }
+            return;
+        }
+
 
         List<Operand> args = instr.args;
         for (int i = args.size() - 1; i >= 0; i--) {
@@ -381,8 +403,8 @@ public class AssemblyGenerator {
             text.append("\n\tSUB sp, #4");
             emitAssign("r0", args.get(i));
             text.append("\n\tSTR r0, [sp]");
-
         }
+
         text.append("\n\t@ call, free stack and set the return value");
         text.append("\n\tBL ").append(name);
 
@@ -395,6 +417,79 @@ public class AssemblyGenerator {
 
         text.append("\n\t@ end call");
     }
+
+    private void genMake(@Nonnull Make_cls instr) {
+        List<Operand> args = instr.free_args;
+        int var = getnewReg();
+        String rd = "r" + var;
+        registers[var] = instr.v.name;
+
+        text.append("\n@starting make cls");
+        text.append("\n\tLDR r0, =").append(args.size() + 2);
+        text.append("\n\tBL malloc");
+        text.append("\n\tMOV ").append(rd).append(", r0");
+
+        text.append("\n\tLDR r2, =").append(Integer.toString(args.size()));
+        text.append("\n\tSTR r2, [").append(rd).append("]");
+
+        text.append("\n\tLDR r2, =").append(instr.fun.name);
+        text.append("\n\tSTR r2, [").append(rd).append(", #4]");
+
+
+        for(int i = 0; i<args.size(); i++){
+            emitAssign("r2", args.get(i));
+            text.append("\n\tSTR r2, [").append(rd).append(", #").append(Integer.toString(i*4 + 8)).append("]");
+        }
+
+        text.append("\n@ending make cls");
+    }
+
+    private void genApply(@Nonnull Apply_cls instr) {
+        int cls = getReg(instr.cls.name);
+        String rc = "r" + cls;
+        int popSize = 0;
+
+
+
+        text.append("\n\tLDR r2, [").append(rc).append("]");
+        text.append("\n\tSUB r2, r2, #1");  // r2 <- size - 1
+        text.append("\n\tADD r1, ").append(rc).append(", #8]");
+        text.append("\n\tADD r1, r1, r2, LSL #2"); // r1 <- address of the last arg (rc + r2*4 + 8)
+        text.append("\nfor : ");
+        text.append("\n\tCMP r2, #0");
+        text.append("\n\tBLT end_for");
+        text.append("\n\tLDR r0, [r1]");
+        text.append("\n\tSUB sp, sp, #4");
+        text.append("\n\tSTR r0, [sp]");
+        text.append("\n\tSUB r2, r2, #1");
+        text.append("\n\tBAL for");
+
+        text.append("\nend_for : \n");
+
+
+
+        List<Operand> args = instr.args;
+        for (int i = args.size() - 1; i >= 0; i--) {
+            text.append("\n\t@ push argument ").append(i);
+            text.append("\n\tSUB sp, #4");
+            emitAssign("r0", args.get(i));
+            text.append("\n\tSTR r0, [sp]");
+            popSize += 4;  // TODO ADD size of free_args
+        }
+
+        text.append("\n\t@ call, free stack and set the return value");
+        text.append("\n\tBX [").append(rc).append(", #4"); //TODO TEST BX [rc, #4]
+
+        text.append("\n\tADD sp, #").append(Integer.toString(popSize));
+
+        if(instr.ret != null){
+            emitAssign(instr.ret, "r11");
+        }
+        text.append("\n\t@ end call");
+
+    }
+
+
 
     private void genAssign(@Nonnull Assign i) {
         emitAssign(i.var, i.op); // r0 <- op
@@ -435,10 +530,30 @@ public class AssemblyGenerator {
     }
 
     public void writeAssembly(@Nonnull PrintStream out) {
-        //footer for .text section and printing everything in the output_file
-        if (data.length() > 7) {
-            out.println(data.toString());
-        }
+        // function check_heap :
+        text.append("\ncheck_heap :");
+        text.append("\n\tLDR r0, =limit");
+        text.append("\n\tLDR r0, [r0]");
+        text.append("\n\tCMP r1, r0");
+        text.append("\n\tBGT error_in_heap");
+        text.append("\n\tMOV PC, LR");
+        text.append("\nerror_in_heap :");
+        text.append("\n\tLDR r0, =error_message");
+        text.append("\n\tBL min_caml_print_string");
+        text.append("\n\tBL min_caml_exit\n");
+
+        // function malloc (r0) :
+        text.append("\nmalloc :");
+        text.append("\n\tLDR r1, =head");
+        text.append("\n\tLDR r2, [r1]");
+        text.append("\n\tADD r1, r2, r0, LSL #2");
+        text.append("\n\tBL check_heap");
+        text.append("\n\tLDR r0, =head");
+        text.append("\n\tSTR r1, [r0]");
+        text.append("\n\tMOV r0, r1\n");
+
+        //prints everything contained in data and text in the output_file
+        out.println(data.toString());
         out.println(text.toString());
     }
 
