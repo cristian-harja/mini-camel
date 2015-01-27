@@ -8,23 +8,19 @@ import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.List;
 
-/**
- * Calls a function object (previously created by a {@link ClosureMake}).
- */
-@Immutable
-public final class ApplyClosure extends KNode {
+public final class KTuple extends KNode {
     @Nonnull
-    public final SymRef functionObj;
+    public final List<SymRef> items;
 
     @Nonnull
-    public final List<SymRef> boundArguments;
+    public final Type type;
 
-    public ApplyClosure(SymRef functionObj, List<SymRef> boundArguments) {
-        this.functionObj = functionObj;
-        this.boundArguments = boundArguments;
+    public KTuple(List<SymRef> items, Type type) {
+        this.items = Collections.unmodifiableList(items);
+        this.type = type;
     }
 
     public void accept(KVisitor v) {
@@ -41,15 +37,11 @@ public final class ApplyClosure extends KNode {
 
     @Nonnull
     public Type getDataType() {
-        return null; // fixme after closure conversion
+        return type;
     }
 
     @Nonnull
     public String toString() {
-        return String.format(
-                "ApplyClosure(%s, %s)",
-                functionObj.id,
-                boundArguments.toString()
-        );
+        return items.toString();
     }
 }

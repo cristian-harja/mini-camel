@@ -1,10 +1,7 @@
 package mini_camel.knorm;
 
 import mini_camel.type.Type;
-import mini_camel.util.KVisitor;
-import mini_camel.util.KVisitor1;
-import mini_camel.util.KVisitor2;
-import mini_camel.util.SymRef;
+import mini_camel.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -13,10 +10,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public final class KLet extends KNode {
     @Nonnull
-    public final SymRef id;
-
-    @Nonnull
-    public final Type t;
+    public final SymDef id;
 
     @Nonnull
     public final KNode initializer;
@@ -24,9 +18,8 @@ public final class KLet extends KNode {
     @Nonnull
     public final KNode ret;
 
-    public KLet(SymRef id, Type t, KNode initializer, KNode ret) {
+    public KLet(SymDef id, KNode initializer, KNode ret) {
         this.id = id;
-        this.t = t;
         this.initializer = initializer;
         this.ret = ret;
     }
@@ -45,9 +38,14 @@ public final class KLet extends KNode {
     }
 
     @Nonnull
+    public Type getDataType() {
+        return id.type;
+    }
+
+    @Nonnull
     public String toString() {
         return String.format(
-                "let %s = (%s) in (%s)",
+                "(let %s = %s in %s)",
                 id.id, initializer, ret
         );
     }

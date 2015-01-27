@@ -1,5 +1,7 @@
 package mini_camel.knorm;
 
+import mini_camel.type.TFloat;
+import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
 import mini_camel.util.KVisitor1;
 import mini_camel.util.KVisitor2;
@@ -32,7 +34,11 @@ public final class KFDiv extends KNode {
     }
 
     @Nonnull
-    @Override
+    public Type getDataType() {
+        return TFloat.INSTANCE;
+    }
+
+    @Nonnull
     public String toString() {
         return op1 + " /. " + op2;
     }

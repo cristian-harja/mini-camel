@@ -1,5 +1,6 @@
 package mini_camel.knorm;
 
+import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
 import mini_camel.util.KVisitor1;
 import mini_camel.util.KVisitor2;
@@ -19,9 +20,13 @@ public final class KApp extends KNode {
     @Nonnull
     public final List<SymRef> args;
 
-    public KApp(SymRef f, List<SymRef> args) {
+    @Nonnull
+    public final Type returnedType;
+
+    public KApp(SymRef f, List<SymRef> args, Type returnedType) {
         this.f = f;
         this.args = Collections.unmodifiableList(args);
+        this.returnedType = returnedType;
     }
 
     public void accept(KVisitor v) {
@@ -34,6 +39,11 @@ public final class KApp extends KNode {
 
     public <T, U> T accept(KVisitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
+    }
+
+    @Nonnull
+    public Type getDataType() {
+        return returnedType;
     }
 
     @Nonnull
