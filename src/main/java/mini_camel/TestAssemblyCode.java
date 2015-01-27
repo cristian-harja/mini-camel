@@ -15,8 +15,10 @@ public class TestAssemblyCode {
         //r = new StringReader("let rec f x y z t a = x + y - z + a - t in f 1 2 3 4 5");
         //r = new StringReader("let rec f x = x + 1 in f 1");
         //r = new StringReader("let rec f x = f x in f");
+        //r = new StringReader("let x = 1 in let rec f y = x in f 1");
         //r = new StringReader("let rec fact x = if (x <= 1.0) then 1.0 else (x *. (fact (x -. 1.0))) in fact 7.0");
-        r = new StringReader("let rec f x = x + 1 in let rec g z = z + 1 in let a = g 1 in f a");
+        r = new StringReader("let rec f x = x + 1 in let rec g z a = z + a in f(g 1 2)");
+        //r = new StringReader("let x = let z = 1 in z + 2 in x + 1");
         //r = new StringReader("let rec f x y = x *. y in 5.");
         //r = new StringReader("let rec f x = let rec g z = g z in 3 in f 2");
         //r = new StringReader("");

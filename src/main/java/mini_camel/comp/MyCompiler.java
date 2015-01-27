@@ -175,18 +175,16 @@ public class MyCompiler {
     }
 
     private void transformElimination() {
-        UnusedVar cff = new UnusedVar();
-        Set<String> unused = cff.applyTransform(transformedAst);
         Elim cf = new Elim();
-        transformedAst = cf.applyTransform(transformedAst, unused);
+        transformedAst = cf.applyTransform(transformedAst);
     }
 
     public boolean preProcessCode() {
         System.out.println("ETAPE 1 : " + transformedAst.toString());
         transformAlphaConversion();
-        System.out.println("ETAPE 2 : "+transformedAst.toString());
         /*transformBetaReduction();
         transformConstantFolding();
+        System.out.println("ETAPE 2 : " + transformedAst.toString());
         transformElimination();*/
         transformInlining();
         System.out.println("ETAPE 3 : " + transformedAst.toString());

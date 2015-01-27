@@ -3,6 +3,7 @@ package mini_camel.visit;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Inlining extends TransformHelper2<Inlining.Ctx> {
@@ -12,9 +13,11 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
 
     public static class Ctx {
         private List<String> l;
+        private List<AstFunDef> afd;
 
         private Ctx(List<String> l) {
             this.l = l;
+            this.afd = new ArrayList<>();
         }
 
     }
@@ -39,25 +42,46 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
         }
 
         Ctx ctx = new Ctx(l);
-        System.out.println("Je recursiveVisit");
         AstExp e = recursiveVisit(ctx, astNode);
-        System.out.println("Jai fini");
         return e;
     }
 
     public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
         if (ctx.l.contains(e.fd.id.toString())) {
-            System.out.println("Je passe ici " + e.fd.id.toString());
-            if (e.e instanceof AstApp) {
-                System.out.println("App : "+e.e.toString());
-                System.out.println("Expr : "+e.toString());
-                return inline(e.fd, (AstApp) e.e);
-            }
-
+            ctx.afd.add(e.fd);
         }
         return recursiveVisit(ctx, e.e);
     }
 
+
+    public AstExp visit(Ctx ctx, @Nonnull AstApp e)
+    {
+        int index = 0;
+        for(AstFunDef iterator : ctx.afd)
+        {
+            if(iterator.id.toString().equals(e.e.toString()))
+            {
+                break;
+            }
+            index++;
+        }
+        int bool = 0;
+        for(AstExp iterator : e.es)
+        {
+            if(iterator instanceof AstApp)
+            {
+                bool ++;
+            }
+        }
+        if(bool == 0)
+        {
+            return inline(ctx.afd.get(index), e);
+        }
+        AstExp tmp = recursiveVisit(ctx,e.es.get(0));
+        AstLet tmp2 = inline(ctx.afd.get(index), e);
+        return new AstLet(ctx.afd.get(index).args.get(0), ctx.afd.get(index).argTypes.get(0), tmp, ctx.afd.get(index).e);
+
+    }
 
 
     public AstLet inline(AstFunDef fd, AstApp e) {
