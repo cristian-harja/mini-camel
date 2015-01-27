@@ -1,10 +1,7 @@
 package mini_camel;
 
 import java.io.*;
-import mini_camel.ast.*;
-import mini_camel.gen.Lexer;
-import mini_camel.gen.Parser;
-import mini_camel.visit.*;
+import mini_camel.comp.MyCompiler;
 
 
 public class TestTransform {
@@ -15,30 +12,32 @@ public class TestTransform {
             //r = new StringReader("let y = 4 in let x = y in let z = print_int(x) in z");
             r = new StringReader("let x = 4 in let y = 12 in let z = x - y in z - 3 + 12");
 
-            //r = new StringReader("let x = 1.5 in let y = 2.74 in x +. y");
 
-            Parser p = new Parser(new Lexer(r));
-            AstExp result = (AstExp) p.parse().value;
 
-            if (result == null) {
+            MyCompiler c = new MyCompiler(r);
+
+            if(!c.parseCode()){
+                c.printErrors(System.err);
                 return;
             }
 
+            if(!c.freeCheck()){
+                c.printErrors(System.err);
+                return;
+            }
 
+            if(!c.typeCheck()){
+                c.printErrors(System.err);
+                return;
+            }
 
-            AstExp res2 = AlphaConv.compute(result);
+            if(!c.preProcessCode()){
+                c.printErrors(System.err);
+                return;
+            }
 
-            AstExp res3 = BetaReduction.compute(res2);
+            c.outputTransformedAst(System.out);
 
-            AstExp res4 = ConstantFold.compute(res3);
-
-
-
-
-
-            System.out.println("Printing the visitor : ");
-            res4.accept(new PrintVisitor(System.out));
-            System.out.println();
         } catch (Exception e) {
             e.printStackTrace();
         }
