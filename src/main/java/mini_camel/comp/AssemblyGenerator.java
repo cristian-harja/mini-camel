@@ -8,6 +8,7 @@ import mini_camel.ir.op.*;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +17,16 @@ public class AssemblyGenerator {
     StringBuilder data;
     StringBuilder text;
 
-    boolean[] registers;
 
     private static final Map<String, String> IMPORTS = new LinkedHashMap<>();
 
-    private Map<String, Integer> varOffsets;
+    private Map<String, Integer> argOffsets;
+    private String[] registers;
+    private ArrayList<String> memory;
+    private int cursor;
 
     private static final String FP_REG = "r12";
+    private String RET_KEYWORD = "ret"; // return value in r11
 
     static {
         IMPORTS.put("print_newline", "min_caml_print_newline");
@@ -30,24 +34,24 @@ public class AssemblyGenerator {
 
     }
 
-    private String RET_KEYWORD = "ret";
+
 
     public AssemblyGenerator() {
         //headers for .data and .text sections
         data = new StringBuilder("\t.data");
-        text = new StringBuilder();
+        text = new StringBuilder("\n\t.text");
 
-        // TODO: use register for return value
-        data.append("\nret\t: .word @ ugly");
-
-        text.append("\n\t.text");
         text.append("\n\t.global _start");
         text.append("\n_start:");
         text.append("\n\tBL _main");
         text.append("\n\tBL min_caml_print_newline");
         text.append("\n\tBL min_caml_exit\n");
 
-        registers = new boolean[13];
+        registers = new String[11];
+        memory = new ArrayList<String>();
+        cursor = 2;
+
+
     }
 
     public void generateAssembly(List<Function> functions) {
@@ -65,7 +69,10 @@ public class AssemblyGenerator {
 
         genLabel(funDef.name);
 
-        varOffsets = new LinkedHashMap<>();
+        argOffsets = new LinkedHashMap<>();
+        registers = new String[11];
+        memory = new ArrayList<String>();
+        cursor = 2;
 
         // Function arguments
         n = args.size();
@@ -78,13 +85,13 @@ public class AssemblyGenerator {
                 text.append(" -> ").append(FP_REG);
                 text.append("+").append(varOffset);
 
-                varOffsets.put(varName, varOffset);
+                argOffsets.put(varName, varOffset);
             }
             text.append('\n');
         }
 
         // Local variables
-        n = locals.size();
+        /*n = locals.size();
         if (n > 0) {
             text.append("\n\t@ local variables");
             for (i = 0, n = locals.size(); i < n; i++) {
@@ -94,15 +101,17 @@ public class AssemblyGenerator {
                 text.append(" -> ").append(FP_REG);
                 text.append("-").append(varOffset);
 
-                varOffsets.put(varName, -varOffset);
+                argOffsets.put(varName, -varOffset);
             }
             text.append('\n');
-        }
+        }*/
 
         // Prologue
         text.append("\n\t@ prologue");
         text.append("\n\tSUB sp, #4");
         text.append("\n\tSTR lr, [sp]");
+        text.append("\n\tstmfd	sp!, {r2 - r10}");
+
 
         // Push frame pointer
         text.append("\n\tSUB sp, #4");
@@ -118,6 +127,7 @@ public class AssemblyGenerator {
             if (t != Instr.Type.LABEL) {
                 text.append("\n\n\t@ ").append(instr.toString());
             }
+
 
             switch (t) {
                 case LABEL:
@@ -153,6 +163,9 @@ public class AssemblyGenerator {
                                     instr.toString() + ")."
                     );
             }
+
+
+
         }
 
         // Epilogue
@@ -161,6 +174,7 @@ public class AssemblyGenerator {
         text.append("\n\tMOV sp, ").append(FP_REG);
         text.append("\n\tLDR ").append(FP_REG).append(", [sp]");
         text.append("\n\tADD sp, #4");
+        text.append("\n\tldmfd	sp!, {r2 - r10}");
         text.append("\n\tLDR lr, [sp]");
         text.append("\n\tADD sp, #4");
         text.append("\n\tMOV pc, lr");
@@ -168,29 +182,133 @@ public class AssemblyGenerator {
         text.append('\n');
     }
 
-    private String locateVar(
-            @Nonnull StringBuilder out_sb,
+
+
+    private Integer locateVar(
             @Nonnull String name
     ) {
-        Integer offset = varOffsets.get(name);
-        if (offset == null) {
+        Integer offset = argOffsets.get(name);
+        /*if (offset == null) {
             throw new RuntimeException(
                     "Sorry, dynamic links & closures not supported yet."
             );
-        }
-        out_sb.append("[").append(FP_REG).append(", #");
-        text.append(offset).append("]");
-        return out_sb.toString();
+        }*/
+        return offset;
     }
 
+
+    private int getnewReg(){
+
+        for(int i = 2; i<=10; i++){
+            if(registers[i] == null){
+                //System.out.println("realloc " + i + " " + registers.size());
+                return i;
+            }
+        }
+
+        String tmp = registers[cursor];
+        data.append("\n").append(tmp).append(" : .word ");
+        text.append("\n\tLDR r0, =").append(tmp);
+        text.append("\n\tSTR r").append(cursor).append(", [r0]");
+        memory.add(tmp);
+
+        int ret = cursor;
+        cursor = cursor > 9 ? 2 : ++cursor;
+        System.out.println("ret : " + ret + " cursor : " + cursor);
+
+        //System.out.println("spill " + ret + " " + registers.size());
+
+        return ret;
+    }
+
+    private int getReg(String var){
+        int i;
+
+        if(var.equals(RET_KEYWORD)){
+            return 11;
+        }
+
+        for (i = 2; i<11; i++){
+            if(registers[i] != null && registers[i].equals(var)){
+                System.out.println("give reg " + i + " for " + var);
+                return i;
+            }
+        }
+
+        for(i = 0; i<memory.size(); i++){
+            if(memory.get(i).equals(var)){
+                memory.remove(i);
+                int r = getnewReg();
+                text.append("\n\tLDR r0, =").append(var);
+                text.append("\n\tLDR r").append(r).append(", [r0]");
+
+                System.out.println("give reg r0 to " + var + " from memory");
+
+                return r;
+            }
+        }
+
+        System.out.println(var + " not in reg or mem");
+        return -1;
+    }
+
+
     private void emitAssign(@Nonnull Var v, @Nonnull Operand op) {
-        emitAssign("r0", op);
-        emitAssign(v, "r0");
+        String var = v.name;
+        int rd;
+        switch (op.getOperandType()) {
+            case CONST_INT:
+                rd = getnewReg();
+                int val = ((ConstInt)op).value;
+                registers[rd] = var;
+                text.append("\n\tLDR r").append(rd).append(", =").append(val);
+                return;
+
+
+            case VAR :
+                if((rd = getReg(var)) != -1){
+                    emitAssign("r"+rd, op);
+                }
+
+                Integer offset = locateVar(var);
+                if(offset != null) {
+                    emitAssign("r0", op);
+                    text.append("\n\tSTR r0, [").append(FP_REG).append(", #").append(offset).append("]");
+                    return;
+                }
+
+                // here the var is not encountered yet
+                rd = getnewReg();
+                registers[rd] = var;
+                emitAssign("r"+rd,op);
+                return;
+
+
+        }
+
     }
 
     private void emitAssign(@Nonnull Var v, @Nonnull String register) {
-        text.append("\n\tSTR ").append(register).append(", ");
-        locateVar(text, v.name);
+        int rd;
+        String var = v.name;
+
+        if((rd = getReg(var)) != -1){
+            text.append("\n\tMOV r").append(rd).append(", ").append(register);
+            return;
+        }
+
+        Integer offset = locateVar(var);
+        if(offset != null) {
+            text.append("\n\tSTR ").append(register).append(", [").append(FP_REG).append(", #").append(offset).append("]");
+            return;
+        }
+
+        // here the var is not encountered yet
+        rd = getnewReg();
+        registers[rd] = var;
+        text.append("\n\tMOV r").append(rd).append(", ").append(register);
+        return;
+
     }
 
     private void emitAssign(@Nonnull String register, @Nonnull Operand op) {
@@ -212,14 +330,17 @@ public class AssemblyGenerator {
                 return;
 
             case VAR:
-                Var var = (Var) op;
-                String varName = var.name;
-                if (varName.equals(RET_KEYWORD)) {
-                    emitAssign(register, "r11");
+                int rd;
+                String var = ((Var)op).name;
+
+                if((rd = getReg(var)) != -1){
+                    text.append("\n\tMOV ").append(register).append(", r").append(rd);
                     return;
                 }
-                text.append("\n\tLDR ").append(register).append(", ");
-                locateVar(text, varName);
+
+                int offset = locateVar(var);
+                text.append("\n\tLDR ").append(register).append(", [").append(FP_REG).append(", #").append(offset).append("]");
+
         }
     }
 

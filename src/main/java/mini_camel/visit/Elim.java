@@ -23,8 +23,10 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
      * @param astNode input AST
      * @return transformed AST
      */
-    public AstExp applyTransform(@Nonnull AstExp astNode, @Nonnull Set<String> s) {
-        Ctx ctx = new Ctx(s);
+    public AstExp applyTransform(@Nonnull AstExp astNode) {
+        UnusedVar cff = new UnusedVar();
+        Set<String> unused = cff.applyTransform(astNode);
+        Ctx ctx = new Ctx(unused);
         AstExp e = recursiveVisit(ctx, astNode);
         return e;
 
@@ -59,7 +61,7 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
 
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
-        return recursiveVisit(ctx, e.ret);
+        return e;
 
     }
 

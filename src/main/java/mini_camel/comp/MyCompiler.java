@@ -5,7 +5,6 @@ import mini_camel.ast.AstSymRef;
 import mini_camel.util.Pair;
 import mini_camel.visit.*;
 import mini_camel.ast.AstExp;
-import mini_camel.ast.AstSymDef;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.Function;
@@ -139,10 +138,12 @@ public class MyCompiler {
 
     public void outputAST(PrintStream out) {
         parsedAst.accept(new PrintVisitor(out));
+        out.print("\n");
     }
 
     public void outputTransformedAst(PrintStream out) {
         transformedAst.accept(new PrintVisitor(out));
+        out.print("\n");
     }
 
     private void transformAlphaConversion() {
@@ -174,18 +175,16 @@ public class MyCompiler {
     }
 
     private void transformElimination() {
-        UnusedVar cff = new UnusedVar();
-        Set<String> unused = cff.applyTransform(transformedAst);
         Elim cf = new Elim();
-        transformedAst = cf.applyTransform(transformedAst, unused);
+        transformedAst = cf.applyTransform(transformedAst);
     }
 
     public boolean preProcessCode() {
         System.out.println("ETAPE 1 : " + transformedAst.toString());
         transformAlphaConversion();
-        System.out.println("ETAPE 2 : " + transformedAst.toString());
         /*transformBetaReduction();
         transformConstantFolding();
+        System.out.println("ETAPE 2 : " + transformedAst.toString());
         transformElimination();*/
         transformInlining();
         System.out.println("ETAPE 3 : " + transformedAst.toString());
