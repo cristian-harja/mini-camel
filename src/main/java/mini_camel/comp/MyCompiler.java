@@ -180,14 +180,20 @@ public class MyCompiler {
     }
 
     public boolean preProcessCode() {
-        System.out.println("ETAPE 1 : " + transformedAst.toString());
-        transformAlphaConversion();
-        /*transformBetaReduction();
-        transformConstantFolding();
-        System.out.println("ETAPE 2 : " + transformedAst.toString());
-        transformElimination();*/
-        transformInlining();
-        System.out.println("ETAPE 3 : " + transformedAst.toString());
+        AstExp oldAst;
+        int i = 0;
+        do {
+            i++;
+            oldAst = transformedAst;
+            System.out.println("ETAPE 1 : " + transformedAst.toString());
+            transformAlphaConversion();
+            transformBetaReduction();
+            transformConstantFolding();
+            System.out.println("ETAPE 2 : " + transformedAst.toString());
+            transformElimination();
+            transformInlining();
+            System.out.println("ETAPE 3 : " + transformedAst.toString());
+        } while (oldAst != transformedAst || i == 3);
         return true;
     }
 
