@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import mini_camel.ast.Id;
+import mini_camel.ast.AstSymDef;
 import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;
@@ -48,28 +48,27 @@ public class Checker {
         program.accept(new DummyVisitor() {
             @Override
             public void visit(@Nonnull AstLet e) {
-                if (e.id.id.equals(symbolName)) {
-                    found[0] = e.id_type;
+                if (e.decl.id.equals(symbolName)) {
+                    found[0] = e.decl.type;
                 }
-                e.e1.accept(this);
-                e.e2.accept(this);
+                e.initializer.accept(this);
+                e.ret.accept(this);
             }
 
             @Override
             public void visit(@Nonnull AstFunDef e) {
-                if (e.id.id.equals(symbolName)) {
-                    found[0] = e.functionType;
+                if (e.decl.id.equals(symbolName)) {
+                    found[0] = e.decl.type;
                     return;
                 }
-                List<Id> args = e.args;
-                for (int i = 0; i < args.size(); i++) {
-                    Id exp = args.get(i);
+                List<AstSymDef> args = e.args;
+                for (AstSymDef exp : args) {
                     if (exp.id.equals(symbolName)) {
-                        found[0] = e.argTypes.get(i);
+                        found[0] = exp.type;
                         return;
                     }
                 }
-                e.e.accept(this);
+                e.body.accept(this);
             }
         });
         return concreteType(found[0]);

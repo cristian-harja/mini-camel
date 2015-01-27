@@ -14,14 +14,14 @@ import java.util.List;
  * <p>A sub-class would override some methods (depending on the node types
  * that it wants to transform) and return either the same node, or a new one.
  * </p>
- * <p>Transforming the AST is done in two steps:<ul>
+ * <p>Transforming the AST is done in two steps:</p>
+ * <ul>
  *     <li>Top-down: recursively visit each node of the tree</li>
  *     <li>Bottom-up: returning from each recursive call, checking whether
  *     any of the children were modified. If not, return the old node;
  *     otherwise, return a new node of the same type, but with the new
  *     children as its fields.</li>
  * </ul>
- * </p>
  * <p>The methods that are not overridden will default to an implementation
  * that applies the transformation recursively on each node (top-down) and
  * then after returning from the recursive calls (bottom-up) return new or
@@ -75,7 +75,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
     }
 
     @Override
-    public AstExp visit(T ctx, @Nonnull AstVar e) {
+    public AstExp visit(T ctx, @Nonnull AstSymRef e) {
         return e;
     }
 
@@ -204,41 +204,41 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstLet e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
+        AstExp old_e1 = e.initializer;
+        AstExp old_e2 = e.ret;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
-        if (new_e1 == e.e1 && new_e2 == e.e2) return e;
-        return new AstLet(e.id, e.id_type, new_e1, new_e2);
+        if (new_e1 == e.initializer && new_e2 == e.ret) return e;
+        return new AstLet(e.decl, new_e1, new_e2);
     }
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstLetTuple e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
+        AstExp old_e1 = e.initializer;
+        AstExp old_e2 = e.ret;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
-        if (new_e1 == e.e1 && new_e2 == e.e2) return e;
-        return new AstLetTuple(e.ids, e.ts, new_e1, new_e2);
+        if (new_e1 == e.initializer && new_e2 == e.ret) return e;
+        return new AstLetTuple(e.ids, new_e1, new_e2);
     }
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstArray e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
+        AstExp old_e1 = e.size;
+        AstExp old_e2 = e.initializer;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
-        if (new_e1 == e.e1 && new_e2 == e.e2) return e;
+        if (new_e1 == e.size && new_e2 == e.initializer) return e;
         return new AstArray(new_e1, new_e2);
     }
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstGet e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
+        AstExp old_e1 = e.array;
+        AstExp old_e2 = e.index;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
-        if (new_e1 == e.e1 && new_e2 == e.e2) return e;
+        if (new_e1 == e.array && new_e2 == e.index) return e;
         return new AstGet(new_e1, new_e2);
     }
 
@@ -248,9 +248,9 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstIf e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
-        AstExp old_e3 = e.e3;
+        AstExp old_e1 = e.eCond;
+        AstExp old_e2 = e.eThen;
+        AstExp old_e3 = e.eElse;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
         AstExp new_e3 = old_e3.accept(this, ctx);
@@ -260,13 +260,13 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstPut e) {
-        AstExp old_e1 = e.e1;
-        AstExp old_e2 = e.e2;
-        AstExp old_e3 = e.e3;
+        AstExp old_e1 = e.array;
+        AstExp old_e2 = e.index;
+        AstExp old_e3 = e.value;
         AstExp new_e1 = old_e1.accept(this, ctx);
         AstExp new_e2 = old_e2.accept(this, ctx);
         AstExp new_e3 = old_e3.accept(this, ctx);
-        if (new_e1 == e.e1 && new_e2 == e.e2 && new_e3 == e.e3) return e;
+        if (new_e1 == e.array && new_e2 == e.index && new_e3 == e.value) return e;
         return new AstPut(new_e1, new_e2, new_e3);
     }
 
@@ -305,19 +305,19 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstFunDef e) {
-        AstExp old_e = e.e;
+        AstExp old_e = e.body;
         AstExp new_e = old_e.accept(this, ctx);
         if (new_e == old_e) return e;
-        return new AstFunDef(e.id, e.args, new_e);
+        return new AstFunDef(e.decl, e.args, new_e);
     }
 
     @Override
     public AstExp visit(T ctx, @Nonnull AstLetRec e) {
-        AstExp old_e = e.e;
+        AstExp old_e = e.ret;
         AstExp new_e = old_e.accept(this, ctx);
         AstFunDef old_fd = e.fd;
         AstFunDef new_fd = (AstFunDef) old_fd.accept(this, ctx);
-        if (new_fd == e.fd && new_e == e.e) return e;
+        if (new_fd == e.fd && new_e == e.ret) return e;
         return new AstLetRec(new_fd, new_e);
     }
 

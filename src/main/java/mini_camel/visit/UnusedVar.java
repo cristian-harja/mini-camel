@@ -35,9 +35,9 @@ public class UnusedVar extends DummyVisitor {
      */
     @Override
     public void visit(@Nonnull AstLet e) {
-        left.add(e.id.id);
-        e.e1.accept(this);
-        e.e2.accept(this);
+        left.add(e.decl.id);
+        e.initializer.accept(this);
+        e.ret.accept(this);
     }
 
     /**
@@ -45,14 +45,14 @@ public class UnusedVar extends DummyVisitor {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public void visit(@Nonnull AstVar e) {
-        right.add(e.id.id);
+    public void visit(@Nonnull AstSymRef e) {
+        right.add(e.id);
     }
 
 
     @Override
     public void visit(@Nonnull AstLetRec e) {
-        e.e.accept(this);
+        e.ret.accept(this);
     }
 
 

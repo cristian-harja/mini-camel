@@ -75,14 +75,14 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
             if (pending.isEmpty()) break;
             AstFunDef fd = pending.remove();
 
-            name = fd.id.id;
+            name = fd.decl.id;
 
             if (compiled.contains(name)) break;
             compiled.add(name);
 
-            node = fd.e;
+            node = fd.body;
             args = new ArrayList<>(fd.args.size());
-            for (Id id : fd.args) {
+            for (AstSymDef id : fd.args) {
                 args.add(new Var(id.id));
             }
         }
@@ -259,9 +259,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         Label lThen = Label.gen();
         Label lElse = Label.gen();
         Label lEndIf = Label.gen();
-        Couple cou1 = e.e1.accept(this, new Branches(lThen, lElse));
-        Couple cou2 = e.e2.accept(this, null);
-        Couple cou3 = e.e3.accept(this, null);
+        Couple cou1 = e.eCond.accept(this, new Branches(lThen, lElse));
+        Couple cou2 = e.eThen.accept(this, null);
+        Couple cou3 = e.eElse.accept(this, null);
         l.addAll(cou1.getInstr());
         l.add(lThen);
         l.addAll(cou2.getInstr());
@@ -277,11 +277,11 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     public Couple visit(Branches b, @Nonnull AstLet e) {
         List<Instr> l = new ArrayList<>();
-        Couple cou1 = e.e1.accept(this, null);
-        Couple cou2 = e.e2.accept(this, null);
+        Couple cou1 = e.initializer.accept(this, null);
+        Couple cou2 = e.ret.accept(this, null);
 
         l.addAll(cou1.getInstr());
-        Var v = new Var(e.id.id);
+        Var v = new Var(e.decl.id);
         l.add(new Assign(v, cou1.getVar()));
         locals.add(v);
         l.addAll(cou2.getInstr());
@@ -289,13 +289,13 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return new Couple(l, cou2.getVar());
     }
 
-    public Couple visit(Branches b, @Nonnull AstVar e) {
-        return new Couple(Collections.<Instr>emptyList(), new Var(e.id.id));
+    public Couple visit(Branches b, @Nonnull AstSymRef e) {
+        return new Couple(Collections.<Instr>emptyList(), new Var(e.id));
     }
 
     public Couple visit(Branches b, @Nonnull AstLetRec e) {
         functions.add(e.fd);
-        return e.e.accept(this, null);
+        return e.ret.accept(this, null);
     }
 
     public Couple visit(Branches b, @Nonnull AstApp e) {

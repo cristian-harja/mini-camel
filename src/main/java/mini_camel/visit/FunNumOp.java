@@ -2,7 +2,6 @@ package mini_camel.visit;
 
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstLetRec;
-import mini_camel.visit.DummyVisitor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -31,11 +30,11 @@ public class FunNumOp extends DummyVisitor {
     @Override
     public void visit(@Nonnull AstLetRec e) {
         NumberOperation no = new NumberOperation();
-        int tmp = no.applyTransform(e.fd.e);
+        int tmp = no.applyTransform(e.fd.body);
         //Ici,il faut rajouter une limite
         if(tmp < bound)
-        {funNumOp.add(e.fd.id.toString());}
-        e.e.accept(this);
+        {funNumOp.add(e.fd.decl.id);}
+        e.ret.accept(this);
     }
 
 }

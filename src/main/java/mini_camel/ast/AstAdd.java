@@ -1,8 +1,11 @@
 package mini_camel.ast;
 
-import mini_camel.visit.*;
+import mini_camel.visit.Visitor;
+import mini_camel.visit.Visitor1;
+import mini_camel.visit.Visitor2;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -10,33 +13,32 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class AstAdd extends AstExp {
+    /**
+     * The operands of the sum. Their data type is expected to be
+     * {@link mini_camel.type.TInt}.
+     */
+    @Nonnull
     public final AstExp e1, e2;
 
-    public AstAdd(
-            @Nonnull AstExp e1,
-            @Nonnull AstExp e2
-    ) {
+    public AstAdd(AstExp e1, AstExp e2) {
         this.e1 = e1;
         this.e2 = e2;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    public <T> T accept(@Nonnull Visitor1<T> v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
-    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
-        return v.visit(a, this, ((AstVar) e1).id, ((AstVar) e2).id);
-    }
-
-    public String toString(){
+    @Nonnull
+    public String toString() {
         return "(" + e1.toString() + " + " + e2.toString() + ")";
     }
 

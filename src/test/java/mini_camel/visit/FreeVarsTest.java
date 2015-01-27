@@ -1,8 +1,7 @@
-package mini_camel.comp;
+package mini_camel.visit;
 
 import mini_camel.ast.AstExp;
-import mini_camel.ast.Id;
-import mini_camel.visit.FreeVars;
+import mini_camel.ast.AstSymRef;
 import mini_camel.tests.TestHelper;
 import org.junit.Test;
 
@@ -22,7 +21,7 @@ public class FreeVarsTest extends TestHelper {
 
         Collections.addAll(expectedFreeSet, vars);
 
-        for (Id var : FreeVars.compute(root).getFreeVariables()) {
+        for (AstSymRef var : FreeVars.compute(root).getFreeVariables()) {
             returnedFreeSet.add(var.id);
         }
 
@@ -46,8 +45,8 @@ public class FreeVarsTest extends TestHelper {
             FreeVars freeVars = FreeVars.compute(e.getValue(), PREDEFS);
 
             assertEquals(e.getKey(), // name of the sample
-                    Collections.<Id>emptySet(), // expecting no free vars
-                    freeVars.getFreeVariables() // actual result
+                    Collections.<String>emptySet(), // expecting no free vars
+                    freeVars.getFreeNames() // actual result
             );
         }
     }

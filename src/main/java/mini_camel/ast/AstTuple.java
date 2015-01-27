@@ -2,6 +2,7 @@ package mini_camel.ast;
 
 import mini_camel.visit.*;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,32 +13,28 @@ import java.util.List;
  */
 @Immutable
 public final class AstTuple extends AstExp {
+    /**
+     * The elements of the tuple being created.
+     */
     public final List<AstExp> es;
 
-    public AstTuple(@Nonnull List<AstExp> es) {
+    public AstTuple(List<AstExp> es) {
         this.es = Collections.unmodifiableList(es);
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    public <T> T accept(@Nonnull Visitor1<T> v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
-    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
-        List<Id> ids = new ArrayList<>(es.size());
-        for (AstExp e : es) {
-            ids.add(((AstVar) e).id);
-        }
-        return v.visit(a, this, ids);
-    }
-
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
 

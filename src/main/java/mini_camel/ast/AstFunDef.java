@@ -3,9 +3,10 @@ package mini_camel.ast;
 import mini_camel.visit.*;import mini_camel.type.TFun;
 import mini_camel.type.Type;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,61 +16,123 @@ import java.util.List;
  */
 @Immutable
 public final class AstFunDef extends AstExp {
-    public final Id id;
-    public final Type functionType;
+    /**
+     * Information about the declared symbol (function name and type). Note
+     * that this not the returned type; if arguments have type {@code T1} ..
+     * {@code Tn} and the return type is {@code Tr} (the {@link #returnType}
+     * field in this class), then the type of the function is
+     * {@code T1 -> (T2 -> (T3 -> ... (Tn -> Tr)...)). This is because from
+     * the point of view of the type system, functions are "Curried".
+     */
+    @Nonnull
+    public final AstSymDef decl;
+
+    /**
+     * Information about the formal arguments of this function (name and type).
+     */
+    @Nonnull
+    public final List<AstSymDef> args;
+
+    /**
+     * <p>The AST node representing the body of the function; it can contain
+     * references to the declared symbol ({@link #decl}), in which case the
+     * function would be recursive.
+     * </p>
+     * <p>The type of this expression is expected to be (after type checking)
+     * equal to {@link #returnType}.
+     * </p>
+     */
+    @Nonnull
+    public final AstExp body;
+
+    /**
+     * Return type; note that the return type (as well as many others types)
+     * is not necessarily known while parsing (and thus, it is not known while
+     * building the AST), so this field will be an instance of {@link
+     * mini_camel.type.TVar}. A {@link mini_camel.type.Checker type checker}
+     * will later create a mapping from type variables to concrete types.
+     */
+    @Nonnull
     public final Type returnType;
-    public final List<Type> argTypes;
-    public final List<Id> args;
-    public final AstExp e;
 
-    public AstFunDef(
-            @Nonnull Id id,
-            @Nonnull List<Id> args,
-            @Nonnull AstExp e
-    ) {
-        this.id = id;
-        this.args = Collections.unmodifiableList(args);
-        this.e = e;
+    @CheckForNull
+    private List<String> ids_;
 
-        List<Type> argTypes;
-        Type functionType = this.returnType = Type.gen();
-        argTypes = new ArrayList<>(args.size());
+    @CheckForNull
+    private List<Type> types_;
 
-        for (int i = 0, n = args.size(); i < n; ++i) {
-            Type argType = Type.gen();
-            argTypes.add(0, argType);
-            functionType = new TFun(argType, functionType);
+    public AstFunDef(Id id, List<AstSymDef> args, AstExp body) {
+
+        this.returnType = Type.gen();
+
+        Type functionType = returnType;
+        for (int i = args.size() - 1; i >= 0; --i) {
+            AstSymDef arg = args.get(i);
+            functionType = new TFun(arg.type, functionType);
         }
 
-        this.functionType = functionType;
-        this.argTypes = Collections.unmodifiableList(argTypes);
+        this.args = Collections.unmodifiableList(args);
+        this.decl = new AstSymDef(id, functionType);
+        this.body = body;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public AstFunDef(AstSymDef decl, List<AstSymDef> args, AstExp body) {
+        Type ret = decl.type; // function type
+        for (AstSymDef arg : args) {
+            TFun tFun = (ret instanceof TFun) ? ((TFun) ret) : null;
+            if (tFun == null || arg.type != tFun.arg) {
+                throw new IllegalArgumentException("Type mismatch");
+            }
+            ret = tFun.ret;
+        }
+        this.decl = decl;
+        this.args = Collections.unmodifiableList(args);
+        this.body = body;
+        this.returnType = ret;
+    }
+
+    @Nonnull
+    public List<String> getArgumentNames() {
+        if (ids_ != null) return ids_;
+        synchronized (this) {
+            if (ids_ != null) return ids_;
+            ids_ = AstSymDef.ids(args);
+        }
+        return ids_;
+    }
+
+    @Nonnull
+    public List<Type> getArgumentTypes() {
+        if (types_ != null) return types_;
+        synchronized (this) {
+            if (types_!= null) return types_;
+            types_ = AstSymDef.types(args);
+        }
+        return types_;
+    }
+
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    public <T> T accept(@Nonnull Visitor1<T> v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
-    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
-        return v.visit(a, this);
-    }
-
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
         sb.append("(");
-        sb.append(id);
+        sb.append(decl.id);
 
         boolean first = true;
         sb.append("(");
-        for (Id l : args){
+        for (AstSymDef l : args){
             if(!first){
                 sb.append(", ");
             }
@@ -77,7 +140,7 @@ public final class AstFunDef extends AstExp {
             sb.append(l.id);
         }
         sb.append(") = ");
-        sb.append(e);
+        sb.append(body);
         sb.append(")");
 
         return sb.toString();

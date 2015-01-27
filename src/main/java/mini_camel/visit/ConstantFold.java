@@ -1,6 +1,6 @@
 package mini_camel.visit;
 
-import mini_camel.ast.Id;
+import mini_camel.ast.AstSymDef;
 import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
@@ -20,31 +20,31 @@ public final class ConstantFold extends TransformHelper {
 
     //Example : if x = 5 is in the symbol table, it will return an AstInt of value 5
     // otherwise it does nothing
-    public AstExp visit(@Nonnull AstVar e) {
-        AstExp new_e = reMapping.get(e.id.id);
+    public AstExp visit(@Nonnull AstSymRef e) {
+        AstExp new_e = reMapping.get(e.id);
         return (new_e == null) ? e : new_e;
     }
 
 
     public AstExp visit(@Nonnull AstLet e){
-        Id old_id = e.id;
-        AstExp new_e1 = e.e1.accept(this);
+        AstSymDef old_id = e.decl;
+        AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
 
 
         reMapping.push();
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
-            if(new_e1 instanceof AstUnit || new_e1 instanceof AstVar || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
+            if(new_e1 instanceof AstUnit || new_e1 instanceof AstSymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
              //if(new_e1 instanceof AstVar){
                 reMapping.put(old_id.id, new_e1);
             }
 
-            new_e2 = e.e2.accept(this);
+            new_e2 = e.ret.accept(this);
         }
         reMapping.pop();
 
-        return new AstLet(old_id, e.id_type, new_e1, new_e2);
+        return new AstLet(old_id, new_e1, new_e2);
     }
 
 
@@ -161,18 +161,18 @@ public final class ConstantFold extends TransformHelper {
     }
 
     public AstExp visit(@Nonnull AstIf e){
-        AstExp new_e1 = e.e1.accept(this);
+        AstExp new_e1 = e.eCond.accept(this);
         if(new_e1 instanceof AstBool){
             if(((AstBool)new_e1).b){
-                return e.e2.accept(this);
+                return e.eThen.accept(this);
             }
             else {
-                return e.e3.accept(this);
+                return e.eElse.accept(this);
             }
         }
 
-        AstExp new_e2 = e.e2.accept(this);
-        AstExp new_e3 = e.e3.accept(this);
+        AstExp new_e2 = e.eThen.accept(this);
+        AstExp new_e3 = e.eElse.accept(this);
         return new AstIf(new_e1, new_e2, new_e3);
 
     }

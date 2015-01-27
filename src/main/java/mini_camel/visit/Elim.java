@@ -36,9 +36,9 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
      */
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLet e) {
-        if(ctx.unused.contains(e.id.id))
+        if(ctx.unused.contains(e.decl.id))
         {
-            return recursiveVisit(ctx, e.e2);
+            return recursiveVisit(ctx, e.ret);
         }
         return super.visit(ctx, e);
     }
@@ -48,7 +48,7 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public AstExp visit(Ctx ctx, @Nonnull AstVar e) {
+    public AstExp visit(Ctx ctx, @Nonnull AstSymRef e) {
         if(ctx.unused.contains(e.toString()))
         {
             return null;
@@ -59,7 +59,7 @@ public class Elim extends TransformHelper2<Elim.Ctx> {
 
     @Override
     public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
-        return recursiveVisit(ctx, e.e);
+        return recursiveVisit(ctx, e.ret);
 
     }
 

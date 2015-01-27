@@ -1,6 +1,6 @@
 package mini_camel.visit;
 
-import mini_camel.ast.Id;
+import mini_camel.ast.AstSymDef;
 import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
@@ -23,11 +23,11 @@ public final class AlphaConv extends TransformHelper {
     private int lastId = 0;
 
     // For mapping renamed variables.
-    private SymTable<Id> reMapping = new SymTable<>();
+    private SymTable<String> reMapping = new SymTable<>();
 
     // The method that renames an identifier.
-    private Id newId(Id id) {
-        return new Id(id.id + "_" + (++lastId));
+    private String newId(String name) {
+        return name + "_" + (++lastId);
     }
 
     private AlphaConv() {
@@ -50,21 +50,21 @@ public final class AlphaConv extends TransformHelper {
     @Override
     public AstExp visit(@Nonnull AstLet e) {
         // Rename the identifier introduced by this `let` expression
-        Id old_id = e.id;
-        Id new_id = newId(old_id);
+        AstSymDef old_id = e.decl;
+        AstSymDef new_id = old_id.rename(newId(old_id.id));
 
         // Recursively perform any modifications on the body of the `let`
-        AstExp new_e1 = e.e1.accept(this);
+        AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
 
         reMapping.push();
         {
-            reMapping.put(old_id.id, new_id);
-            new_e2 = e.e2.accept(this);
+            reMapping.put(old_id.id, new_id.id);
+            new_e2 = e.ret.accept(this);
         }
         reMapping.pop();
 
-        return new AstLet(new_id, e.id_type, new_e1, new_e2);
+        return new AstLet(new_id, new_e1, new_e2);
     }
 
     /**
@@ -72,31 +72,29 @@ public final class AlphaConv extends TransformHelper {
      * renamed by the current transformation and return its new name.
      */
     @Override
-    public AstExp visit(@Nonnull AstVar e) {
+    public AstExp visit(@Nonnull AstSymRef e) {
         // Locate (in the environment) the symbol being referenced here.
-        Id old_id = e.id;
-        Id new_id = reMapping.get(old_id.id);
+        String old_id = e.id;
+        String new_id = reMapping.get(old_id);
 
         // If the symbol was not found, return the old name.
-        if (new_id == null || new_id.id.equals(old_id.id)) return e;
+        if (new_id == null || new_id.equals(old_id)) return e;
 
         // If the name was changed, return the new AST node.
-        return new AstVar(new_id);
+        return new AstSymRef(new_id);
     }
 
 
     @Override
     public AstExp visit(@Nonnull AstLetRec e) {
         AstFunDef old_fd = e.fd;
-        Id old_id = old_fd.id;
         AstFunDef new_fd = (AstFunDef) old_fd.accept(this);
-        Id new_id = new_fd.id;
-        AstExp old_e = e.e;
+        AstExp old_e = e.ret;
         AstExp new_e;
 
         reMapping.push();
         {
-            reMapping.put(old_id.id, new_id);
+            reMapping.put(old_fd.decl.id, new_fd.decl.id);
             new_e = old_e.accept(this);
         }
         reMapping.pop();
@@ -110,23 +108,23 @@ public final class AlphaConv extends TransformHelper {
 
     @Override
     public AstExp visit(@Nonnull AstFunDef e) {
-        Id old_id = e.id;
-        Id new_id = newId(old_id);
+        AstSymDef old_id = e.decl;
+        AstSymDef new_id = old_id.rename(newId(old_id.id));
 
-        AstExp old_e = e.e;
+        AstExp old_e = e.body;
         AstExp new_e;
 
-        List<Id> old_args = e.args;
-        List<Id> new_args = new ArrayList<>();
+        List<AstSymDef> old_args = e.args;
+        List<AstSymDef> new_args = new ArrayList<>();
 
 
         reMapping.push();
         {
-            reMapping.put(old_id.id, new_id);
-            for (Id old_arg : old_args) {
-                Id new_arg = newId(old_arg);
+            reMapping.put(old_id.id, new_id.id);
+            for (AstSymDef old_arg : old_args) {
+                AstSymDef new_arg = old_arg.rename(newId(old_arg.id));
                 new_args.add(new_arg);
-                reMapping.put(old_arg.id, new_arg);
+                reMapping.put(old_arg.id, new_arg.id);
             }
             new_e = old_e.accept(this);
         }

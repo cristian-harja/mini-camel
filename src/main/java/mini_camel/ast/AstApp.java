@@ -3,6 +3,8 @@ package mini_camel.ast;
 import mini_camel.visit.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,37 +15,36 @@ import java.util.List;
  */
 @Immutable
 public final class AstApp extends AstExp {
+    /**
+     * The expression that is being interpreted as a function.
+     */
+    @Nonnull
     public final AstExp e;
+
+    /**
+     * The list of arguments to the function.
+     */
+    @Nonnull
     public final List<AstExp> es;
 
-    public AstApp(
-            @Nonnull AstExp e,
-            @Nonnull List<AstExp> es
-    ) {
+    public AstApp(AstExp e, List<AstExp> es) {
         this.e = e;
         this.es = Collections.unmodifiableList(es);
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    public <T> T accept(@Nonnull Visitor1<T> v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
-    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
-        List<Id> ids = new ArrayList<>(es.size());
-        for (AstExp e : es) {
-            ids.add(((AstVar) e).id);
-        }
-        return v.visit(a, this, ((AstVar)e).id, ids);
-    }
-
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("(");
