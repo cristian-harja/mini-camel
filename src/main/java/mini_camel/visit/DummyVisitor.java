@@ -1,11 +1,13 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
+import mini_camel.util.Visitor;
 
 import javax.annotation.Nonnull;
 
 /**
- * An implementation of the {@link Visitor} interface that just traverses the
+ * An implementation of the {@link mini_camel.util.Visitor} interface that just traverses the
  * AST recursively. Intended for use as a base class; you should override some
  * methods in order to only handle certain node types in your sub-class, while
  * ignoring the others.
@@ -32,7 +34,7 @@ public abstract class DummyVisitor implements Visitor {
     }
 
     @Override
-    public void visit(@Nonnull AstSymRef e) {
+    public void visit(@Nonnull SymRef e) {
         // do nothing
     }
 

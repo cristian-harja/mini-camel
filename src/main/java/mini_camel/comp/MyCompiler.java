@@ -1,7 +1,7 @@
 package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
-import mini_camel.ast.AstSymRef;
+import mini_camel.util.SymRef;
 import mini_camel.util.Pair;
 import mini_camel.visit.*;
 import mini_camel.ast.AstExp;
@@ -108,9 +108,9 @@ public class MyCompiler {
 
         FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS);
 
-        Set<AstSymRef> freeVars = fvv.getFreeVariables();
+        Set<SymRef> freeVars = fvv.getFreeVariables();
 
-        for (AstSymRef i : freeVars) {
+        for (SymRef i : freeVars) {
             error(i.getSymbol(), "Unknown symbol: " + i.id + ".");
         }
 

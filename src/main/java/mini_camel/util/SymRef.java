@@ -1,26 +1,28 @@
-package mini_camel.ast;
+package mini_camel.util;
 
-import mini_camel.visit.Visitor;
-import mini_camel.visit.Visitor1;
-import mini_camel.visit.Visitor2;
+import mini_camel.ast.AstExp;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Denotes a symbol reference.
  */
-public final class AstSymRef extends AstExp {
+@Immutable
+@ParametersAreNonnullByDefault
+public final class SymRef extends AstExp {
     /**
      * Name of the identifier being referenced.
      */
     public final String id;
 
-    public AstSymRef(String id) {
+    public SymRef(String id) {
         this.id = id;
     }
 
-    public AstSymRef(Id id) {
+    public SymRef(Id id) {
         this(id.id);
         setSymbol(id.getSymbol());
     }

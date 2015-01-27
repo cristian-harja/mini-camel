@@ -1,4 +1,4 @@
-package mini_camel.visit;
+package mini_camel.util;
 
 import mini_camel.ast.*;
 
@@ -30,7 +30,7 @@ public interface Visitor2<RetT, ArgT>{
     RetT visit(ArgT a, @Nonnull AstLE e);
     RetT visit(ArgT a, @Nonnull AstIf e);
     RetT visit(ArgT a, @Nonnull AstLet e);
-    RetT visit(ArgT a, @Nonnull AstSymRef e);
+    RetT visit(ArgT a, @Nonnull SymRef e);
     RetT visit(ArgT a, @Nonnull AstLetRec e);
     RetT visit(ArgT a, @Nonnull AstApp e);
     RetT visit(ArgT a, @Nonnull AstTuple e);

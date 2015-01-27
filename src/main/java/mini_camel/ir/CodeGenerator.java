@@ -1,8 +1,10 @@
 package mini_camel.ir;
 
+import mini_camel.util.SymDef;
+import mini_camel.util.SymRef;
 import mini_camel.util.Pair;
 import mini_camel.ast.*;
-import mini_camel.visit.Visitor2;
+import mini_camel.util.Visitor2;
 import mini_camel.ir.op.*;
 import mini_camel.ir.instr.*;
 
@@ -82,7 +84,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
             node = fd.body;
             args = new ArrayList<>(fd.args.size());
-            for (AstSymDef id : fd.args) {
+            for (SymDef id : fd.args) {
                 args.add(new Var(id.id));
             }
         }
@@ -289,7 +291,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return new Couple(l, cou2.getVar());
     }
 
-    public Couple visit(Branches b, @Nonnull AstSymRef e) {
+    public Couple visit(Branches b, @Nonnull SymRef e) {
         return new Couple(Collections.<Instr>emptyList(), new Var(e.id));
     }
 

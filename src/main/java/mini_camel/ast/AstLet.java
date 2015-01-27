@@ -1,7 +1,8 @@
 package mini_camel.ast;
 
 import mini_camel.type.TUnit;
-import mini_camel.visit.*;import mini_camel.type.Type;
+import mini_camel.util.*;
+import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -16,7 +17,7 @@ public final class AstLet extends AstExp {
      * Information about the declared identifier (name and type).
      */
     @Nonnull
-    public final AstSymDef decl;
+    public final SymDef decl;
 
     /**
      * The expression used to initialize the declared symbol. Its type must
@@ -32,7 +33,7 @@ public final class AstLet extends AstExp {
     @Nonnull
     public final AstExp ret;
 
-    public AstLet(AstSymDef decl, AstExp initializer, AstExp ret) {
+    public AstLet(SymDef decl, AstExp initializer, AstExp ret) {
         this.decl = decl;
         this.initializer = initializer;
         this.ret = ret;
@@ -43,7 +44,7 @@ public final class AstLet extends AstExp {
     }
 
     private AstLet(Id id, Type t, AstExp initializer, AstExp ret) {
-        this.decl = new AstSymDef(id, t);
+        this.decl = new SymDef(id, t);
         this.initializer = initializer;
         this.ret = ret;
     }

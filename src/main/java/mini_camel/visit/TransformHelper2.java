@@ -1,6 +1,8 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
+import mini_camel.util.Visitor2;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -75,7 +77,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
     }
 
     @Override
-    public AstExp visit(T ctx, @Nonnull AstSymRef e) {
+    public AstExp visit(T ctx, @Nonnull SymRef e) {
         return e;
     }
 

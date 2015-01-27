@@ -1,6 +1,9 @@
 package mini_camel.ast;
 
-import mini_camel.visit.*;
+import mini_camel.util.SymDef;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
 import mini_camel.type.Type;
 
 import javax.annotation.CheckForNull;
@@ -20,7 +23,7 @@ public final class AstLetTuple extends AstExp {
      * the body of the {@code let} expression.
      */
     @Nonnull
-    public final List<AstSymDef> ids;
+    public final List<SymDef> ids;
 
     /**
      * Initializer of the {@code let} expression. Its type is expected to be
@@ -41,7 +44,7 @@ public final class AstLetTuple extends AstExp {
     @CheckForNull
     private List<Type> types_;
 
-    public AstLetTuple(List<AstSymDef> ids, AstExp initializer, AstExp ret) {
+    public AstLetTuple(List<SymDef> ids, AstExp initializer, AstExp ret) {
         this.ids = Collections.unmodifiableList(ids);
         this.initializer = initializer;
         this.ret = ret;
@@ -52,7 +55,7 @@ public final class AstLetTuple extends AstExp {
         if (ids_ != null) return ids_;
         synchronized (this) {
             if (ids_ != null) return ids_;
-            ids_ = AstSymDef.ids(ids);
+            ids_ = SymDef.ids(ids);
         }
         return ids_;
     }
@@ -62,7 +65,7 @@ public final class AstLetTuple extends AstExp {
         if (types_ != null) return types_;
         synchronized (this) {
             if (types_!= null) return types_;
-            types_ = AstSymDef.types(ids);
+            types_ = SymDef.types(ids);
         }
         return types_;
     }
@@ -87,7 +90,7 @@ public final class AstLetTuple extends AstExp {
 
         boolean first = true;
         sb.append("(");
-        for (AstSymDef l : ids){
+        for (SymDef l : ids){
             if(!first){
                 sb.append(", ");
             }

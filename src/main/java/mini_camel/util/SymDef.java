@@ -1,11 +1,13 @@
-package mini_camel.ast;
+package mini_camel.util;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import mini_camel.ast.AstNode;
 import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 
@@ -14,7 +16,8 @@ import java.util.List;
  * declared identifier.
  */
 @Immutable
-public final class AstSymDef extends AstNode {
+@ParametersAreNonnullByDefault
+public final class SymDef extends AstNode {
     /**
      * The name of the symbol.
      */
@@ -29,48 +32,48 @@ public final class AstSymDef extends AstNode {
     @Nonnull
     public final Type type;
 
-    public AstSymDef(String id, Type type) {
+    public SymDef(String id, Type type) {
         this.id = id;
         this.type = type;
     }
 
-    public AstSymDef(Id id, Type type) {
+    public SymDef(Id id, Type type) {
         this(id.id, type);
         setSymbol(id.getSymbol());
     }
 
-    public AstSymDef(String id) {
+    public SymDef(String id) {
         this(id, Type.gen());
     }
 
-    public AstSymDef(Id id) {
+    public SymDef(Id id) {
         this(id.id, Type.gen());
         setSymbol(id.getSymbol());
     }
 
     @Nonnull
-    public AstSymDef rename(String newName) {
+    public SymDef rename(String newName) {
         if (newName.equals(id)) return this;
-        AstSymDef sym = new AstSymDef(newName, type);
+        SymDef sym = new SymDef(newName, type);
         sym.setSymbol(getSymbol());
         return sym;
     }
 
     @Nonnull
-    public static List<String> ids(List<AstSymDef> list) {
-        return Lists.transform(list, new Function<AstSymDef, String>() {
+    public static List<String> ids(List<SymDef> list) {
+        return Lists.transform(list, new Function<SymDef, String>() {
             @Override
-            public String apply(@Nullable AstSymDef from) {
+            public String apply(@Nullable SymDef from) {
                 return from == null ? null : from.id;
             }
         });
     }
 
     @Nonnull
-    public static List<Type> types(List<AstSymDef> list) {
-        return Lists.transform(list, new Function<AstSymDef, Type>() {
+    public static List<Type> types(List<SymDef> list) {
+        return Lists.transform(list, new Function<SymDef, Type>() {
             @Override
-            public Type apply(@Nullable AstSymDef from) {
+            public Type apply(@Nullable SymDef from) {
                 return from == null ? null : from.type;
             }
         });

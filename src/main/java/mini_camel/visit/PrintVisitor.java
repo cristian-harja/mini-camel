@@ -1,6 +1,9 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymDef;
+import mini_camel.util.SymRef;
+import mini_camel.util.Visitor;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
@@ -133,17 +136,17 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstSymRef e){
+    public void visit(@Nonnull SymRef e){
         out.print(e.id);
     }
 
 
     // print sequence of identifiers 
-    private void printInfix(List<AstSymDef> l, String op) {
+    private void printInfix(List<SymDef> l, String op) {
         if (l.isEmpty()) {
             return;
         }
-        Iterator<AstSymDef> it = l.iterator();
+        Iterator<SymDef> it = l.iterator();
         out.print(it.next().id);
         while (it.hasNext()) {
             out.print(op);

@@ -3,6 +3,7 @@ import ldf.java_cup.runtime.TokenFactory;
 import ldf.java_cup.runtime.Symbol;
 
 import mini_camel.ast.*;
+import mini_camel.util.Id;
 
 import java.io.Reader;
 

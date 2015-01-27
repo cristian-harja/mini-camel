@@ -1,6 +1,6 @@
 package mini_camel.type;
 
-import mini_camel.ast.AstSymDef;
+import mini_camel.util.SymDef;
 import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;
@@ -61,8 +61,8 @@ public class Checker {
                     found[0] = e.decl.type;
                     return;
                 }
-                List<AstSymDef> args = e.args;
-                for (AstSymDef exp : args) {
+                List<SymDef> args = e.args;
+                for (SymDef exp : args) {
                     if (exp.id.equals(symbolName)) {
                         found[0] = exp.type;
                         return;

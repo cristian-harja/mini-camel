@@ -1,6 +1,7 @@
 package mini_camel.ast;
 
-import mini_camel.visit.*;import mini_camel.type.TFun;
+import mini_camel.util.*;
+import mini_camel.type.TFun;
 import mini_camel.type.Type;
 
 import javax.annotation.CheckForNull;
@@ -25,13 +26,13 @@ public final class AstFunDef extends AstExp {
      * the point of view of the type system, functions are "Curried".
      */
     @Nonnull
-    public final AstSymDef decl;
+    public final SymDef decl;
 
     /**
      * Information about the formal arguments of this function (name and type).
      */
     @Nonnull
-    public final List<AstSymDef> args;
+    public final List<SymDef> args;
 
     /**
      * <p>The AST node representing the body of the function; it can contain
@@ -61,24 +62,24 @@ public final class AstFunDef extends AstExp {
     @CheckForNull
     private List<Type> types_;
 
-    public AstFunDef(Id id, List<AstSymDef> args, AstExp body) {
+    public AstFunDef(Id id, List<SymDef> args, AstExp body) {
 
         this.returnType = Type.gen();
 
         Type functionType = returnType;
         for (int i = args.size() - 1; i >= 0; --i) {
-            AstSymDef arg = args.get(i);
+            SymDef arg = args.get(i);
             functionType = new TFun(arg.type, functionType);
         }
 
         this.args = Collections.unmodifiableList(args);
-        this.decl = new AstSymDef(id, functionType);
+        this.decl = new SymDef(id, functionType);
         this.body = body;
     }
 
-    public AstFunDef(AstSymDef decl, List<AstSymDef> args, AstExp body) {
+    public AstFunDef(SymDef decl, List<SymDef> args, AstExp body) {
         Type ret = decl.type; // function type
-        for (AstSymDef arg : args) {
+        for (SymDef arg : args) {
             TFun tFun = (ret instanceof TFun) ? ((TFun) ret) : null;
             if (tFun == null || arg.type != tFun.arg) {
                 throw new IllegalArgumentException("Type mismatch");
@@ -96,7 +97,7 @@ public final class AstFunDef extends AstExp {
         if (ids_ != null) return ids_;
         synchronized (this) {
             if (ids_ != null) return ids_;
-            ids_ = AstSymDef.ids(args);
+            ids_ = SymDef.ids(args);
         }
         return ids_;
     }
@@ -106,7 +107,7 @@ public final class AstFunDef extends AstExp {
         if (types_ != null) return types_;
         synchronized (this) {
             if (types_!= null) return types_;
-            types_ = AstSymDef.types(args);
+            types_ = SymDef.types(args);
         }
         return types_;
     }
@@ -132,7 +133,7 @@ public final class AstFunDef extends AstExp {
 
         boolean first = true;
         sb.append("(");
-        for (AstSymDef l : args){
+        for (SymDef l : args){
             if(!first){
                 sb.append(", ");
             }
