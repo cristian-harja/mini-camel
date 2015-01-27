@@ -8,6 +8,7 @@ public interface KVisitor {
     void visit(KInt k);
     void visit(KFloat k);
     void visit(KVar k);
+    void visit(KTuple k);
 
     // Integer operations
     void visit(KNeg k);
@@ -41,5 +42,4 @@ public interface KVisitor {
     void visit(ApplyClosure k);
     void visit(ApplyDirect k);
     void visit(ClosureMake k);
-
 }

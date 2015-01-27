@@ -1,5 +1,6 @@
 package mini_camel.knorm;
 
+import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
 import mini_camel.util.KVisitor1;
 import mini_camel.util.KVisitor2;
@@ -34,9 +35,14 @@ public final class KLetRec extends KNode {
     }
 
     @Nonnull
+    public Type getDataType() {
+        return fd.name.type;
+    }
+
+    @Nonnull
     public String toString() {
         return String.format(
-                "let rec %s %s = %s in %s",
+                "let rec %s %s = (%s) in %s",
                 fd.name.id, fd.args,
                 fd.body, ret.toString()
         );

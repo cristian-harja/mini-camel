@@ -10,6 +10,7 @@ public interface KVisitor2<T, U> {
     T visit(U a, @Nonnull KInt k);
     T visit(U a, @Nonnull KFloat k);
     T visit(U a, @Nonnull KVar k);
+    T visit(U a, @Nonnull KTuple k);
 
     // Integer operations
     T visit(U a, @Nonnull KNeg k);

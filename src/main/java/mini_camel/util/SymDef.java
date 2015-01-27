@@ -60,6 +60,11 @@ public final class SymDef extends AstNode {
     }
 
     @Nonnull
+    public SymRef makeRef() {
+        return new SymRef(id);
+    }
+
+    @Nonnull
     public static List<String> ids(List<SymDef> list) {
         return Lists.transform(list, new Function<SymDef, String>() {
             @Override

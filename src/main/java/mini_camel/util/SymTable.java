@@ -24,6 +24,10 @@ public final class SymTable<T> {
         tmp.put(name, value);
     }
 
+    public Map<String, T> top() {
+        return st.peek();
+    }
+
     private Map<String, T> getStackElement(int index) {
 
         if (index == 0)

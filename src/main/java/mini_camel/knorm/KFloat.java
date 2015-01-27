@@ -1,5 +1,7 @@
 package mini_camel.knorm;
 
+import mini_camel.type.TFloat;
+import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
 import mini_camel.util.KVisitor1;
 import mini_camel.util.KVisitor2;
@@ -26,6 +28,11 @@ public final class KFloat extends KNode {
 
     public <T, U> T accept(KVisitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
+    }
+
+    @Nonnull
+    public Type getDataType() {
+        return TFloat.INSTANCE;
     }
 
     @Nonnull

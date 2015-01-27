@@ -1,5 +1,6 @@
 package mini_camel.knorm;
 
+import mini_camel.type.Type;
 import mini_camel.util.*;
 
 import javax.annotation.Nonnull;
@@ -35,6 +36,11 @@ public final class KLetTuple extends KNode {
 
     public <T, U> T accept(KVisitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
+    }
+
+    @Nonnull
+    public Type getDataType() {
+        return ret.getDataType();
     }
 
     @Nonnull
