@@ -20,6 +20,10 @@ public abstract class TestHelper {
     public static AstExp parse(@Nonnull Reader r) {
         try {
             MyCompiler comp = new MyCompiler(r);
+            if (!comp.parseCode()) {
+                comp.printErrors(System.err);
+                throw new RuntimeException("Could not parse sample test");
+            }
             return comp.getParseTree();
         } catch (Exception e) {
             throw new RuntimeException(e);

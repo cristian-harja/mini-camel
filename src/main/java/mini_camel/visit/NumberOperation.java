@@ -60,7 +60,7 @@ public class NumberOperation extends DummyVisitor {
     @Override
     public void visit(@Nonnull AstLet e) {
         numberOfOperation ++;
-        e.e2.accept(this);
+        e.ret.accept(this);
     }
 
 }

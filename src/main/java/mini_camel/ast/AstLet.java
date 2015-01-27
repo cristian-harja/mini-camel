@@ -1,8 +1,10 @@
 package mini_camel.ast;
 
+import mini_camel.type.TUnit;
 import mini_camel.visit.*;import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -10,41 +12,60 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class AstLet extends AstExp {
-    public final Id id;
-    public final Type id_type;
-    public final AstExp e1;
-    public final AstExp e2;
+    /**
+     * Information about the declared identifier (name and type).
+     */
+    @Nonnull
+    public final AstSymDef decl;
 
-    public AstLet(
-            @Nonnull Id id,
-            @Nonnull Type t,
-            @Nonnull AstExp e1,
-            @Nonnull AstExp e2
-    ) {
-        this.id = id;
-        this.id_type = t;
-        this.e1 = e1;
-        this.e2 = e2;
+    /**
+     * The expression used to initialize the declared symbol. Its type must
+     * be compatible to the type contained in {@code decl.type}.
+     */
+    @Nonnull
+    public final AstExp initializer;
+
+    /**
+     * The expression returned by this {@code let}; it can (and it should)
+     * contain references to the symbol declared in {@link #decl}.
+     */
+    @Nonnull
+    public final AstExp ret;
+
+    public AstLet(AstSymDef decl, AstExp initializer, AstExp ret) {
+        this.decl = decl;
+        this.initializer = initializer;
+        this.ret = ret;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public AstLet(Id id, AstExp initializer, AstExp ret) {
+        this(id, Type.gen(), initializer, ret);
+    }
+
+    private AstLet(Id id, Type t, AstExp initializer, AstExp ret) {
+        this.decl = new AstSymDef(id, t);
+        this.initializer = initializer;
+        this.ret = ret;
+    }
+
+    public static AstLet semicolonSyntacticSugar(AstExp s1, AstExp s2) {
+        return new AstLet(Id.gen(), TUnit.INSTANCE, s1, s2);
+    }
+
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    public <T> T accept(@Nonnull Visitor1<T> v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
-    public <T, U> T accept(@Nonnull VisitorK<T, U> v, U a) {
-        return v.visit(a, this);
-    }
-
-
+    @Nonnull
     public String toString(){
-        return "(let " + id.id + " = " + e1 + " in " + e2 + ")";
+        return "(let " + decl.id + " = " + initializer + " in " + ret + ")";
     }
 }

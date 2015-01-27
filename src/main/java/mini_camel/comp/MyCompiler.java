@@ -1,10 +1,11 @@
 package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
+import mini_camel.ast.AstSymRef;
 import mini_camel.util.Pair;
 import mini_camel.visit.*;
 import mini_camel.ast.AstExp;
-import mini_camel.ast.Id;
+import mini_camel.ast.AstSymDef;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.Function;
@@ -108,9 +109,9 @@ public class MyCompiler {
 
         FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS);
 
-        Set<Id> freeVars = fvv.getFreeVariables();
+        Set<AstSymRef> freeVars = fvv.getFreeVariables();
 
-        for (Id i : freeVars) {
+        for (AstSymRef i : freeVars) {
             error(i.getSymbol(), "Unknown symbol: " + i.id + ".");
         }
 
@@ -182,7 +183,7 @@ public class MyCompiler {
     public boolean preProcessCode() {
         System.out.println("ETAPE 1 : " + transformedAst.toString());
         transformAlphaConversion();
-        System.out.println("ETAPE 2 : "+transformedAst.toString());
+        System.out.println("ETAPE 2 : " + transformedAst.toString());
         /*transformBetaReduction();
         transformConstantFolding();
         transformElimination();*/

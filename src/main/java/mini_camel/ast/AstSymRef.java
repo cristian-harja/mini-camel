@@ -1,23 +1,28 @@
 package mini_camel.ast;
 
-import mini_camel.visit.*;
+import mini_camel.visit.Visitor;
+import mini_camel.visit.Visitor1;
+import mini_camel.visit.Visitor2;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 /**
- * Boolean literal ({@code true} or {@code false}).
+ * Denotes a symbol reference.
  */
-@Immutable
-public final class AstBool extends AstExp {
+public final class AstSymRef extends AstExp {
     /**
-     * The value of the boolean literal.
+     * Name of the identifier being referenced.
      */
-    public final boolean b;
+    public final String id;
 
-    public AstBool(boolean b) {
-        this.b = b;
+    public AstSymRef(String id) {
+        this.id = id;
+    }
+
+    public AstSymRef(Id id) {
+        this(id.id);
+        setSymbol(id.getSymbol());
     }
 
     public void accept(Visitor v) {
@@ -34,7 +39,7 @@ public final class AstBool extends AstExp {
 
     @Nonnull
     public String toString(){
-        return Boolean.toString(b);
+        return id;
     }
 
 }

@@ -46,16 +46,16 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
     }
 
     public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
-        if (ctx.l.contains(e.fd.id.toString())) {
-            System.out.println("Je passe ici " + e.fd.id.toString());
-            if (e.e instanceof AstApp) {
-                System.out.println("App : "+e.e.toString());
+        if (ctx.l.contains(e.fd.decl.id)) {
+            System.out.println("Je passe ici " + e.fd.decl.toString());
+            if (e.ret instanceof AstApp) {
+                System.out.println("App : "+e.ret.toString());
                 System.out.println("Expr : "+e.toString());
-                return inline(e.fd, (AstApp) e.e);
+                return inline(e.fd, (AstApp) e.ret);
             }
 
         }
-        return recursiveVisit(ctx, e.e);
+        return recursiveVisit(ctx, e.ret);
     }
 
 
@@ -63,12 +63,12 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
     public AstLet inline(AstFunDef fd, AstApp e) {
         AstLet l = null;
         if (fd.args.size() == 1) {
-            l = new AstLet(fd.args.get(0), fd.argTypes.get(0), e.es.get(0), fd.e);
+            l = new AstLet(fd.args.get(0), e.es.get(0), fd.body);
         } else {
-            l = new AstLet(fd.args.get(fd.args.size() - 1), fd.argTypes.get(fd.args.size() - 1), e.es.get(fd.args.size() - 1), fd.e);
+            l = new AstLet(fd.args.get(fd.args.size() - 1), e.es.get(fd.args.size() - 1), fd.body);
             int i = fd.args.size() - 2;
             while (i != -1) {
-                AstLet tmp = new AstLet(fd.args.get(i), fd.argTypes.get(i), e.es.get(i), l);
+                AstLet tmp = new AstLet(fd.args.get(i), e.es.get(i), l);
                 l = tmp;
                 i--;
             }

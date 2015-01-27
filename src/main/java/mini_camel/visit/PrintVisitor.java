@@ -115,35 +115,35 @@ public final class PrintVisitor implements Visitor {
 
     public void visit(@Nonnull AstIf e){
         out.print("(if ");
-        e.e1.accept(this);
+        e.eCond.accept(this);
         out.print(" then ");
-        e.e2.accept(this);
+        e.eThen.accept(this);
         out.print(" else ");
-        e.e3.accept(this);
+        e.eElse.accept(this);
         out.print(")");
     }
 
     public void visit(@Nonnull AstLet e) {
         out.print("(let ");
-        out.print(e.id);
+        out.print(e.decl.id);
         out.print(" = ");
-        e.e1.accept(this);
+        e.initializer.accept(this);
         out.print(" in ");
-        e.e2.accept(this);
+        e.ret.accept(this);
         out.print(")");
     }
 
-    public void visit(@Nonnull AstVar e){
-        out.print(e.id.id);
+    public void visit(@Nonnull AstSymRef e){
+        out.print(e.id);
     }
 
 
     // print sequence of identifiers 
-    private void printInfix(List<Id> l, String op) {
+    private void printInfix(List<AstSymDef> l, String op) {
         if (l.isEmpty()) {
             return;
         }
-        Iterator<Id> it = l.iterator();
+        Iterator<AstSymDef> it = l.iterator();
         out.print(it.next().id);
         while (it.hasNext()) {
             out.print(op);
@@ -166,13 +166,13 @@ public final class PrintVisitor implements Visitor {
 
     public void visit(@Nonnull AstLetRec e){
         out.print("(let rec ");
-        out.print(e.fd.id.id);
+        out.print(e.fd.decl.id);
         out.print(" ");
         printInfix(e.fd.args, " ");
         out.print(" = ");
-        e.fd.e.accept(this);
+        e.fd.body.accept(this);
         out.print(" in ");
-        e.e.accept(this);
+        e.ret.accept(this);
         out.print(")");
     }
 
@@ -194,34 +194,34 @@ public final class PrintVisitor implements Visitor {
         out.print("(let (");
         printInfix(e.ids, ", ");
         out.print(") = ");
-        e.e1.accept(this);
+        e.initializer.accept(this);
         out.print(" in ");
-        e.e2.accept(this);
+        e.ret.accept(this);
         out.print(")");
     }
 
     public void visit(@Nonnull AstArray e){
         out.print("(Array.create ");
-        e.e1.accept(this);
+        e.size.accept(this);
         out.print(" ");
-        e.e2.accept(this);
+        e.initializer.accept(this);
         out.print(")");
     }
 
     public void visit(@Nonnull AstGet e){
-        e.e1.accept(this);
+        e.array.accept(this);
         out.print(".(");
-        e.e2.accept(this);
+        e.index.accept(this);
         out.print(")");
     }
 
     public void visit(@Nonnull AstPut e){
         out.print("(");
-        e.e1.accept(this);
+        e.array.accept(this);
         out.print(".(");
-        e.e2.accept(this);
+        e.index.accept(this);
         out.print(") <- ");
-        e.e3.accept(this);
+        e.value.accept(this);
         out.print(")");
     }
 

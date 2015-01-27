@@ -8,7 +8,7 @@ import org.junit.Test;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class CheckerTest extends TestHelper {
 
@@ -40,6 +40,7 @@ public class CheckerTest extends TestHelper {
 
     @Test
     public void testAllSamples() {
+        // All the samples must be well-typed
         for (Map.Entry<String, AstExp> sample : allSamples().entrySet()) {
             assertTrue(sample.getKey(), wellTyped(sample.getValue()));
         }
@@ -47,8 +48,9 @@ public class CheckerTest extends TestHelper {
 
     @Test
     public void test1() {
-        wellTyped(parse(
+        // Not well-typed, because the type of `y` can't be determined.
+        assertFalse(wellTyped(parse(
                 "let rec id x y = x in print_int (id 1 id)"
-        ));
+        )));
     }
 }

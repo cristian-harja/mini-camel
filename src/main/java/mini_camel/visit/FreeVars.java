@@ -14,7 +14,7 @@ public final class FreeVars extends DummyVisitor {
 
     private Set<String> globals = new HashSet<>();
     private Multiset<String> bound = HashMultiset.create();
-    private Set<Id> free = new HashSet<>();
+    private Set<AstSymRef> free = new HashSet<>();
     private Set<String> freeStr = new HashSet<>();
 
     private FreeVars() {
@@ -34,7 +34,7 @@ public final class FreeVars extends DummyVisitor {
         return fvv;
     }
 
-    public Set<Id> getFreeVariables() {
+    public Set<AstSymRef> getFreeVariables() {
         return free;
     }
 
@@ -44,46 +44,43 @@ public final class FreeVars extends DummyVisitor {
 
     @Override
     public void visit(@Nonnull AstLet e) {
-        e.e1.accept(this);
-        bound.add(e.id.id);
-        e.e2.accept(this);
-        bound.remove(e.id.id);
+        String id = e.decl.id;
+        e.initializer.accept(this);
+        bound.add(id);
+        e.ret.accept(this);
+        bound.remove(id);
     }
 
     @Override
-    public void visit(@Nonnull AstVar e) {
-        String id = e.id.id;
+    public void visit(@Nonnull AstSymRef e) {
+        String id = e.id;
         if (bound.contains(id)) return;
         if (globals.contains(id)) return;
-        free.add(e.id);
-        freeStr.add(e.id.id);
+        free.add(e);
+        freeStr.add(id);
     }
 
     @Override
     public void visit(@Nonnull AstLetRec e) {
-        bound.add(e.fd.id.id);
+        String id = e.fd.decl.id;
+        bound.add(id);
         e.fd.accept(this);
-        e.e.accept(this);
-        bound.remove(e.fd.id.id);
+        e.ret.accept(this);
+        bound.remove(id);
     }
 
     @Override
     public void visit(@Nonnull AstLetTuple e) {
-        e.e1.accept(this);
-        for (Id item : e.ids) {
-            bound.add(item.id);
-        }
-        e.e2.accept(this);
+        e.initializer.accept(this);
+        bound.addAll(e.getIdentifierList());
+        e.ret.accept(this);
+        bound.removeAll(e.getIdentifierList());
     }
 
     @Override
     public void visit(@Nonnull AstFunDef e) {
-        for (Id item : e.args) {
-            bound.add(item.id);
-        }
-        e.e.accept(this);
-        for (Id item : e.args) {
-            bound.remove(item.id);
-        }
+        bound.addAll(e.getArgumentNames());
+        e.body.accept(this);
+        bound.removeAll(e.getArgumentNames());
     }
 }

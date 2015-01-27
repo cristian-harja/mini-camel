@@ -32,7 +32,7 @@ public abstract class DummyVisitor implements Visitor {
     }
 
     @Override
-    public void visit(@Nonnull AstVar e) {
+    public void visit(@Nonnull AstSymRef e) {
         // do nothing
     }
 
@@ -106,21 +106,21 @@ public abstract class DummyVisitor implements Visitor {
 
     @Override
     public void visit(@Nonnull AstIf e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
-        e.e3.accept(this);
+        e.eCond.accept(this);
+        e.eThen.accept(this);
+        e.eElse.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstLet e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
+        e.initializer.accept(this);
+        e.ret.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstLetRec e) {
         e.fd.accept(this);
-        e.e.accept(this);
+        e.ret.accept(this);
     }
 
     @Override
@@ -140,31 +140,31 @@ public abstract class DummyVisitor implements Visitor {
 
     @Override
     public void visit(@Nonnull AstLetTuple e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
+        e.initializer.accept(this);
+        e.ret.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstArray e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
+        e.size.accept(this);
+        e.initializer.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstGet e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
+        e.array.accept(this);
+        e.index.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstPut e) {
-        e.e1.accept(this);
-        e.e2.accept(this);
-        e.e3.accept(this);
+        e.array.accept(this);
+        e.index.accept(this);
+        e.value.accept(this);
     }
 
     @Override
     public void visit(@Nonnull AstFunDef e) {
-        e.e.accept(this);
+        e.body.accept(this);
     }
 }

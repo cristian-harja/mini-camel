@@ -1,6 +1,6 @@
 package mini_camel.visit;
 
-import mini_camel.ast.Id;
+import mini_camel.ast.AstSymDef;
 import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 
 public final class BetaReduction extends TransformHelper {
 
-    private SymTable<AstVar> reMapping = new SymTable<>();
+    private SymTable<AstSymRef> reMapping = new SymTable<>();
 
     private BetaReduction() {
     }
@@ -18,30 +18,30 @@ public final class BetaReduction extends TransformHelper {
     }
 
 
-    public AstExp visit(@Nonnull AstVar e) {
-        AstExp new_e = reMapping.get(e.id.id);
+    public AstExp visit(@Nonnull AstSymRef e) {
+        AstExp new_e = reMapping.get(e.id);
         return (new_e == null) ? e : new_e;
     }
 
 
     public AstExp visit(@Nonnull AstLet e){
-        Id old_id = e.id;
-        AstExp new_e1 = e.e1.accept(this);
+        AstSymDef old_id = e.decl;
+        AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
 
-        if(new_e1 instanceof AstVar){
+        if(new_e1 instanceof AstSymRef){
             reMapping.push();
             {
-                reMapping.put(old_id.id,(AstVar)new_e1);
-                new_e2 = e.e2.accept(this);
+                reMapping.put(old_id.id,(AstSymRef)new_e1);
+                new_e2 = e.ret.accept(this);
             }
             reMapping.pop();
         }
         else {
-            new_e2 = e.e2.accept(this);
+            new_e2 = e.ret.accept(this);
         }
 
-        return new AstLet(old_id, e.id_type, new_e1, new_e2);
+        return new AstLet(old_id, new_e1, new_e2);
     }
 
 

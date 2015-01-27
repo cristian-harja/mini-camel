@@ -1,8 +1,8 @@
 package mini_camel.type;
 
+import mini_camel.ast.*;
 import mini_camel.util.Pair;
 import mini_camel.util.SymTable;
-import mini_camel.ast.*;
 import mini_camel.visit.Visitor;
 
 import javax.annotation.Nonnull;
@@ -60,7 +60,7 @@ public class EquationGenerator {
 
             @Override
             public void visit(@Nonnull AstErr e) {
-                // TODO: the error type
+                // no equations are generated for an erroneous AST node
             }
 
             @Override
@@ -161,80 +161,49 @@ public class EquationGenerator {
 
             @Override
             public void visit(@Nonnull AstIf e) {
-                exprIsOfType(e.e1, BOOL);
-                exprIsOfType(e.e2, type);
-                exprIsOfType(e.e3, type);
+                exprIsOfType(e.eCond, BOOL);
+                exprIsOfType(e.eThen, type);
+                exprIsOfType(e.eElse, type);
             }
 
             @Override
             public void visit(@Nonnull AstLet e) {
-                exprIsOfType(e.e1, e.id_type);
+                exprIsOfType(e.initializer, e.decl.type);
                 env.push();
                 {
-                    env.put(e.id.id, e.id_type);
-                    exprIsOfType(e.e2, type);
+                    env.put(e.decl.id, e.decl.type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
 
             @Override
-            public void visit(@Nonnull AstVar e) {
-                typeEquals(type, env.get(e.id.id));
+            public void visit(@Nonnull AstSymRef e) {
+                typeEquals(type, env.get(e.id));
             }
 
             @Override
             public void visit(@Nonnull AstLetRec e) {
                 env.push();
                 {
-                    env.put(e.fd.id.id, e.fd.functionType);
-                    exprIsOfType(e.fd, e.fd.functionType);
-                    exprIsOfType(e.e, type);
+                    env.put(e.fd.decl.id, e.fd.decl.type);
+                    exprIsOfType(e.fd, e.fd.decl.type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
 
-            /*
-            @Override
-            public void visit(AstFunDef e) {
-                int i, numArgs = e.args.size();
-                Type returnType = Type.gen();
-                List<Type> argTypes = new ArrayList<>(numArgs);
-
-                for (i = 0; i < numArgs; ++i) {
-                    argTypes.add(Type.gen());
-                }
-
-                Type functionType = returnType;
-
-                for (i = numArgs - 1; i >= 0; --i) {
-                    functionType = new TFun(argTypes.get(i), functionType);
-                }
-
-                for (i = 0; i < numArgs; ++i) {
-                    env.put(e.args.get(i).id, argTypes.get(i));
-                }
-
-                typeEquals(type, functionType);
-                exprIsOfType(e.e, returnType);
-
-                for (i = 0; i < numArgs; ++i) {
-                    env.remove(e.args.get(i).id);
-                }
-            }
-            */
-
             @Override
             public void visit(@Nonnull AstFunDef e) {
-                int i, numArgs = e.args.size();
 
                 env.push();
                 {
-                    for (i = 0; i < numArgs; ++i) {
-                        env.put(e.args.get(i).id, e.argTypes.get(i));
+                    for (AstSymDef arg : e.args) {
+                        env.put(arg.id, arg.type);
                     }
 
                     //typeEquals(type, e.functionType);
-                    exprIsOfType(e.e, e.returnType);
+                    exprIsOfType(e.body, e.returnType);
                 }
                 env.pop();
             }
@@ -277,16 +246,15 @@ public class EquationGenerator {
 
             @Override
             public void visit(@Nonnull AstLetTuple e) {
-                int i, n = e.ids.size();
-                exprIsOfType(e.e1, new TTuple(e.ts));
+                exprIsOfType(e.initializer, new TTuple(e.getIdentifierTypes()));
 
                 env.push();
                 {
-                    for (i = 0; i < n; ++i) {
-                        env.put(e.ids.get(i).id, e.ts.get(i));
+                    for (AstSymDef sym : e.ids) {
+                        env.put(sym.id, sym.type);
                     }
 
-                    exprIsOfType(e.e2, type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
@@ -294,23 +262,23 @@ public class EquationGenerator {
             @Override
             public void visit(@Nonnull AstArray e) {
                 Type elementType = Type.gen();
-                exprIsOfType(e.e1, INT);
-                exprIsOfType(e.e2, elementType);
+                exprIsOfType(e.size, INT);
+                exprIsOfType(e.initializer, elementType);
                 typeEquals(type, new TArray(elementType));
             }
 
             @Override
             public void visit(@Nonnull AstGet e) {
-                exprIsOfType(e.e1, new TArray(type));
-                exprIsOfType(e.e2, INT);
+                exprIsOfType(e.array, new TArray(type));
+                exprIsOfType(e.index, INT);
             }
 
             @Override
             public void visit(@Nonnull AstPut e) {
                 Type t = Type.gen();
-                exprIsOfType(e.e1, new TArray(t));
-                exprIsOfType(e.e2, INT);
-                exprIsOfType(e.e3, t);
+                exprIsOfType(e.array, new TArray(t));
+                exprIsOfType(e.index, INT);
+                exprIsOfType(e.value, t);
                 typeEquals(type, UNIT);
             }
         });

@@ -27,7 +27,7 @@ public interface Visitor {
     void visit(@Nonnull AstLE e);
     void visit(@Nonnull AstIf e);
     void visit(@Nonnull AstLet e);
-    void visit(@Nonnull AstVar e);
+    void visit(@Nonnull AstSymRef e);
     void visit(@Nonnull AstLetRec e);
     void visit(@Nonnull AstApp e);
     void visit(@Nonnull AstTuple e);

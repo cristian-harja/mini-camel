@@ -21,12 +21,12 @@ public class RecursiveCheck extends DummyVisitor {
     }
 
     public void visit(@Nonnull AstLetRec e) {
-        recDef.add(e.fd.id.id);
+        recDef.add(e.fd.decl.id);
 
         e.fd.accept(this);
     }
 
-    public void visit(@Nonnull AstVar e) {
+    public void visit(@Nonnull AstSymRef e) {
         if (recDef.contains(e.toString())) {
             recFunction.add(e.toString());
         }
