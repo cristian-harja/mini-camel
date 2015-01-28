@@ -194,31 +194,26 @@ public class MyCompiler {
     }
 
     public boolean preProcessCode() {
-        AstExp oldAst;
 
         Set<String> unusedVars = UnusedVar.compute(parsedAst);
         for (String unusedVar : unusedVars) {
             warn("Unused variable: " + unusedVar);
         }
 
-        try {
-            int i = 0;
-            do {
-                i++;
-                oldAst = transformedAst;
-                //System.out.println("ETAPE 1 : " + transformedAst.toString());
-                transformAlphaConversion();
-                transformBetaReduction();
-                transformConstantFolding();
-                //System.out.println("ETAPE 2 : " + transformedAst.toString());
-                transformElimination();
-                transformInlining();
-                //System.out.println("ETAPE 3 : " + transformedAst.toString());
-            } while (oldAst != transformedAst || i == 3);
-        } catch (RuntimeException e) {
-            error("An exception has occurred while pre-processing the AST.", e);
-            return false;
+
+        transformAlphaConversion();
+        transformBetaReduction();
+        int i = 0;
+        while(i < 4){
+            i++;
+            transformInlining();
+            //System.out.println("ETAPE A : " + transformedAst.toString());
+            transformConstantFolding();
+            //System.out.println("ETAPE B : " + transformedAst.toString());
+            transformElimination();
+            //System.out.println("ETAPE C : " + transformedAst.toString());
         }
+        //System.out.println("Etape finale : "+transformedAst.toString());
         return true;
     }
 
