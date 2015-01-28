@@ -1,11 +1,14 @@
 package mini_camel.util;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import mini_camel.ast.AstExp;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
 
 /**
  * Denotes a symbol reference.
@@ -18,6 +21,15 @@ public final class SymRef extends AstExp {
      */
     public final String id;
 
+    private static final Function<SymRef, String>
+            GET_ID = new Function<SymRef, String>() {
+        @Override
+        public String apply(@Nullable SymRef input) {
+            if (input == null) return null;
+            return input.id;
+        }
+    };
+
     public SymRef(String id) {
         this.id = id;
     }
@@ -25,6 +37,10 @@ public final class SymRef extends AstExp {
     public SymRef(Id id) {
         this(id.id);
         setSymbol(id.getSymbol());
+    }
+
+    public static List<String> idList(List<SymRef> l) {
+        return Lists.transform(l, GET_ID);
     }
 
     public void accept(Visitor v) {
