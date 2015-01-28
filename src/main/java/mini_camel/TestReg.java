@@ -18,7 +18,7 @@ public class TestReg {
 
         //c.outputTransformedAst(System.out);
 
-        c.codeGeneration_new();
+        c.generateIR();
 
 
         c.outputIR(System.out);

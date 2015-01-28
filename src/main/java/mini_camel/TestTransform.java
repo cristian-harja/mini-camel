@@ -38,7 +38,7 @@ public class TestTransform {
                 return;
             }
 
-            c.outputTransformedAst(System.out);
+            c.outputTransformedAST(System.out);
 
         } catch (Exception e) {
             e.printStackTrace();
