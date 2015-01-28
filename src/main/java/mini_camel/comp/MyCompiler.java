@@ -246,6 +246,7 @@ public class MyCompiler {
 
     public boolean codeGeneration_new() {
         try {
+            performKNormalization();
             Program p = ClosureConv.compute(kNormalized, PREDEFS.keySet());
             funDefs = CodeGenerator2.compile(p, PREDEFS, "_main");
         } catch (RuntimeException e) {

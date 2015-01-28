@@ -230,11 +230,15 @@ public final class KNormalize extends KNormalizeHelper
         symbolTable.push();
         {
             symbolTable.put(e.fd.decl.id, e.fd.decl.type);
-            ret = e.ret.accept(this);
-            for (SymDef arg : e.fd.args) {
-                symbolTable.put(arg.id, arg.type);
+            symbolTable.push();
+            {
+                for (SymDef arg : e.fd.args) {
+                    symbolTable.put(arg.id, arg.type);
+                }
+                fdBody = e.fd.body.accept(this);
             }
-            fdBody = e.fd.body.accept(this);
+            symbolTable.pop();
+            ret = e.ret.accept(this);
         }
         symbolTable.pop();
 

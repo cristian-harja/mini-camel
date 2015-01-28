@@ -26,7 +26,7 @@ public class CodeGenerator2 implements KVisitor {
     private Map<String, Var> free = new LinkedHashMap<>();
     private Map<String, Var> args = new LinkedHashMap<>();
     private Map<String, Var> locals = new LinkedHashMap<>();
-    private Map<String, Var> globals = new LinkedHashMap<>();
+    private Map<String, Label> globals = new LinkedHashMap<>();
 
     private static final ConstInt CONST_0 = new ConstInt(0);
     private static final ConstInt CONST_1 = new ConstInt(1);
@@ -44,16 +44,18 @@ public class CodeGenerator2 implements KVisitor {
         );
     }
 
-    public static Function compile(KFunDef fd, Map<String, Type> globals) {
+    private static Function compile(KFunDef fd, Map<String, Type> globals) {
         CodeGenerator2 cg = new CodeGenerator2();
         cg.functionBegin = new Label(fd.name.id);
-        cg.free.putAll(Collections.<String, Var>emptyMap());
 
         for (Map.Entry<String, Type> e : globals.entrySet()) {
-            cg.globals.put(e.getKey(), new Var(e.getKey(), e.getValue()));
+            cg.globals.put(e.getKey(), new Label(e.getKey()));
         }
         for (SymDef arg : fd.args) {
             cg.args.put(arg.id, new Var(arg.id, arg.type));
+        }
+        for (SymRef arg : fd.freeVars) {
+            cg.free.put(arg.id, new Var(arg.id, null));
         }
 
         fd.body.accept(cg);
@@ -63,7 +65,7 @@ public class CodeGenerator2 implements KVisitor {
 
     public static List<Function> compile(
             Program p,
-            Map<String, Type> globals,
+            Map<String, Type> predefs,
             String mainName
     ) {
         KFunDef fd = new KFunDef(
@@ -73,6 +75,8 @@ public class CodeGenerator2 implements KVisitor {
         );
 
         Collection<KFunDef> topLevel = p.topLevel.values();
+        Map<String, Type> globals = new LinkedHashMap<>();
+        globals.putAll(predefs);
 
         for (KFunDef funDef : topLevel) {
             globals.put(funDef.name.id, funDef.name.type);
@@ -115,10 +119,10 @@ public class CodeGenerator2 implements KVisitor {
         v = locals.get(ref.id);
         if (v != null) return v;
 
-        v = free.get(ref.id);
+        v = args.get(ref.id);
         if (v != null) return v;
 
-        v = globals.get(ref.id);
+        v = free.get(ref.id);
         if (v != null) return v;
 
         throw new RuntimeException(

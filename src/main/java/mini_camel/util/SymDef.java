@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Denotes a symbol declaration; groups together the name and type of the
@@ -17,7 +18,7 @@ import java.util.List;
  */
 @Immutable
 @ParametersAreNonnullByDefault
-public final class SymDef extends AstNode {
+public final class SymDef extends AstNode implements Map.Entry<String, Type> {
     /**
      * The name of the symbol.
      */
@@ -87,5 +88,19 @@ public final class SymDef extends AstNode {
     @Nonnull
     public String toString() {
         return id;
+    }
+
+    @Nonnull
+    public String getKey() {
+        return id;
+    }
+
+    @Nonnull
+    public Type getValue() {
+        return type;
+    }
+
+    public Type setValue(Type value) {
+        throw new UnsupportedOperationException();
     }
 }

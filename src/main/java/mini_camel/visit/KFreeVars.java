@@ -7,21 +7,29 @@ import mini_camel.util.SymRef;
 import mini_camel.util.SymTable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 @ParametersAreNonnullByDefault
 public final class KFreeVars extends KDummyVisitor {
 
-    private List<SymRef> free = new ArrayList<>();
-    private SymTable<Type> symbolTable = new SymTable<>();
+    private List<SymRef> free = new LinkedList<>();
+    private SymTable<Type> symbolTable;
 
     private KFreeVars() {
     }
 
+    public static List<SymRef> compute(KNode root, SymTable<Type> symTable) {
+        KFreeVars fv = new KFreeVars();
+        fv.symbolTable = symTable;
+        root.accept(fv);
+        return fv.free;
+    }
+
     public static List<SymRef> compute(KNode root) {
         KFreeVars fv = new KFreeVars();
+        fv.symbolTable = new SymTable<>();
         root.accept(fv);
         return fv.free;
     }
@@ -39,8 +47,9 @@ public final class KFreeVars extends KDummyVisitor {
     public void visit(KLetRec k) {
         symbolTable.push();
         {
+            freeCheck(k.fd.freeVars);
             symbolTable.put(k.fd.name.id, k.fd.name.type);
-            k.fd.body.accept(this);
+            //k.fd.body.accept(this);
             for (SymDef arg : k.fd.args) {
                 symbolTable.put(arg.id, arg.type);
             }
@@ -69,13 +78,19 @@ public final class KFreeVars extends KDummyVisitor {
     }
 
     public void visit(ApplyDirect k) {
-        freeCheck(k.functionName);
+        //freeCheck(k.functionName);
         freeCheck(k.args);
     }
 
     public void visit(ClosureMake k) {
-        freeCheck(k.functionName);
-        freeCheck(k.freeArguments);
+        symbolTable.push();
+        {
+            // freeCheck(k.functionName);
+            freeCheck(k.freeArguments);
+            symbolTable.put(k.target);
+            k.ret.accept(this);
+        }
+        symbolTable.pop();
     }
 
     private void freeCheck(SymRef ref) {
