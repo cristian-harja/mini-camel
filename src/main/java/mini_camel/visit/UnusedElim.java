@@ -26,7 +26,6 @@ public final class UnusedElim extends TransformHelper {
      */
     public static AstExp compute(AstExp astNode) {
         return astNode.accept(new UnusedElim(astNode));
-
     }
 
     @Nonnull
@@ -35,20 +34,6 @@ public final class UnusedElim extends TransformHelper {
             return e.ret.accept(this);
         }
         return super.visit(e);
-    }
-
-    @Nonnull
-    public AstExp visit(SymRef e) {
-        if (unused.contains(e.id)) {
-            return null; // ??? fixme
-        }
-        return e;
-    }
-
-
-    @Nonnull
-    public AstExp visit(AstLetRec e) {
-        return e.ret.accept(this);
     }
 
 

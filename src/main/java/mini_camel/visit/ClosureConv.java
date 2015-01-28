@@ -1,7 +1,7 @@
 package mini_camel.visit;
 
-import com.google.common.collect.Lists;
 import mini_camel.knorm.*;
+import mini_camel.type.Type;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 
@@ -13,7 +13,7 @@ import java.util.*;
 @SuppressWarnings("unused")
 public final class ClosureConv extends KTransformHelper {
 
-    List<KFunDef> topLevel = new ArrayList<>();
+    Map<String, KFunDef> topLevel = new LinkedHashMap<>();
     Set<String> known = new HashSet<>();
     Set<String> env = new HashSet<>();
 
@@ -26,15 +26,8 @@ public final class ClosureConv extends KTransformHelper {
 
         cc.known.addAll(globals);
         result = root.accept(cc);
-        cc.topLevel = Lists.reverse(cc.topLevel);
 
-        Map<String, KFunDef> topLevel = new LinkedHashMap<>();
-
-        for (KFunDef fd : cc.topLevel) {
-            topLevel.put(fd.name.id, fd);
-        }
-
-        return new Program(topLevel, result);
+        return new Program(cc.topLevel, result);
     }
 
     private static Program compute(KNode root) {
@@ -45,55 +38,38 @@ public final class ClosureConv extends KTransformHelper {
     public KNode visit(KLetRec e) {
         KNode e1_new, e2_new;
 
-        SymDef fSymbol = e.fd.name;
-        String fName = fSymbol.id;
-        Set<String> argNames = new HashSet<>();
-        List<String> fv;
+        String id = e.fd.name.id;
 
-        for (SymDef id : e.fd.args) {
-            argNames.add(id.id);
+        List<SymRef> e1_free = e.fd.freeVars;
+
+        if (e1_free.isEmpty()) {
+            known.add(id);
         }
 
-        known.add(fName);
-        env.add(fName);
-        env.addAll(argNames);
-        {
-            e1_new = e.fd.body.accept(this);
-            fv = SymRef.idList(KFreeVars.compute(e.fd.body));
-            fv.removeAll(argNames);
+        KFunDef fd = new KFunDef(
+                e.fd.name, e.fd.args,
+                e.fd.body.accept(this)
+        );
+        topLevel.put(id, fd);
 
-            if (!fv.isEmpty()) {
-                known.remove(fName);
-                e1_new = e.fd.body.accept(this);
-                fv = SymRef.idList(KFreeVars.compute(e.fd.body));
-                fv.removeAll(argNames);
-                fv.remove(fName);
+        e2_new = e.ret.accept(this);
+
+        List<SymRef> e2_free = KFreeVars.compute(e2_new);
+        Iterator<SymRef> it = e2_free.iterator();
+        while (it.hasNext()) {
+            SymRef ref = it.next();
+            if (!ref.id.equals(id)) {
+                continue;
             }
-
-            topLevel.add(new KFunDef(
-                    fSymbol,
-                    e.fd.args,
-                    fv,
-                    e1_new
-            ));
-
-            env.removeAll(argNames);
-            e2_new = e.ret.accept(this);
-
-            if (SymRef.idList(KFreeVars.compute(e2_new)).contains(fName)) {
-                List<SymRef> refs = new ArrayList<>(fv.size());
-                for (String var : fv) {
-                    refs.add(new SymRef(var));
-                }
-                e2_new = new KLet(
-                        fSymbol, // reusing same ID ? fixme
-                        new ClosureMake(fSymbol.makeRef(), refs),
-                        e2_new
-                );
-            }
+            it.remove();
+            e2_new = new ClosureMake(
+                    new SymDef(id, Type.gen()), // fixme: type
+                    fd.name.makeRef(),
+                    e1_free,
+                    e2_new
+            );
+            break;
         }
-        known.remove(fName);
-        env.remove(fName);
 
         return e2_new;
 
@@ -106,28 +82,6 @@ public final class ClosureConv extends KTransformHelper {
             return new ApplyDirect(f, e.args);
         }
         return new ApplyClosure(f, e.args);
-    }
-
-    @Nonnull
-    public KNode visit(KLet e) {
-        KNode e_new;
-        String id = e.id.id;
-        env.add(id);
-        e_new = super.visit(e);
-        env.remove(id);
-        return e_new;
-    }
-
-    @Nonnull
-    public KNode visit(KLetTuple e) {
-        List<String> args = new ArrayList<>(e.ids.size());
-        for (SymDef id : e.ids) {
-            args.add(id.id);
-        }
-        env.addAll(args);
-        KNode e_new = super.visit(e);
-        env.removeAll(args);
-        return e_new;
     }
 
 }

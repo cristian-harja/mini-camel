@@ -4,6 +4,7 @@ import mini_camel.ir.instr.*;
 import mini_camel.ir.instr.ClsMake;
 import mini_camel.ir.op.*;
 import mini_camel.knorm.*;
+import mini_camel.type.TFun;
 import mini_camel.type.TUnit;
 import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
@@ -14,7 +15,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 @ParametersAreNonnullByDefault
-@SuppressWarnings("unused")
 public class CodeGenerator2 implements KVisitor {
 
     private List<Instr> code = new ArrayList<>();
@@ -26,7 +26,7 @@ public class CodeGenerator2 implements KVisitor {
     private Map<String, Var> free = new LinkedHashMap<>();
     private Map<String, Var> args = new LinkedHashMap<>();
     private Map<String, Var> locals = new LinkedHashMap<>();
-    private Map<String, Var> globals = new LinkedHashMap<>();
+    private Map<String, Type> predefs = new LinkedHashMap<>();
 
     private static final ConstInt CONST_0 = new ConstInt(0);
     private static final ConstInt CONST_1 = new ConstInt(1);
@@ -44,16 +44,16 @@ public class CodeGenerator2 implements KVisitor {
         );
     }
 
-    public static Function compile(KFunDef fd, Map<String, Type> globals) {
+    private static Function compile(KFunDef fd, Map<String, Type> predefs) {
         CodeGenerator2 cg = new CodeGenerator2();
         cg.functionBegin = new Label(fd.name.id);
-        cg.free.putAll(Collections.<String, Var>emptyMap());
+        cg.predefs.putAll(predefs);
 
-        for (Map.Entry<String, Type> e : globals.entrySet()) {
-            cg.globals.put(e.getKey(), new Var(e.getKey(), e.getValue()));
-        }
         for (SymDef arg : fd.args) {
             cg.args.put(arg.id, new Var(arg.id, arg.type));
+        }
+        for (SymRef arg : fd.freeVars) {
+            cg.free.put(arg.id, new Var(arg.id, null));
         }
 
         fd.body.accept(cg);
@@ -63,7 +63,7 @@ public class CodeGenerator2 implements KVisitor {
 
     public static List<Function> compile(
             Program p,
-            Map<String, Type> globals,
+            Map<String, Type> predefs,
             String mainName
     ) {
         KFunDef fd = new KFunDef(
@@ -73,6 +73,8 @@ public class CodeGenerator2 implements KVisitor {
         );
 
         Collection<KFunDef> topLevel = p.topLevel.values();
+        Map<String, Type> globals = new LinkedHashMap<>();
+        globals.putAll(predefs);
 
         for (KFunDef funDef : topLevel) {
             globals.put(funDef.name.id, funDef.name.type);
@@ -115,10 +117,10 @@ public class CodeGenerator2 implements KVisitor {
         v = locals.get(ref.id);
         if (v != null) return v;
 
-        v = free.get(ref.id);
+        v = args.get(ref.id);
         if (v != null) return v;
 
-        v = globals.get(ref.id);
+        v = free.get(ref.id);
         if (v != null) return v;
 
         throw new RuntimeException(
@@ -218,7 +220,7 @@ public class CodeGenerator2 implements KVisitor {
         int i, n = k.ids.size();
         Var array = find(k.initializer);
         for (i = 0; i < n; ++i) {
-            Var dest = find(k.ids.get(0).makeRef());
+            Var dest = newLocal(k.ids.get(0));
             code.add(new ArrGet(dest, array, cons(i)));
         }
     }
@@ -274,7 +276,17 @@ public class CodeGenerator2 implements KVisitor {
         for (SymRef ref : k.args) {
             args.add(find(ref));
         }
-        code.add(new DirApply(dest, k.functionName.id, args));
+
+        // Name of the function to call
+        String fName = k.functionName.id;
+
+        // Check that its type is not () -> T
+        Type fType = predefs.get(fName);
+        if (fType instanceof TFun && ((TFun) fType).arg == TUnit.INSTANCE) {
+            args.clear();
+        }
+
+        code.add(new DirApply(dest, fName, args));
     }
 
     public void visit(ClosureMake k) {
@@ -282,6 +294,8 @@ public class CodeGenerator2 implements KVisitor {
         for (SymRef ref : k.freeArguments) {
             args.add(find(ref));
         }
+        pushVar(newLocal(k.target));
         code.add(new ClsMake(dest, new Label(k.functionName.id), args));
+        popVar();
     }
 }

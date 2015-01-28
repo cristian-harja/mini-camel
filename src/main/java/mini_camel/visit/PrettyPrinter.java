@@ -7,16 +7,29 @@ import mini_camel.util.Visitor;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 
 @ParametersAreNonnullByDefault
-@SuppressWarnings("unused")
-public final class PrintVisitor implements Visitor {
+public final class PrettyPrinter implements Visitor {
 
     private PrintStream out;
+    private int indent;
 
-    public PrintVisitor(PrintStream out) {
+    public PrettyPrinter(PrintStream out) {
         this.out = out;
+    }
+
+    private void nl(int indentChange) {
+        indent += indentChange;
+        nl();
+    }
+
+    private void nl() {
+        out.print('\n');
+        for (int i = 0; i < indent; ++i) {
+            out.print('\t');
+        }
     }
 
     public void visit(AstUnit e) {
@@ -64,13 +77,13 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFNeg e){
+    public void visit(AstFNeg e) {
         out.print("(-. ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(AstFAdd e){
+    public void visit(AstFAdd e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" +. ");
@@ -78,7 +91,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFSub e){
+    public void visit(AstFSub e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" -. ");
@@ -94,7 +107,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstFDiv e){
+    public void visit(AstFDiv e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" /. ");
@@ -102,7 +115,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstEq e){
+    public void visit(AstEq e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" = ");
@@ -110,7 +123,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstLE e){
+    public void visit(AstLE e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" <= ");
@@ -118,32 +131,44 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstIf e){
-        out.print("(if ");
+    public void visit(AstIf e) {
+        out.print("(\n");
+        nl();
+        out.print("if ");
+        indent++;
         e.eCond.accept(this);
-        out.print(" then ");
+        indent--;
+        nl();
+
+        out.print("then");
+        nl(+1);
         e.eThen.accept(this);
-        out.print(" else ");
+        nl(-1);
+
+        out.print("else");
+        nl(+1);
         e.eElse.accept(this);
+        nl(-1);
         out.print(")");
     }
 
     public void visit(AstLet e) {
-        out.print("(let ");
+        out.print("let ");
         out.print(e.decl.id);
         out.print(" = ");
         e.initializer.accept(this);
-        out.print(" in ");
+        out.print(" in");
+        nl();
         e.ret.accept(this);
-        out.print(")");
     }
 
-    public void visit(SymRef e){
+
+    public void visit(SymRef e) {
         out.print(e.id);
     }
 
 
-    // print sequence of identifiers 
+    // print sequence of identifiers
     private void printInfix(List<SymDef> l, String op) {
         if (l.isEmpty()) {
             return;
@@ -169,19 +194,22 @@ public final class PrintVisitor implements Visitor {
         }
     }
 
-    public void visit(AstLetRec e){
-        out.print("(let rec ");
+    public void visit(AstLetRec e) {
+        out.print("let rec ");
         out.print(e.fd.decl.id);
         out.print(" ");
         printInfix(e.fd.args, " ");
-        out.print(" = ");
+        out.print(" =");
+        nl(+1);
         e.fd.body.accept(this);
-        out.print(" in ");
+        nl(-1);
+        out.print("in");
+        nl(+1);
         e.ret.accept(this);
-        out.print(")");
+        indent--;
     }
 
-    public void visit(AstApp e){
+    public void visit(AstApp e) {
         out.print("(");
         e.e.accept(this);
         out.print(" ");
@@ -189,23 +217,24 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstTuple e){
+    public void visit(AstTuple e) {
         out.print("(");
         printInfix2(e.es, ", ");
         out.print(")");
     }
 
-    public void visit(AstLetTuple e){
-        out.print("(let (");
+    public void visit(AstLetTuple e) {
+        out.print("let (");
         printInfix(e.ids, ", ");
         out.print(") = ");
         e.initializer.accept(this);
-        out.print(" in ");
+        out.print(" in");
+        nl(+1);
         e.ret.accept(this);
-        out.print(")");
+        nl(-1);
     }
 
-    public void visit(AstArray e){
+    public void visit(AstArray e) {
         out.print("(Array.create ");
         e.size.accept(this);
         out.print(" ");
@@ -213,14 +242,14 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(AstGet e){
+    public void visit(AstGet e) {
         e.array.accept(this);
         out.print(".(");
         e.index.accept(this);
         out.print(")");
     }
 
-    public void visit(AstPut e){
+    public void visit(AstPut e) {
         out.print("(");
         e.array.accept(this);
         out.print(".(");
@@ -231,10 +260,10 @@ public final class PrintVisitor implements Visitor {
     }
 
     public void visit(AstFunDef e) {
-        // nothing to do
+
     }
 
-    public void visit(AstErr e) {
+    public void visit(AstErr astErr) {
         out.print("<error>");
     }
 }

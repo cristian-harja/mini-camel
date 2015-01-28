@@ -3,14 +3,12 @@ package mini_camel.type;
 import mini_camel.ast.*;
 import mini_camel.util.*;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-@ParametersAreNonnullByDefault
-public class EquationGenerator {
+public final class EquationGenerator {
 
     static final Type UNIT = TUnit.INSTANCE;
     static final Type BOOL = TBool.INSTANCE;

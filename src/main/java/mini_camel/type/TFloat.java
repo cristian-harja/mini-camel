@@ -1,5 +1,6 @@
 package mini_camel.type;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -13,8 +14,13 @@ public final class TFloat extends Type {
     // Immutable singleton class. Use TFloat.INSTANCE instead.
     private TFloat() {}
 
-    @Override
+    @Nonnull
     public String toString() {
         return "float";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.FLOAT;
     }
 }

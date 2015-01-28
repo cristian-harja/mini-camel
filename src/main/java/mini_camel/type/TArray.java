@@ -8,14 +8,20 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class TArray extends Type {
+    @Nonnull
     public final Type elementType;
 
-    public TArray(@Nonnull Type t) {
+    public TArray(Type t) {
         elementType = t;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return "[" + elementType + "]";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.ARRAY;
     }
 }

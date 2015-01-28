@@ -1,5 +1,6 @@
 package mini_camel.type;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -14,8 +15,13 @@ public final class TInt extends Type {
     // Immutable singleton class. Use TInt.INSTANCE instead.
     private TInt() {}
 
-    @Override
+    @Nonnull
     public String toString() {
         return "int";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.INTEGER;
     }
 }

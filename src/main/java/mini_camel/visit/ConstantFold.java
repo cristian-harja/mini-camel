@@ -40,7 +40,7 @@ public final class ConstantFold extends TransformHelper {
         reMapping.push();
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
-            if (new_e1 instanceof AstUnit || new_e1 instanceof SymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple) {
+            if (isSuitable(new_e1)) {
                 //if(new_e1 instanceof AstVar){
                 reMapping.put(old_id.id, new_e1);
             }
@@ -50,6 +50,17 @@ public final class ConstantFold extends TransformHelper {
         reMapping.pop();
 
         return new AstLet(old_id, new_e1, new_e2);
+    }
+
+    private boolean isSuitable(AstExp e) {
+        if (e instanceof AstUnit) return true;
+        if (e instanceof SymRef) return true;
+        if (e instanceof AstInt) return true;
+        if (e instanceof AstBool) return true;
+        if (e instanceof AstFloat) return true;
+        if (e instanceof AstArray) return true;
+        if (e instanceof AstTuple) return true;
+        return false;
     }
 
 
