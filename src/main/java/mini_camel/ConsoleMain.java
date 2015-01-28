@@ -168,7 +168,13 @@ public class ConsoleMain {
 
         // Compile
         if (!comp.preProcessCode()) return false;
-        if (!comp.codeGeneration()) return false;
+        /*//
+        // there's a bug in closure conversion, which crashes the compiler
+        if (!comp.performKNormalization()) return false;
+        if (!comp.codeGeneration_new()) return false;
+        /*/
+        if (!comp.codeGeneration_old()) return false;
+        //*/
 
         // Output
         if (printIR) {

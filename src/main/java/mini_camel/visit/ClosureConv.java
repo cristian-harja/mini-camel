@@ -20,7 +20,7 @@ public final class ClosureConv extends KTransformHelper {
     private ClosureConv() {
     }
 
-    public static KNode compute(KNode root, Set<String> globals) {
+    public static Program compute(KNode root, Set<String> globals) {
         ClosureConv cc = new ClosureConv();
         KNode result;
 
@@ -28,10 +28,16 @@ public final class ClosureConv extends KTransformHelper {
         result = root.accept(cc);
         cc.topLevel = Lists.reverse(cc.topLevel);
 
-        return result;
+        Map<String, KFunDef> topLevel = new LinkedHashMap<>();
+
+        for (KFunDef fd : cc.topLevel) {
+            topLevel.put(fd.name.id, fd);
+        }
+
+        return new Program(topLevel, result);
     }
 
-    private static KNode compute(KNode root) {
+    private static Program compute(KNode root) {
         return compute(root, Collections.<String>emptySet());
     }
 
@@ -67,7 +73,7 @@ public final class ClosureConv extends KTransformHelper {
             topLevel.add(new KFunDef(
                     fSymbol,
                     e.fd.args,
-                    // fv ... fixme
+                    fv,
                     e1_new
             ));
 

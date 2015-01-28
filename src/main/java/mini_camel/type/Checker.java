@@ -21,10 +21,10 @@ public class Checker {
     EquationSolver solver;
     Map<String, Type> solution;
 
-    public Checker(AstExp pgm) {
+    public Checker(AstExp pgm, Map<String, Type> predefs) {
         program = pgm;
         gen = new EquationGenerator();
-        input = gen.genEquations(pgm);
+        input = gen.genEquations(pgm, predefs);
         equations = new ArrayList<>(input);
         solver = new EquationSolver(equations);
         solution = solver.getSolution();

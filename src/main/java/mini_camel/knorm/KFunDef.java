@@ -16,11 +16,28 @@ public final class KFunDef {
     public final List<SymDef> args;
 
     @Nonnull
+    public final List<String> freeVars;
+
+    @Nonnull
     public final KNode body;
 
-    public KFunDef(SymDef name, List<SymDef> args, KNode body) {
+    public KFunDef(
+            SymDef name,
+            List<SymDef> args,
+            KNode body
+    ) {
+        this(name, args, Collections.<String>emptyList(), body);
+    }
+
+    public KFunDef(
+            SymDef name,
+            List<SymDef> args,
+            List<String> free,
+            KNode body
+    ) {
         this.name = name;
         this.args = Collections.unmodifiableList(args);
+        freeVars = Collections.unmodifiableList(free);
         this.body = body;
     }
 }

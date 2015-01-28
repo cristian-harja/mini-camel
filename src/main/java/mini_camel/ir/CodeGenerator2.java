@@ -4,6 +4,8 @@ import mini_camel.ir.instr.*;
 import mini_camel.ir.instr.ClsMake;
 import mini_camel.ir.op.*;
 import mini_camel.knorm.*;
+import mini_camel.type.TUnit;
+import mini_camel.type.Type;
 import mini_camel.util.KVisitor;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
@@ -42,12 +44,14 @@ public class CodeGenerator2 implements KVisitor {
         );
     }
 
-    public static Function compile(KFunDef fd, Map<String, Var> globals) {
+    public static Function compile(KFunDef fd, Map<String, Type> globals) {
         CodeGenerator2 cg = new CodeGenerator2();
         cg.functionBegin = new Label(fd.name.id);
-        cg.globals.putAll(globals);
         cg.free.putAll(Collections.<String, Var>emptyMap());
 
+        for (Map.Entry<String, Type> e : globals.entrySet()) {
+            cg.globals.put(e.getKey(), new Var(e.getKey(), e.getValue()));
+        }
         for (SymDef arg : fd.args) {
             cg.args.put(arg.id, new Var(arg.id, arg.type));
         }
@@ -56,6 +60,34 @@ public class CodeGenerator2 implements KVisitor {
 
         return cg.getResult();
     }
+
+    public static List<Function> compile(
+            Program p,
+            Map<String, Type> globals,
+            String mainName
+    ) {
+        KFunDef fd = new KFunDef(
+                new SymDef(mainName, TUnit.INSTANCE),
+                Collections.<SymDef>emptyList(),
+                p.mainBody
+        );
+
+        Collection<KFunDef> topLevel = p.topLevel.values();
+
+        for (KFunDef funDef : topLevel) {
+            globals.put(funDef.name.id, funDef.name.type);
+        }
+
+        List<Function> result = new ArrayList<>(p.topLevel.size() + 1);
+
+        result.add(compile(fd, globals));
+        for (KFunDef funDef : topLevel) {
+            result.add(compile(funDef, globals));
+        }
+
+        return result;
+    }
+
 
     private ConstInt cons(int i) {
         if (i == 0) return CONST_0;

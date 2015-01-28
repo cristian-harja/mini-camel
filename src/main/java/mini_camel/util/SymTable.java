@@ -1,5 +1,7 @@
 package mini_camel.util;
 
+import mini_camel.type.Type;
+
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -58,4 +60,9 @@ public final class SymTable<T> {
         return null;
     }
 
+    public void putAll(Map<String, T> items) {
+        for (Map.Entry<String, T> item : items.entrySet()) {
+            put(item.getKey(), item.getValue());
+        }
+    }
 }
