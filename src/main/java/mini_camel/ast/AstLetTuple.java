@@ -1,47 +1,88 @@
 package mini_camel.ast;
 
-import mini_camel.ir.Couple;
+import mini_camel.util.SymDef;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
 import mini_camel.type.Type;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Let expression ({@code let (id1, id2, ...idN) = e1 in e2}).
+ * Let expression with a tuple ({@code let (id1, id2, ...idN) = e1 in e2}).
  */
 @Immutable
 public final class AstLetTuple extends AstExp {
-    public final List<Id> ids;
-    public final List<Type> ts;
-    public final AstExp e1, e2;
+    /**
+     * Contains the declared identifiers (name and type), which are bound in
+     * the body of the {@code let} expression.
+     */
+    @Nonnull
+    public final List<SymDef> ids;
 
-    public AstLetTuple(
-            @Nonnull List<Id> ids,
-            @Nonnull List<Type> ts,
-            @Nonnull AstExp e1,
-            @Nonnull AstExp e2
-    ) {
+    /**
+     * Initializer of the {@code let} expression. Its type is expected to be
+     * {@link mini_camel.type.TTuple}.
+     */
+    @Nonnull
+    public final AstExp initializer;
+
+    /**
+     * The expression returned by this {@code let}.
+     */
+    @Nonnull
+    public final AstExp ret;
+
+    @CheckForNull
+    private List<String> ids_;
+
+    @CheckForNull
+    private List<Type> types_;
+
+    public AstLetTuple(List<SymDef> ids, AstExp initializer, AstExp ret) {
         this.ids = Collections.unmodifiableList(ids);
-        this.ts = Collections.unmodifiableList(ts);
-        this.e1 = e1;
-        this.e2 = e2;
+        this.initializer = initializer;
+        this.ret = ret;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    @Nonnull
+    public List<String> getIdentifierList() {
+        if (ids_ != null) return ids_;
+        synchronized (this) {
+            if (ids_ != null) return ids_;
+            ids_ = SymDef.ids(ids);
+        }
+        return ids_;
+    }
+
+    @Nonnull
+    public List<Type> getIdentifierTypes() {
+        if (types_ != null) return types_;
+        synchronized (this) {
+            if (types_!= null) return types_;
+            types_ = SymDef.types(ids);
+        }
+        return types_;
+    }
+
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
@@ -49,7 +90,7 @@ public final class AstLetTuple extends AstExp {
 
         boolean first = true;
         sb.append("(");
-        for (Id l : ids){
+        for (SymDef l : ids){
             if(!first){
                 sb.append(", ");
             }
@@ -57,9 +98,9 @@ public final class AstLetTuple extends AstExp {
             sb.append(l.id);
         }
         sb.append(") = ");
-        sb.append(e1);
+        sb.append(initializer);
         sb.append(" in ");
-        sb.append(e2);
+        sb.append(ret);
         sb.append(")");
 
         return sb.toString();

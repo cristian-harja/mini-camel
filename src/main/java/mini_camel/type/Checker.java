@@ -1,11 +1,11 @@
 package mini_camel.type;
 
-import mini_camel.ast.Id;
-import mini_camel.Pair;
+import mini_camel.util.SymDef;
+import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.ast.AstFunDef;
 import mini_camel.ast.AstLet;
-import mini_camel.ast.DummyVisitor;
+import mini_camel.visit.DummyVisitor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -21,10 +21,10 @@ public class Checker {
     EquationSolver solver;
     Map<String, Type> solution;
 
-    public Checker(AstExp pgm) {
+    public Checker(AstExp pgm, Map<String, Type> predefs) {
         program = pgm;
         gen = new EquationGenerator();
-        input = gen.genEquations(pgm);
+        input = gen.genEquations(pgm, predefs);
         equations = new ArrayList<>(input);
         solver = new EquationSolver(equations);
         solution = solver.getSolution();
@@ -48,28 +48,27 @@ public class Checker {
         program.accept(new DummyVisitor() {
             @Override
             public void visit(@Nonnull AstLet e) {
-                if (e.id.id.equals(symbolName)) {
-                    found[0] = e.id_type;
+                if (e.decl.id.equals(symbolName)) {
+                    found[0] = e.decl.type;
                 }
-                e.e1.accept(this);
-                e.e2.accept(this);
+                e.initializer.accept(this);
+                e.ret.accept(this);
             }
 
             @Override
             public void visit(@Nonnull AstFunDef e) {
-                if (e.id.id.equals(symbolName)) {
-                    found[0] = e.functionType;
+                if (e.decl.id.equals(symbolName)) {
+                    found[0] = e.decl.type;
                     return;
                 }
-                List<Id> args = e.args;
-                for (int i = 0; i < args.size(); i++) {
-                    Id exp = args.get(i);
+                List<SymDef> args = e.args;
+                for (SymDef exp : args) {
                     if (exp.id.equals(symbolName)) {
-                        found[0] = e.argTypes.get(i);
+                        found[0] = exp.type;
                         return;
                     }
                 }
-                e.e.accept(this);
+                e.body.accept(this);
             }
         });
         return concreteType(found[0]);

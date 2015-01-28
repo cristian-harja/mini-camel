@@ -1,8 +1,12 @@
 package mini_camel.ast;
 
-import mini_camel.ir.Couple;
+import mini_camel.util.SymDef;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -10,39 +14,44 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class AstLetRec extends AstExp {
+    /**
+     * Function declared by this {@code let rec} expression.
+     */
     public final AstFunDef fd;
-    public final AstExp e;
 
-    public AstLetRec(
-            @Nonnull AstFunDef fd,
-            @Nonnull AstExp e
-    ) {
+    /**
+     * Value returned by this {@code let rec}; it can (and it should) contain
+     * references to the declared function.
+     */
+    public final AstExp ret;
+
+    public AstLetRec(AstFunDef fd, AstExp ret) {
         this.fd = fd;
-        this.e = e;
+        this.ret = ret;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
         sb.append("(let rec ");
-        sb.append(fd.id);
+        sb.append(fd.decl.id);
 
         boolean first = true;
         sb.append("(");
-        for (Id l : fd.args){
+        for (SymDef l : fd.args){
             if(!first){
                 sb.append(", ");
             }
@@ -50,9 +59,9 @@ public final class AstLetRec extends AstExp {
             sb.append(l.id);
         }
         sb.append(") = ");
-        sb.append(fd.e);
+        sb.append(fd.body);
         sb.append(" in ");
-        sb.append(e);
+        sb.append(ret);
         sb.append(")");
 
         return sb.toString();
