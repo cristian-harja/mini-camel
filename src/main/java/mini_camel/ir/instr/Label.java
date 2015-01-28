@@ -10,27 +10,29 @@ public final class Label implements Instr, Operand {
 
     private static int x = 0;
 
+    @Nonnull
     public final String name;
 
-    public Label(@Nonnull String name) {
+    public Label(String name) {
         this.name = name;
     }
 
+    @Nonnull
     public static Label gen() {
         return new Label("l"+x++);
     }
 
-    @Override
+    @Nonnull
     public Instr.Type getInstrType() {
         return Instr.Type.LABEL;
     }
 
-    @Override
+    @Nonnull
     public Operand.Type getOperandType() {
         return Operand.Type.LABEL;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return name + ":";
     }

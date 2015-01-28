@@ -6,6 +6,7 @@ import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +19,7 @@ import java.util.List;
  * is used as input to other stages of compilation.
  * </p>
  */
+@ParametersAreNonnullByDefault
 public final class AlphaConv extends TransformHelper {
 
     // To help generate new unique variable names.
@@ -26,12 +28,13 @@ public final class AlphaConv extends TransformHelper {
     // For mapping renamed variables.
     private SymTable<String> reMapping = new SymTable<>();
 
-    // The method that renames an identifier.
-    private String newId(String name) {
-        return name + "_" + (++lastId);
+    private AlphaConv() {
     }
 
-    private AlphaConv() {
+    // The method that renames an identifier.
+    @Nonnull
+    private String newId(String name) {
+        return name + "_" + (++lastId);
     }
 
     /**
@@ -40,7 +43,8 @@ public final class AlphaConv extends TransformHelper {
      * @param astNode input AST
      * @return transformed AST
      */
-    public static AstExp compute(@Nonnull AstExp astNode) {
+    @Nonnull
+    public static AstExp compute(AstExp astNode) {
         return astNode.accept(new AlphaConv());
     }
 
@@ -48,8 +52,8 @@ public final class AlphaConv extends TransformHelper {
      * When encountering a `let` expression, we try to rename the identifier
      * bound by it to something unique within the current environment.
      */
-    @Override
-    public AstExp visit(@Nonnull AstLet e) {
+    @Nonnull
+    public AstExp visit(AstLet e) {
         // Rename the identifier introduced by this `let` expression
         SymDef old_id = e.decl;
         SymDef new_id = old_id.rename(newId(old_id.id));
@@ -72,8 +76,8 @@ public final class AlphaConv extends TransformHelper {
      * When encountering the usage of a variable, we check whether it was
      * renamed by the current transformation and return its new name.
      */
-    @Override
-    public AstExp visit(@Nonnull SymRef e) {
+    @Nonnull
+    public AstExp visit(SymRef e) {
         // Locate (in the environment) the symbol being referenced here.
         String old_id = e.id;
         String new_id = reMapping.get(old_id);
@@ -85,9 +89,8 @@ public final class AlphaConv extends TransformHelper {
         return new SymRef(new_id);
     }
 
-
-    @Override
-    public AstExp visit(@Nonnull AstLetRec e) {
+    @Nonnull
+    public AstExp visit(AstLetRec e) {
         AstFunDef old_fd = e.fd;
         AstFunDef new_fd = (AstFunDef) old_fd.accept(this);
         AstExp old_e = e.ret;
@@ -107,8 +110,8 @@ public final class AlphaConv extends TransformHelper {
     }
 
 
-    @Override
-    public AstExp visit(@Nonnull AstFunDef e) {
+    @Nonnull
+    public AstExp visit(AstFunDef e) {
         SymDef old_id = e.decl;
         SymDef new_id = old_id.rename(newId(old_id.id));
 
@@ -136,8 +139,8 @@ public final class AlphaConv extends TransformHelper {
     }
 
 
-    @Override
-    public AstExp visit(@Nonnull AstApp e) {
+    @Nonnull
+    public AstExp visit(AstApp e) {
         AstExp old_e = e.e;
         AstExp new_e;
 

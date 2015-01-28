@@ -8,20 +8,23 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class Assign implements Instr {
+    @Nonnull
     public final Var var;
+
+    @Nonnull
     public final Operand op;
 
-    public Assign(@Nonnull Var v, @Nonnull Operand o) {
+    public Assign(Var v, Operand o) {
         var = v;
         op = o;
     }
 
-    @Override
+    @Nonnull
     public Type getInstrType() {
         return Type.ASSIGN;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return var + " := " + op;
     }

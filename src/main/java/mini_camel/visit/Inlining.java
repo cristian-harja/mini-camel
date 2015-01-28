@@ -3,111 +3,70 @@ package mini_camel.visit;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.*;
 
-public class Inlining extends TransformHelper2<Inlining.Ctx> {
+@ParametersAreNonnullByDefault
+public final class Inlining extends TransformHelper {
 
-    public Inlining() {
+    private List<AstFunDef> afd = new ArrayList<>();
+    private Collection<String> l;
+
+    public Inlining(Collection<String> functionsToInline) {
+        l = functionsToInline;
     }
 
     public static AstExp compute(AstExp astNode) {
-        FunNumOp in = new FunNumOp();
-        List<String> l = in.applyTransform(astNode);
-
-        RecursiveCheck r = new RecursiveCheck();
-        List<String> rf = r.applyTransform(astNode);
-
-        l.removeAll(rf);
+        Map<String, AstFunDef> l = SizeFilter.compute(astNode, 300);
+        l.keySet().removeAll(RecursiveCheck.compute(astNode));
 
         if (l.size() == 0) {
             return astNode;
         }
 
-        Ctx ctx = new Ctx(l);
-        return astNode.accept(new Inlining(), ctx);
+        Inlining i = new Inlining(l.keySet());
+        return astNode.accept(i);
     }
 
-    public static class Ctx {
-        private List<String> l;
-        private List<AstFunDef> afd;
-
-        private Ctx(){}
-
-        private Ctx(List<String> l) {
-            this.l = l;
-            this.afd = new ArrayList<>();
+    @Nonnull
+    public AstExp visit(AstLetRec e) {
+        if (l.contains(e.fd.decl.id)) {
+            afd.add(e.fd);
         }
-
-    }
-
-    /**
-     * This is the method that initiates the actual transformation.
-     *
-     * @param astNode input AST
-     * @return transformed AST
-     */
-    public AstExp applyTransform(@Nonnull AstExp astNode) {
-        FunNumOp in = new FunNumOp();
-        List<String> l = in.applyTransform(astNode);
-
-        RecursiveCheck r = new RecursiveCheck();
-        List<String> rf = r.applyTransform(astNode);
-
-        l.removeAll(rf);
-
-        if (l.size() == 0) {
-            return astNode;
-        }
-
-        Ctx ctx = new Ctx(l);
-        AstExp e = recursiveVisit(ctx, astNode);
-        return e;
-    }
-
-    public AstExp visit(Ctx ctx, @Nonnull AstLetRec e) {
-        if (ctx.l.contains(e.fd.decl.id)) {
-            ctx.afd.add(e.fd);
-        }
-        return recursiveVisit(ctx, e.ret);
+        return e.ret.accept(this);
     }
 
 
-    public AstExp visit(Ctx ctx, @Nonnull AstApp e)
-    {
+    @Nonnull
+    public AstExp visit(AstApp e) {
         int index = 0;
-        for(AstFunDef iterator : ctx.afd)
-        {
-            if(iterator.decl.id.equals(e.e.toString()))
-            {
+        for (AstFunDef iterator : afd) {
+            if (iterator.decl.id.equals(e.e.toString())) {
                 break;
             }
             index++;
         }
         int bool = 0;
-        for(AstExp iterator : e.es)
-        {
-            if(iterator instanceof AstApp)
-            {
-                bool ++;
+        for (AstExp iterator : e.es) {
+            if (iterator instanceof AstApp) {
+                bool++;
             }
         }
-        if(bool == 0)
-        {
-            return inline(ctx.afd.get(index), e);
+        if (bool == 0) {
+            return inline(afd.get(index), e);
         }
-        AstExp tmp = recursiveVisit(ctx,e.es.get(0));
-        AstLet tmp2 = inline(ctx.afd.get(index), e);
+        AstExp tmp = e.es.get(0).accept(this);
+        AstLet tmp2 = inline(afd.get(index), e); // ??? fixme
         return new AstLet(
-                ctx.afd.get(index).args.get(0),
-                tmp, ctx.afd.get(index).body
+                afd.get(index).args.get(0),
+                tmp, afd.get(index).body
         );
 
     }
 
 
     public AstLet inline(AstFunDef fd, AstApp e) {
-        AstLet l = null;
+        AstLet l;
         if (fd.args.size() == 1) {
             l = new AstLet(fd.args.get(0), e.es.get(0), fd.body);
         } else {
@@ -127,5 +86,26 @@ public class Inlining extends TransformHelper2<Inlining.Ctx> {
         return l;
     }
 
+    private static class SizeFilter extends DummyVisitor {
+        private int bound;
+        private Map<String, AstFunDef> found = new LinkedHashMap<>();
+
+        private SizeFilter(int bound) {
+            this.bound = bound;
+        }
+
+        public static Map<String, AstFunDef> compute(AstExp root, int bound) {
+            SizeFilter sf = new SizeFilter(bound);
+            root.accept(sf);
+            return sf.found;
+        }
+
+        public void visit(AstLetRec e) {
+            if(FunctionSize.compute(e.fd.body) < bound)  {
+                found.put(e.fd.decl.id, e.fd);
+            }
+            e.ret.accept(this);
+        }
+    }
 
 }

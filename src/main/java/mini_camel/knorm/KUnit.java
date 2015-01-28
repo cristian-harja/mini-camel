@@ -12,7 +12,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class KUnit extends KNode {
-    public static KUnit INSTANCE = new KUnit();
+    public static final KUnit INSTANCE = new KUnit();
 
     public void accept(KVisitor v) {
         v.visit(this);

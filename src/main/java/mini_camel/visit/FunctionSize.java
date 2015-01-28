@@ -2,63 +2,58 @@ package mini_camel.visit;
 
 import mini_camel.ast.*;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
-public class NumberOperation extends DummyVisitor {
+@ParametersAreNonnullByDefault
+public final class FunctionSize extends DummyVisitor {
 
     private int numberOfOperation;
 
-    public NumberOperation() {
-        numberOfOperation = 0;
+    private FunctionSize() {
     }
 
-    public int applyTransform(@Nonnull AstExp astNode) {
-        astNode.accept(this);
-        return numberOfOperation;
+    public static int compute(AstExp astNode) {
+        FunctionSize fs = new FunctionSize();
+        astNode.accept(fs);
+        return fs.numberOfOperation;
     }
 
-    @Override
-    public void visit(@Nonnull AstSub e) {
+    public void visit(AstSub e) {
         numberOfOperation ++;
         e.e1.accept(this);
         e.e2.accept(this);
     }
-    @Override
-    public void visit(@Nonnull AstFSub e) {
-        numberOfOperation ++;
-        e.e1.accept(this);
-        e.e2.accept(this);
-    }
-
-    @Override
-    public void visit(@Nonnull AstAdd e) {
+    public void visit(AstFSub e) {
         numberOfOperation ++;
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFMul e) {
+    public void visit(AstAdd e) {
         numberOfOperation ++;
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFDiv e) {
+    public void visit(AstFMul e) {
         numberOfOperation ++;
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstEq e) {
+    public void visit(AstFDiv e) {
         numberOfOperation ++;
         e.e1.accept(this);
         e.e2.accept(this);
     }
-    @Override
-    public void visit(@Nonnull AstLet e) {
+
+    public void visit(AstEq e) {
+        numberOfOperation ++;
+        e.e1.accept(this);
+        e.e2.accept(this);
+    }
+
+    public void visit(AstLet e) {
         numberOfOperation ++;
         e.ret.accept(this);
     }

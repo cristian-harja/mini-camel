@@ -1,12 +1,13 @@
 package mini_camel.ir;
 
+import mini_camel.ast.*;
+import mini_camel.ir.instr.*;
+import mini_camel.ir.op.ConstFloat;
+import mini_camel.ir.op.ConstInt;
+import mini_camel.ir.op.Operand;
+import mini_camel.ir.op.Var;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
-import mini_camel.util.Pair;
-import mini_camel.ast.*;
-import mini_camel.util.Visitor2;
-import mini_camel.ir.op.*;
-import mini_camel.ir.instr.*;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -14,8 +15,7 @@ import java.util.*;
 /**
  * CodeGenerator
  */
-@SuppressWarnings("UnusedParameters")
-public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
+public class CodeGenerator extends CodeGeneratorHelper {
 
     private static int va = 0;
 
@@ -24,29 +24,7 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     private Couple result = null;
 
-    public CodeGenerator() {
-    }
-
-    public Operand getVar() {
-        return result.getVar();
-    }
-
-    public List<Var> getLocals() {
-        return locals;
-    }
-
-    private Var genVar() {
-        Var v = new Var("V" + ++va);
-        locals.add(v);
-        return v;
-    }
-
-    public List<Instr> getCode() {
-        return result.getInstr();
-    }
-
-    public void generateCode(AstExp e) {
-        result = e.accept(this, null);
+    private CodeGenerator() {
     }
 
     public static List<Function> generateIR(AstExp root, String mainFunName) {
@@ -60,15 +38,15 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
         while (true) {
             cg = new CodeGenerator();
-            cg.generateCode(node);
+            node.accept(cg, null);
 
-            List<Instr> body = cg.getCode();
-            body.add(new Ret(cg.getVar())); // fixme
+            List<Instr> body = cg.result.getInstr();
+            body.add(new Ret(cg.result.getVar())); // fixme
 
             functions.add(new Function(
                     new Label(name),
                     args,
-                    cg.getLocals(),
+                    cg.locals,
                     body
             ));
 
@@ -93,19 +71,10 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     }
 
-    public class Branches extends Pair<Label, Label> {
-
-        public Branches(Label ifTrue, Label ifFalse) {
-            super(ifTrue, ifFalse);
-        }
-
-        public Label ifTrue() {
-            return left;
-        }
-
-        public Label ifFalse() {
-            return right;
-        }
+    private Var genVar() {
+        Var v = new Var("V" + ++va);
+        locals.add(v);
+        return v;
     }
 
     public Couple visit(Branches b, @Nonnull AstUnit e) {
@@ -114,11 +83,10 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
 
     public Couple visit(Branches b, @Nonnull AstBool e) {//TODO if non null
         ArrayList<Instr> l = new ArrayList<>(1);
-        if (b != null){
+        if (b != null) {
             l.add(new Jump(e.b ? b.ifTrue() : b.ifFalse()));
             return new Couple(l, null);
-        }
-        else {
+        } else {
             Var v = genVar();
             l.add(new Assign(v, new ConstInt(e.b ? 1 : 0)));
             return new Couple(l, v);
@@ -145,7 +113,6 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return e.e.accept(this, new Branches(b.ifFalse(), b.ifTrue()));
     }
 
-
     public Couple visit(Branches b, @Nonnull AstNeg e) {
         Var v = genVar();
         List<Instr> l = new ArrayList<>();
@@ -154,7 +121,6 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         l.add(new SubI(v, new ConstInt(0), c.getVar()));
         return new Couple(l, v);
     }
-
 
     public Couple visit(Branches b, @Nonnull AstAdd e) {
         Var v = genVar();
@@ -299,10 +265,9 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
     }
 
     public Couple visit(Branches b, @Nonnull SymRef e) {
-        if(b == null){
+        if (b == null) {
             return new Couple(Collections.<Instr>emptyList(), new Var(e.id));
-        }
-        else {
+        } else {
             List<Instr> l = new ArrayList<>();
             Var v = new Var(e.id);
             Branch newb = new Branch(false, v, new ConstInt(1), b.ifTrue(), b.ifFalse());
@@ -371,7 +336,6 @@ public class CodeGenerator implements Visitor2<Couple, CodeGenerator.Branches> {
         return null;
     }
 
-    @Override
     public Couple visit(Branches b, @Nonnull AstErr e) {
         throw new RuntimeException("Compiling an `AstErr`??");
     }

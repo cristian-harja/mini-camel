@@ -37,10 +37,6 @@ import java.util.List;
  */
 public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
 
-    protected AstExp recursiveVisit(T ctx, @Nonnull AstExp e) {
-        return e.accept(this, ctx);
-    }
-
     /*
         Arity = 0. No children to verify.
 
@@ -51,32 +47,32 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         new values for their fields).
      */
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstErr e) {
         return e;
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstUnit e) {
         return e;
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstBool e) {
         return e;
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstInt e) {
         return e;
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFloat e) {
         return e;
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull SymRef e) {
         return e;
     }
@@ -94,7 +90,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
                 of the same type, initialized with the new values
      */
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstNot e) {
         AstExp old_e = e.e; // step 1
         AstExp new_e = old_e.accept(this, ctx); // step 2
@@ -104,7 +100,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstNot(new_e); // step 5
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstNeg e) {
         AstExp old_e = e.e;
         AstExp new_e = old_e.accept(this, ctx);
@@ -112,7 +108,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstNeg(new_e);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFNeg e) {
         AstExp old_e = e.e;
         AstExp new_e = old_e.accept(this, ctx);
@@ -124,7 +120,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         Arity = 2. Two children to test.
      */
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstAdd e) {
         AstExp old_e1 = e.e1; // step 1 ...
         AstExp old_e2 = e.e2;
@@ -134,7 +130,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstAdd(new_e1, new_e2); // step 5
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstSub e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -144,7 +140,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstSub(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFAdd e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -154,7 +150,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstFAdd(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFSub e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -164,7 +160,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstFSub(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFMul e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -174,7 +170,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstFMul(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFDiv e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -184,7 +180,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstFDiv(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstEq e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -194,7 +190,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstEq(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstLE e) {
         AstExp old_e1 = e.e1;
         AstExp old_e2 = e.e2;
@@ -204,7 +200,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstLE(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstLet e) {
         AstExp old_e1 = e.initializer;
         AstExp old_e2 = e.ret;
@@ -214,7 +210,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstLet(e.decl, new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstLetTuple e) {
         AstExp old_e1 = e.initializer;
         AstExp old_e2 = e.ret;
@@ -224,7 +220,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstLetTuple(e.ids, new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstArray e) {
         AstExp old_e1 = e.size;
         AstExp old_e2 = e.initializer;
@@ -234,7 +230,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstArray(new_e1, new_e2);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstGet e) {
         AstExp old_e1 = e.array;
         AstExp old_e2 = e.index;
@@ -248,7 +244,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         Arity = 3. Three children to verify.
      */
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstIf e) {
         AstExp old_e1 = e.eCond;
         AstExp old_e2 = e.eThen;
@@ -260,7 +256,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstIf(new_e1, new_e2, new_e3);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstPut e) {
         AstExp old_e1 = e.array;
         AstExp old_e2 = e.index;
@@ -278,7 +274,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         Same old story, only this time we are applying the transformation
         to each item in a list and then comparing the new and old lists.
      */
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstApp e) {
         AstExp old_e = e.e;
         AstExp new_e = old_e.accept(this, ctx);
@@ -290,7 +286,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstApp(new_e, new_args);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstTuple e) {
         List<AstExp> new_items = new ArrayList<>(e.es.size());
         for (AstExp old_item : e.es) {
@@ -305,7 +301,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         seeing so far.
     */
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstFunDef e) {
         AstExp old_e = e.body;
         AstExp new_e = old_e.accept(this, ctx);
@@ -313,7 +309,7 @@ public abstract class TransformHelper2<T> implements Visitor2<AstExp, T> {
         return new AstFunDef(e.decl, e.args, new_e);
     }
 
-    @Override
+    @Nonnull
     public AstExp visit(T ctx, @Nonnull AstLetRec e) {
         AstExp old_e = e.ret;
         AstExp new_e = old_e.accept(this, ctx);

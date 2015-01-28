@@ -1,17 +1,19 @@
 package mini_camel.visit;
 
+import mini_camel.ast.*;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 import mini_camel.util.SymTable;
-import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
 public final class ConstantFold extends TransformHelper {
 
     private SymTable<AstExp> reMapping = new SymTable<>();
 
-    private ConstantFold () {
+    private ConstantFold() {
     }
 
     public static AstExp compute(AstExp astNode) {
@@ -21,13 +23,15 @@ public final class ConstantFold extends TransformHelper {
 
     //Example : if x = 5 is in the symbol table, it will return an AstInt of value 5
     // otherwise it does nothing
-    public AstExp visit(@Nonnull SymRef e) {
+    @Nonnull
+    public AstExp visit(SymRef e) {
         AstExp new_e = reMapping.get(e.id);
         return (new_e == null) ? e : new_e;
     }
 
 
-    public AstExp visit(@Nonnull AstLet e){
+    @Nonnull
+    public AstExp visit(AstLet e) {
         SymDef old_id = e.decl;
         AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
@@ -36,8 +40,8 @@ public final class ConstantFold extends TransformHelper {
         reMapping.push();
         {
             // Puts the mapping e.id -> e.e1 (its value) in the stack and transforms the expression e.e2
-            if(new_e1 instanceof AstUnit || new_e1 instanceof SymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple){
-             //if(new_e1 instanceof AstVar){
+            if (new_e1 instanceof AstUnit || new_e1 instanceof SymRef || new_e1 instanceof AstInt || new_e1 instanceof AstBool || new_e1 instanceof AstFloat || new_e1 instanceof AstArray || new_e1 instanceof AstTuple) {
+                //if(new_e1 instanceof AstVar){
                 reMapping.put(old_id.id, new_e1);
             }
 
@@ -49,125 +53,129 @@ public final class ConstantFold extends TransformHelper {
     }
 
 
-
-    public AstExp visit(@Nonnull AstAdd e){
+    @Nonnull
+    public AstExp visit(AstAdd e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstInt && new_e2 instanceof  AstInt){
-            int val = ((AstInt)new_e1).i + ((AstInt)new_e2).i;
-            return new AstInt(val);
+        if (new_e1 instanceof AstInt && new_e2 instanceof AstInt) {
+            return new AstInt(
+                    ((AstInt) new_e1).i + ((AstInt) new_e2).i
+            );
         }
 
         return new AstAdd(new_e1, new_e2);
     }
 
-
-    public AstExp visit(@Nonnull AstSub e){
+    @Nonnull
+    public AstExp visit(AstSub e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
 
-        if(new_e1 instanceof AstInt && new_e2 instanceof  AstInt){
-            int val = ((AstInt)new_e1).i - ((AstInt)new_e2).i;
+        if (new_e1 instanceof AstInt && new_e2 instanceof AstInt) {
+            int val = ((AstInt) new_e1).i - ((AstInt) new_e2).i;
             return new AstInt(val);
         }
 
         return new AstSub(new_e1, new_e2);
     }
 
-
-    public AstExp visit(@Nonnull AstNeg e){
+    @Nonnull
+    public AstExp visit(AstNeg e) {
         AstExp new_e = e.e.accept(this);
 
-        if(new_e instanceof AstInt){
-            int val = - ((AstInt)new_e).i;
-            return new AstInt(val);
+        if (new_e instanceof AstInt) {
+            return new AstInt(-((AstInt) new_e).i);
         }
 
         return new AstNeg(new_e);
     }
 
-
-    public AstExp visit(@Nonnull AstFNeg e){
+    @Nonnull
+    public AstExp visit(AstFNeg e) {
         AstExp new_e = e.e.accept(this);
 
-        if(new_e instanceof AstFloat){
-            float val = - ((AstFloat)new_e).f;
-            return new AstFloat(val);
+        if (new_e instanceof AstFloat) {
+            return new AstFloat(-((AstFloat) new_e).f);
         }
 
         return new AstNeg(new_e);
     }
 
-
-    public AstExp visit(@Nonnull AstFAdd e){
+    @Nonnull
+    public AstExp visit(AstFAdd e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstFloat && new_e2 instanceof  AstFloat){
-            float val = ((AstFloat)new_e1).f + ((AstFloat)new_e2).f;
-            return new AstFloat(val);
+        if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            return new AstFloat(
+                    ((AstFloat) new_e1).f + ((AstFloat) new_e2).f
+            );
         }
 
         return new AstFAdd(new_e1, new_e2);
     }
 
-
-    public AstExp visit(@Nonnull AstFSub e){
+    @Nonnull
+    public AstExp visit(AstFSub e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstFloat && new_e2 instanceof  AstFloat){
-            float val = ((AstFloat)new_e1).f - ((AstFloat)new_e2).f;
-            return new AstFloat(val);
+        if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            return new AstFloat(
+                    ((AstFloat) new_e1).f - ((AstFloat) new_e2).f
+            );
         }
 
         return new AstFAdd(new_e1, new_e2);
     }
 
-
-    public AstExp visit(@Nonnull AstFMul e){
+    @Nonnull
+    public AstExp visit(AstFMul e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstFloat && new_e2 instanceof  AstFloat){
-            float val = ((AstFloat)new_e1).f * ((AstFloat)new_e2).f;
-            return new AstFloat(val);
+        if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            return new AstFloat(
+                    ((AstFloat) new_e1).f * ((AstFloat) new_e2).f
+            );
         }
 
         return new AstFAdd(new_e1, new_e2);
     }
 
-
-    public AstExp visit(@Nonnull AstFDiv e){
+    @Nonnull
+    public AstExp visit(AstFDiv e) {
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstFloat && new_e2 instanceof  AstFloat){
-            float val = ((AstFloat)new_e1).f / ((AstFloat)new_e2).f;
-            return new AstFloat(val);
+        if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            return new AstFloat(
+                    ((AstFloat) new_e1).f / ((AstFloat) new_e2).f
+            );
         }
 
         return new AstFAdd(new_e1, new_e2);
     }
 
-    public AstExp visit(@Nonnull AstNot e){
+    @Nonnull
+    public AstExp visit(AstNot e) {
         AstExp new_e = e.e.accept(this);
 
-        if(new_e instanceof AstBool){
-            return new AstBool(!((AstBool)new_e).b);
+        if (new_e instanceof AstBool) {
+            return new AstBool(!((AstBool) new_e).b);
         }
         return new AstNot(new_e);
     }
 
-    public AstExp visit(@Nonnull AstIf e){
+    @Nonnull
+    public AstExp visit(AstIf e) {
         AstExp new_e1 = e.eCond.accept(this);
-        if(new_e1 instanceof AstBool){
-            if(((AstBool)new_e1).b){
+        if (new_e1 instanceof AstBool) {
+            if (((AstBool) new_e1).b) {
                 return e.eThen.accept(this);
-            }
-            else {
+            } else {
                 return e.eElse.accept(this);
             }
         }
@@ -178,50 +186,41 @@ public final class ConstantFold extends TransformHelper {
 
     }
 
-    public AstExp visit(@Nonnull AstEq e){
+    @Nonnull
+    public AstExp visit(AstEq e) {
+        boolean b;
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
-
-        if(new_e1 instanceof AstInt && new_e2 instanceof AstInt){
-            if(((AstInt)new_e1).i == ((AstInt)new_e2).i){
-                return new AstBool(true);
-            }
-            else {
-                return new AstBool(false);
-            }
-        }
-        else if (new_e1 instanceof AstBool && new_e2 instanceof AstBool){
-            if(((AstBool)new_e1).b == ((AstBool)new_e2).b){
-                return new AstBool(true);
-            }
-            else {
-                return new AstBool(false);
-            }
+        if (new_e1 instanceof AstInt && new_e2 instanceof AstInt) {
+            b = ((AstInt) new_e1).i == ((AstInt) new_e2).i;
+        } else if (new_e1 instanceof AstBool && new_e2 instanceof AstBool) {
+            b = ((AstBool) new_e1).b == ((AstBool) new_e2).b;
+        } else if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            b = ((AstFloat) new_e1).f == ((AstFloat) new_e2).f;
+        } else {
+            return new AstEq(new_e1, new_e2);
         }
 
-        // TODO float
+        return AstBool.staticInstance(b);
 
-
-        return new AstEq(new_e1, new_e2);
     }
 
-    public AstExp visit(@Nonnull AstLE e){
+    @Nonnull
+    public AstExp visit(AstLE e) {
+        boolean b;
         AstExp new_e1 = e.e1.accept(this);
         AstExp new_e2 = e.e2.accept(this);
 
-        if(new_e1 instanceof AstInt && new_e2 instanceof AstInt){
-            if(((AstInt)new_e1).i <= ((AstInt)new_e2).i){
-                return new AstBool(true);
-            }
-            else {
-                return new AstBool(false);
-            }
+        if (new_e1 instanceof AstInt && new_e2 instanceof AstInt) {
+            b = ((AstInt) new_e1).i <= ((AstInt) new_e2).i;
+        } else if (new_e1 instanceof AstFloat && new_e2 instanceof AstFloat) {
+            b = ((AstFloat) new_e1).f <= ((AstFloat) new_e2).f;
+        } else {
+            return new AstLE(new_e1, new_e2);
         }
 
-        // TODO float
+        return AstBool.staticInstance(b);
 
-
-        return new AstLE(new_e1, new_e2);
     }
 
 }

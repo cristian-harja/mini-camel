@@ -18,6 +18,9 @@ public final class AstBool extends AstExp {
      */
     public final boolean b;
 
+    public static final AstBool TRUE = new AstBool(true);
+    public static final AstBool FALSE = new AstBool(false);
+
     public AstBool(boolean b) {
         this.b = b;
     }
@@ -39,4 +42,7 @@ public final class AstBool extends AstExp {
         return Boolean.toString(b);
     }
 
+    public static AstBool staticInstance(boolean b) {
+        return b ? TRUE : FALSE;
+    }
 }

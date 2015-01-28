@@ -4,12 +4,13 @@ import mini_camel.ir.instr.Instr;
 import mini_camel.ir.instr.Label;
 import mini_camel.ir.op.Var;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
 import java.util.List;
 
 @Immutable
+@ParametersAreNonnullByDefault
 public final class Function {
     public final Label name;
     public final List<Var> args;
@@ -17,10 +18,10 @@ public final class Function {
     public final List<Instr> body;
 
     public Function(
-            @Nonnull Label name,
-            @Nonnull List<Var> args,
-            @Nonnull List<Var> locals,
-            @Nonnull List<Instr> body
+            Label name,
+            List<Var> args,
+            List<Var> locals,
+            List<Instr> body
     ) {
         this.name = name;
         this.args = Collections.unmodifiableList(args);

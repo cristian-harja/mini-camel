@@ -5,18 +5,19 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class Jump implements Instr {
+    @Nonnull
     public final Label label;
 
-    public Jump(@Nonnull Label l) {
+    public Jump(Label l) {
         label = l;
     }
 
-    @Override
+    @Nonnull
     public Type getInstrType() {
         return Type.JUMP;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return "JMP " + label.name;
     }

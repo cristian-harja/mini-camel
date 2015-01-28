@@ -2,6 +2,7 @@ package mini_camel.ir.instr;
 
 import mini_camel.ir.op.Operand;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.CheckForNull;
 import javax.annotation.concurrent.Immutable;
@@ -16,13 +17,13 @@ public final class Ret implements Instr {
         this.op = op;
     }
 
-    @Override
+    @Nonnull
     public Type getInstrType() {
         return Type.RETURN;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
-        return "RET " + op;
+        return op == null ? "RET" : ("RET " + op);
     }
 }

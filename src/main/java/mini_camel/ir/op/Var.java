@@ -5,18 +5,19 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class Var implements Operand {
+    @Nonnull
     public final String name;
 
-    public Var(@Nonnull String name) {
+    public Var(String name) {
         this.name = name;
     }
 
-    @Override
+    @Nonnull
     public Type getOperandType() {
         return Type.VAR;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return name;
     }
