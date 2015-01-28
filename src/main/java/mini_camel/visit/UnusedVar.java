@@ -29,10 +29,7 @@ public final class UnusedVar extends DummyVisitor {
                 tmp.add(str);
             }
         }
-        for(String st : tmp)
-        {
-            uv.left.remove(st);
-        }
+        uv.left.removeAll(tmp);
         return uv.left;
     }
 

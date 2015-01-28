@@ -17,6 +17,7 @@ public class ConsoleMain {
     private boolean onlyParse;
     private boolean onlyTypeCheck;
     private boolean printAST;
+    private boolean printAST2;
     private boolean printIR;
     private boolean printASM;
 
@@ -68,9 +69,14 @@ public class ConsoleMain {
                 onlyTypeCheck = true;
                 continue;
             }
-            if (arg.equals("-A")) {
+            if (arg.equals("-a")) {
                 optionsSelected++;
                 printAST = true;
+                continue;
+            }
+            if (arg.equals("-A")) {
+                optionsSelected++;
+                printAST2 = true;
                 continue;
             }
             if (arg.equals("-I")) {
@@ -166,15 +172,18 @@ public class ConsoleMain {
         if (!comp.typeCheck()) return false;
         if (onlyTypeCheck) return true;
 
-        // Compile
+        // Pre-processing
         if (!comp.preProcessCode()) return false;
-        /*//
-        // there's a bug in closure conversion, which crashes the compiler
+        if (printAST2) {
+            comp.outputTransformedAST(out);
+            out.println();
+            return true;
+        }
+
+        // Compilation
         if (!comp.performKNormalization()) return false;
-        if (!comp.codeGeneration_new()) return false;
-        /*/
-        if (!comp.codeGeneration_old()) return false;
-        //*/
+        if (!comp.performClosureConversion()) return false;
+        if (!comp.generateIR()) return false;
 
         // Output
         if (printIR) {
@@ -216,7 +225,8 @@ public class ConsoleMain {
         sout("\t-v\tDisplays the version number");
         sout("\t-p\tOnly parse the input (no further processing)");
         sout("\t-t\tOnly perform type checking (after parsing)");
-        sout("\t-A\tPrint Abstract Syntax Tree (AST)");
+        sout("\t-a\tPrint Abstract Syntax Tree (AST)");
+        sout("\t-A\tPrint AST after pre-processing");
         sout("\t-I\tPrint compiled code in Intermediate Representation (IR)");
         sout("Other options:");
         sout("\t-o <output>");

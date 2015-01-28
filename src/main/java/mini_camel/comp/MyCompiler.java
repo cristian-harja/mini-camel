@@ -6,6 +6,7 @@ import mini_camel.ir.CodeGenerator2;
 import mini_camel.knorm.KNode;
 import mini_camel.knorm.Program;
 import mini_camel.type.*;
+import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 import mini_camel.util.Pair;
 import mini_camel.visit.*;
@@ -25,6 +26,7 @@ public class MyCompiler {
     private AstExp parsedAst;
     private AstExp transformedAst;
     private KNode kNormalized;
+    private Program closureConv;
     private List<Function> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
@@ -165,13 +167,34 @@ public class MyCompiler {
     }
 
     public void outputAST(PrintStream out) {
-        parsedAst.accept(new PrintVisitor(out));
+        parsedAst.accept(new PrettyPrinter(out));
         out.print("\n");
     }
 
-    public void outputTransformedAst(PrintStream out) {
-        transformedAst.accept(new PrintVisitor(out));
+    public void outputTransformedAST(PrintStream out) {
+        transformedAst.accept(new PrettyPrinter(out));
         out.print("\n");
+    }
+
+    private void reportUnusedVars() {
+        Set<String> unusedVars = UnusedVar.compute(parsedAst);
+        for (String unusedVar : unusedVars) {
+            warn("Unused variable: " + unusedVar);
+        }
+    }
+
+    private boolean checkDuplicateDecl() {
+        boolean passed = true;
+        List<Collection<SymDef>> dup = DuplicateDecl.compute(parsedAst);
+        for (Collection<SymDef> incident : dup) {
+            for (SymDef sym : incident) {
+                error(sym.getSymbol(),
+                        "Duplicate symbol declaration: " + sym.id
+                );
+                passed = false;
+            }
+        }
+        return passed;
     }
 
     private void transformAlphaConversion() {
@@ -195,11 +218,9 @@ public class MyCompiler {
 
     public boolean preProcessCode() {
 
-        Set<String> unusedVars = UnusedVar.compute(parsedAst);
-        for (String unusedVar : unusedVars) {
-            warn("Unused variable: " + unusedVar);
-        }
+        reportUnusedVars();
 
+        if (!checkDuplicateDecl()) return false;
 
         transformAlphaConversion();
         transformBetaReduction();
@@ -207,18 +228,14 @@ public class MyCompiler {
         while(i < 4){
             i++;
             transformInlining();
-            //System.out.println("ETAPE A : " + transformedAst.toString());
             transformConstantFolding();
-            //System.out.println("ETAPE B : " + transformedAst.toString());
             transformElimination();
-            //System.out.println("ETAPE C : " + transformedAst.toString());
         }
-        //System.out.println("Etape finale : "+transformedAst.toString());
         return true;
     }
 
-    // virtual code generation, immediate optimisation and register allocation
-    // build 3-adress code ??
+    @Deprecated
+    @SuppressWarnings("unused")
     public boolean codeGeneration_old() {
         try {
             funDefs = CodeGenerator.generateIR(transformedAst, "_main");
@@ -239,11 +256,19 @@ public class MyCompiler {
         return true;
     }
 
-    public boolean codeGeneration_new() {
+    public boolean performClosureConversion() {
         try {
-            performKNormalization();
-            Program p = ClosureConv.compute(kNormalized, PREDEFS.keySet());
-            funDefs = CodeGenerator2.compile(p, PREDEFS, "_main");
+            closureConv = ClosureConv.compute(kNormalized, PREDEFS.keySet());
+        } catch (RuntimeException e) {
+            error("An exception has occurred during closure-conversion.", e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean generateIR() {
+        try {
+            funDefs = CodeGenerator2.compile(closureConv, PREDEFS, "_main");
         } catch (RuntimeException e) {
             error("An exception has occurred while generating the IR.", e);
             return false;
