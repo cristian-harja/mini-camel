@@ -1,6 +1,11 @@
 package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
+import mini_camel.ir.CodeGenerator;
+import mini_camel.ir.CodeGenerator2;
+import mini_camel.knorm.KNode;
+import mini_camel.knorm.Program;
+import mini_camel.type.*;
 import mini_camel.util.SymRef;
 import mini_camel.util.Pair;
 import mini_camel.visit.*;
@@ -9,20 +14,17 @@ import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
 import mini_camel.ir.Function;
 import mini_camel.ir.instr.Instr;
-import mini_camel.type.Checker;
-import mini_camel.type.Type;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
-import static mini_camel.ir.CodeGenerator.*;
-
 public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
+    private KNode kNormalized;
     private List<Function> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
@@ -31,12 +33,30 @@ public class MyCompiler {
     private boolean freeVarsBegun, freeVarsSuccessful;
     private boolean typingBegun, typingSuccessful;
 
-    private static Set<String> PREDEFS = new LinkedHashSet<>();
+
+    public static final Map<String, Type> PREDEFS;
     static {
-        Collections.addAll(PREDEFS,
-                "print_newline", "print_int", "abs_float", "sqrt", "sin",
-                "cos", "float_of_int", "int_of_float", "truncate"
-        );
+        Map<String, Type> predefs  = new LinkedHashMap<>();
+
+        Type UNIT = TUnit.INSTANCE;
+        Type INT = TInt.INSTANCE;
+        Type FLOAT = TFloat.INSTANCE;
+
+        predefs.put("print_newline", new TFun(UNIT, UNIT));
+        predefs.put("print_int", new TFun(INT, UNIT));
+
+        Type floatFun = new TFun(FLOAT, FLOAT);
+
+        predefs.put("abs_float", floatFun);
+        predefs.put("sqrt", floatFun);
+        predefs.put("sin", floatFun);
+        predefs.put("cos", floatFun);
+
+        predefs.put("float_of_int", new TFun(INT, FLOAT));
+        predefs.put("int_of_float", new TFun(FLOAT, INT));
+        predefs.put("truncate", new TFun(FLOAT, INT));
+
+        PREDEFS = Collections.unmodifiableMap(predefs);
     }
 
     public MyCompiler(@Nonnull Reader input) {
@@ -106,7 +126,7 @@ public class MyCompiler {
         if (freeVarsBegun) return freeVarsSuccessful;
         freeVarsBegun = true;
 
-        FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS);
+        FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS.keySet());
 
         Set<SymRef> freeVars = fvv.getFreeVariables();
 
@@ -121,7 +141,7 @@ public class MyCompiler {
         if (typingBegun) return typingSuccessful;
         typingBegun = true;
 
-        Checker c = new Checker(parsedAst);
+        Checker c = new Checker(parsedAst, PREDEFS);
         typingSuccessful = c.wellTyped();
 
         if (!typingSuccessful) {
@@ -158,19 +178,7 @@ public class MyCompiler {
         transformedAst = ConstantFold.compute(transformedAst);
     }
     private void transformInlining() {
-        /*NumberOperation no = new NumberOperation();
-        int tmp = no.applyTransform(transformedAst);
-        System.out.println("Le nombre d'opérations est : "+tmp);
-        FunNumOp in = new FunNumOp();
-        List<mini_camel.transform.Pair> l = in.applyTransform(transformedAst);*/
         transformedAst = Inlining.compute(transformedAst);
-        /*RecursiveCheck rc = new RecursiveCheck();
-        List<String> l = rc.applyTransform(transformedAst);
-        for(String i : l)
-        {
-            System.out.println("Fonction recursive : "+i);
-        }*/
-
     }
 
     private void transformElimination() {
@@ -179,27 +187,53 @@ public class MyCompiler {
 
     public boolean preProcessCode() {
         AstExp oldAst;
-        int i = 0;
-        do {
-            i++;
-            oldAst = transformedAst;
-            //System.out.println("ETAPE 1 : " + transformedAst.toString());
-            transformAlphaConversion();
-            transformBetaReduction();
-            transformConstantFolding();
-            //System.out.println("ETAPE 2 : " + transformedAst.toString());
-            transformElimination();
-            transformInlining();
-            //System.out.println("ETAPE 3 : " + transformedAst.toString());
-        } while (oldAst != transformedAst || i == 3);
+        try {
+            int i = 0;
+            do {
+                i++;
+                oldAst = transformedAst;
+                //System.out.println("ETAPE 1 : " + transformedAst.toString());
+                transformAlphaConversion();
+                transformBetaReduction();
+                transformConstantFolding();
+                //System.out.println("ETAPE 2 : " + transformedAst.toString());
+                transformElimination();
+                transformInlining();
+                //System.out.println("ETAPE 3 : " + transformedAst.toString());
+            } while (oldAst != transformedAst || i == 3);
+        } catch (RuntimeException e) {
+            error("An exception has occurred while pre-processing the AST.", e);
+            return false;
+        }
         return true;
     }
 
     // virtual code generation, immediate optimisation and register allocation
     // build 3-adress code ??
-    public boolean codeGeneration() {
+    public boolean codeGeneration_old() {
         try {
-            funDefs = generateIR(transformedAst, "_main");
+            funDefs = CodeGenerator.generateIR(transformedAst, "_main");
+        } catch (RuntimeException e) {
+            error("An exception has occurred while generating the IR.", e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean performKNormalization() {
+        try {
+            kNormalized = KNormalize.compute(transformedAst);
+        } catch (RuntimeException e) {
+            error("An exception has occurred while K-normalizing.", e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean codeGeneration_new() {
+        try {
+            Program p = ClosureConv.compute(kNormalized, PREDEFS.keySet());
+            funDefs = CodeGenerator2.compile(p, PREDEFS, "_main");
         } catch (RuntimeException e) {
             error("An exception has occurred while generating the IR.", e);
             return false;

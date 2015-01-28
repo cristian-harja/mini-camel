@@ -1,5 +1,6 @@
 package mini_camel.type;
 
+import mini_camel.comp.MyCompiler;
 import mini_camel.util.Pair;
 import mini_camel.ast.AstExp;
 import mini_camel.tests.TestHelper;
@@ -14,7 +15,7 @@ public class CheckerTest extends TestHelper {
 
     @SuppressWarnings("unused")
     private Checker debugTypes(AstExp pgm) {
-        Checker c = new Checker(pgm);
+        Checker c = new Checker(pgm, MyCompiler.PREDEFS);
 
         System.out.println("Input:");
         System.out.println("\t" + c.getProgram());
@@ -35,7 +36,7 @@ public class CheckerTest extends TestHelper {
     }
 
     private boolean wellTyped(@Nonnull AstExp pgm) {
-        return new Checker(pgm).wellTyped();
+        return new Checker(pgm, MyCompiler.PREDEFS).wellTyped();
     }
 
     @Test

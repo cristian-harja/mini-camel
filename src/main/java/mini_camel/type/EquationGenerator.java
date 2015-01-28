@@ -7,6 +7,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @ParametersAreNonnullByDefault
 public class EquationGenerator {
@@ -16,24 +17,14 @@ public class EquationGenerator {
     static final Type INT = TInt.INSTANCE;
     static final Type FLOAT = TFloat.INSTANCE;
 
-    public List<Pair<Type, Type>> genEquations(final AstExp exp) {
+    public List<Pair<Type, Type>> genEquations(
+            final AstExp exp,
+            final Map<String, Type> predefs
+    ) {
         List<Pair<Type, Type>> out = new ArrayList<>();
         SymTable<Type> env = new SymTable<>();
         env.push();
-        env.put("print_newline", new TFun(UNIT, UNIT));
-        env.put("print_int", new TFun(INT, UNIT));
-
-        Type floatFun = new TFun(FLOAT, FLOAT);
-
-        env.put("abs_float", floatFun);
-        env.put("sqrt", floatFun);
-        env.put("sin", floatFun);
-        env.put("cos", floatFun);
-
-        env.put("float_of_int", new TFun(INT, FLOAT));
-        env.put("int_of_float", new TFun(FLOAT, INT));
-        env.put("truncate", new TFun(FLOAT, INT));
-
+        env.putAll(predefs);
         genEquations(out, env, exp, UNIT);
         return out;
     }

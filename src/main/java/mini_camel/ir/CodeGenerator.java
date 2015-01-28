@@ -38,7 +38,7 @@ public class CodeGenerator extends CodeGeneratorHelper {
 
         while (true) {
             cg = new CodeGenerator();
-            node.accept(cg, null);
+            cg.result = node.accept(cg, null);
 
             List<Instr> body = cg.result.getInstr();
             body.add(new Ret(cg.result.getVar())); // fixme

@@ -1,13 +1,13 @@
 package mini_camel.knorm;
 
 import mini_camel.type.Type;
-import mini_camel.util.KVisitor;
-import mini_camel.util.KVisitor1;
-import mini_camel.util.KVisitor2;
+import mini_camel.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
+import java.util.List;
 
 @Immutable
 public final class KLetRec extends KNode {
