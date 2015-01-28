@@ -115,8 +115,8 @@ abstract class KNormalizeHelper {
 
         return new KLet(
                 destVar,
-                handler.apply(new SymRef(destVar.id)),
-                normalized
+                normalized,
+                handler.apply(new SymRef(destVar.id))
         );
     }
 

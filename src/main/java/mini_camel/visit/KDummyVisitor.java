@@ -6,7 +6,7 @@ import mini_camel.util.KVisitor;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public class KDummyVisitor implements KVisitor {
+public abstract class KDummyVisitor implements KVisitor {
     public void visit(KUnit k) {
         // do nothing
     }

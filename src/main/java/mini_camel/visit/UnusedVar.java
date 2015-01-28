@@ -4,8 +4,7 @@ import mini_camel.ast.*;
 import mini_camel.util.SymRef;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @ParametersAreNonnullByDefault
 public final class UnusedVar extends DummyVisitor {
@@ -19,7 +18,18 @@ public final class UnusedVar extends DummyVisitor {
     public static Set<String> compute(AstExp astNode) {
         UnusedVar uv = new UnusedVar();
         astNode.accept(uv);
+
         uv.left.removeAll(uv.right);
+
+        Iterator<String> s = uv.left.iterator();
+        List<String> tmp = new ArrayList<>();
+        while (s.hasNext()) {
+            String str = s.next();
+            if(str.contains("?v")){
+                tmp.add(str);
+            }
+        }
+        uv.left.removeAll(tmp);
         return uv.left;
     }
 

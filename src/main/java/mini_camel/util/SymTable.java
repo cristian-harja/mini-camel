@@ -1,6 +1,6 @@
 package mini_camel.util;
 
-import mini_camel.type.Type;
+import java.util.Collection;
 
 import java.util.Map;
 import java.util.Stack;
@@ -24,6 +24,17 @@ public final class SymTable<T> {
     public void put(String name, T value) {
         Map<String, T> tmp = st.peek();
         tmp.put(name, value);
+    }
+
+    public void putAll(Collection<? extends Map.Entry<String, T>> all) {
+        Map<String, T> top = st.peek();
+        for (Map.Entry<String, T> e : all) {
+            top.put(e.getKey(), e.getValue());
+        }
+    }
+
+    public void putAll(Map<String, ? extends T> map) {
+        st.peek().putAll(map);
     }
 
     public Map<String, T> top() {
@@ -60,9 +71,7 @@ public final class SymTable<T> {
         return null;
     }
 
-    public void putAll(Map<String, T> items) {
-        for (Map.Entry<String, T> item : items.entrySet()) {
-            put(item.getKey(), item.getValue());
-        }
+    public void put(Map.Entry<String, T> e) {
+        st.peek().put(e.getKey(), e.getValue());
     }
 }

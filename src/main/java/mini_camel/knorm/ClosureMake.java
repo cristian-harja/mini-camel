@@ -1,10 +1,7 @@
 package mini_camel.knorm;
 
 import mini_camel.type.Type;
-import mini_camel.util.KVisitor;
-import mini_camel.util.KVisitor1;
-import mini_camel.util.KVisitor2;
-import mini_camel.util.SymRef;
+import mini_camel.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,14 +15,27 @@ import java.util.List;
 @Immutable
 public final class ClosureMake extends KNode {
     @Nonnull
+    public final SymDef target;
+
+    @Nonnull
     public final SymRef functionName;
 
     @Nonnull
     public final List<SymRef> freeArguments;
 
-    public ClosureMake(SymRef functionName, List<SymRef> freeArguments) {
+    @Nonnull
+    public final KNode ret;
+
+    public ClosureMake(
+            SymDef target,
+            SymRef functionName,
+            List<SymRef> freeArguments,
+            KNode ret
+    ) {
+        this.target = target;
         this.functionName = functionName;
         this.freeArguments = freeArguments;
+        this.ret = ret;
     }
 
     public void accept(KVisitor v) {
@@ -42,15 +52,17 @@ public final class ClosureMake extends KNode {
 
     @Nonnull
     public Type getDataType() {
-        return null; // fixme after closure conversion
+        return ret.getDataType(); // fixme: verify correctness
     }
 
     @Nonnull
     public String toString() {
         return String.format(
-                "MakeClosure(%s, %s)",
+                "let %s = MakeClosure(%s, %s) in (%s)",
+                target.id,
                 functionName.id,
-                freeArguments.toString()
+                freeArguments.toString(),
+                ret.toString()
         );
     }
 }
