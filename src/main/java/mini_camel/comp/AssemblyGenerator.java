@@ -285,6 +285,7 @@ public class AssemblyGenerator {
         return ret;
     }
 
+
     private int getReg(String var){
         int i;
 
@@ -304,6 +305,7 @@ public class AssemblyGenerator {
                 int r = getnewReg();
                 text.append("\n\tLDR r0, =").append(var);
                 text.append("\n\tLDR r").append(r).append(", [r0]");
+                registers[r] = var;
 
                 return r;
             }
@@ -311,8 +313,6 @@ public class AssemblyGenerator {
 
         return -1;
     }
-
-
 
 
 
@@ -401,8 +401,11 @@ public class AssemblyGenerator {
                     return;
                 }
 
-                int offset = locateVar(var);
-                text.append("\n\tLDR ").append(register).append(", [r12, #").append(offset).append("]");
+                Integer offset = locateVar(var);
+                if(offset == null){
+                    System.out.println(var);
+                }
+                //text.append("\n\tLDR ").append(register).append(", [r12, #").append(offset).append("]");
 
         }
     }
@@ -560,6 +563,9 @@ public class AssemblyGenerator {
     }
 
     private void genAddI(@Nonnull AddI i) {
+        if(i.var.name.equals("V5")){
+            System.out.println("here!!");
+        }
         genBinaryOp("ADD", i.var, i.op1, i.op2);
     }
 
@@ -605,7 +611,7 @@ public class AssemblyGenerator {
         text.append("\n\tLDR r0, =error_message");
         text.append("\n\tBL min_caml_print_string");
         text.append("\n\tBL min_caml_exit\n");
-        //TODO MERGE CHECK HEAP INTO MALLOC
+        //TODO MERGE CHECK_HEAP INTO MALLOC
         // function malloc (r0) :
         text.append("\nmalloc :");
         text.append("\n\tLDR r1, =head");

@@ -1,6 +1,7 @@
 package mini_camel.visit;
 
 import mini_camel.ast.*;
+import mini_camel.util.SymRef;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -17,8 +18,9 @@ public final class Inlining extends TransformHelper {
     }
 
     public static AstExp compute(AstExp astNode) {
-        Map<String, AstFunDef> l = SizeFilter.compute(astNode, 300);
+        Map<String, AstFunDef> l = SizeFilter.compute(astNode, 15);
         l.keySet().removeAll(RecursiveCheck.compute(astNode));
+
 
         if (l.size() == 0) {
             return astNode;
@@ -32,13 +34,20 @@ public final class Inlining extends TransformHelper {
     public AstExp visit(AstLetRec e) {
         if (l.contains(e.fd.decl.id)) {
             afd.add(e.fd);
+
         }
-        return e.ret.accept(this);
+        return new AstLetRec(e.fd, e.ret.accept(this));
     }
 
 
     @Nonnull
     public AstExp visit(AstApp e) {
+        if(e.e instanceof SymRef)
+        {
+            if(((SymRef)e.e).id.equals("print_int") ||((SymRef)e.e).id.equals("print_newline")){
+                return e;
+            }
+        }
         int index = 0;
         for (AstFunDef iterator : afd) {
             if (iterator.decl.id.equals(e.e.toString())) {
@@ -46,6 +55,7 @@ public final class Inlining extends TransformHelper {
             }
             index++;
         }
+
         int bool = 0;
         for (AstExp iterator : e.es) {
             if (iterator instanceof AstApp) {
