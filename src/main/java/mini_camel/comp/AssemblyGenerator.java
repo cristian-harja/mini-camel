@@ -145,6 +145,15 @@ public class AssemblyGenerator {
                 case CLS_APPLY:
                     genApply((ClsApply)instr);
                     break;
+                case ARRAY_NEW:
+                    genMakeArray((ArrNew) instr);
+                    break;
+                case ARRAY_GET:
+                    genGetArray((ArrGet) instr);
+                    break;
+                case ARRAY_PUT:
+                    genPutArray((ArrPut) instr);
+                    break;
                 case ASSIGN:
                     genAssign((Assign) instr);
                     break;
@@ -188,17 +197,70 @@ public class AssemblyGenerator {
         text.append("\n\tMOV pc, lr\n\n");
     }
 
+    private void genMakeArray(ArrNew instr) {
+        text.append("\n@start make array");
 
+        int r = getnewReg();
+        registers[r] = instr.var.name;
+        String rd = "r" + r;
+
+        emitAssign("r0", instr.size);
+        text.append("\n\tBL malloc");
+        text.append("\n\tMOV ").append(rd).append(", r0");
+
+        if(instr.init != null) {
+            //need to put the value init in every cell of the array in the heap
+            emitAssign("r1", instr.init);
+            emitAssign("r2", instr.size);
+            text.append("MOV r0, ").append(rd);
+
+            text.append("\nfor_make_array : ");
+            text.append("\n\tCMP r2, #0");
+            text.append("\n\tBLE end_for_make_array");
+            text.append("\n\tSTR r1, [r0]");
+            text.append("\n\tADD r0, r0, #4");
+            text.append("\n\tSUB r2, r2, #1");
+            text.append("\n\tBAL for_make_array");
+
+            text.append("\nend_for_make_array : \n");
+        }
+
+        text.append("\n@end make array");
+    }
+
+    private void genPutArray(ArrPut instr) {
+        text.append("\n@start put array");
+
+        int reg = getReg(instr.array.name);
+        emitAssign("r0", instr.index);
+        emitAssign("r1", instr.value);
+        text.append("\n\tADD r0, r").append(reg).append(", r0, LSL #2");
+        text.append("\n\tSTR r1, [r0]");
+
+        text.append("\n@end put array");
+    }
+
+    private void genGetArray(ArrGet instr) {
+        text.append("\n@start get array");
+        String out = instr.output.name;
+        int rd;
+        int arr = getReg(instr.array.name);
+        if((rd = getReg(out))==-1){
+            rd= getnewReg();
+            registers[rd] = out;
+        }
+        emitAssign("r0", instr.index);
+
+        text.append("\n\tADD r0, r").append(arr).append(", r0, LSL #2");
+        text.append("\n\tSTR r").append(rd).append(", [r0]");
+
+        text.append("\n@end get array");
+    }
 
     private Integer locateVar(
             @Nonnull String name
     ) {
         Integer offset = argOffsets.get(name);
-        /*if (offset == null) {
-            throw new RuntimeException(
-                    "Sorry, dynamic links & closures not supported yet."
-            );
-        }*/
         return offset;
     }
 
@@ -424,7 +486,7 @@ public class AssemblyGenerator {
         registers[var] = instr.v.name;
 
         text.append("\n@starting make cls");
-        text.append("\n\tLDR r0, =").append(args.size() + 2);
+        text.append("\n\tLDR r0, =").append(Integer.toString(args.size() + 2));
         text.append("\n\tBL malloc");
         text.append("\n\tMOV ").append(rd).append(", r0");
 
@@ -448,22 +510,22 @@ public class AssemblyGenerator {
         String rc = "r" + cls;
         int popSize = 0;
 
-
+        text.append("\n@starting apply cls");
 
         text.append("\n\tLDR r2, [").append(rc).append("]");
-        text.append("\n\tSUB r2, r2, #1");  // r2 <- size - 1
+        text.append("\n\tSUB r2, r2, #1");  // r2 <- (size - 1)
         text.append("\n\tADD r1, ").append(rc).append(", #8]");
         text.append("\n\tADD r1, r1, r2, LSL #2"); // r1 <- address of the last arg (rc + r2*4 + 8)
-        text.append("\nfor : ");
+        text.append("\nfor_apply_cls : ");
         text.append("\n\tCMP r2, #0");
-        text.append("\n\tBLT end_for");
+        text.append("\n\tBLT end_for_apply_cls");
         text.append("\n\tLDR r0, [r1]");
         text.append("\n\tSUB sp, sp, #4");
         text.append("\n\tSTR r0, [sp]");
         text.append("\n\tSUB r2, r2, #1");
-        text.append("\n\tBAL for");
+        text.append("\n\tBAL for_apply_cls");
 
-        text.append("\nend_for : \n");
+        text.append("\nend_for_apply_cls : \n");
 
 
 
@@ -473,18 +535,21 @@ public class AssemblyGenerator {
             text.append("\n\tSUB sp, #4");
             emitAssign("r0", args.get(i));
             text.append("\n\tSTR r0, [sp]");
-            popSize += 4;  // TODO ADD size of free_args
+            popSize += 4;
         }
 
         text.append("\n\t@ call, free stack and set the return value");
-        text.append("\n\tBX [").append(rc).append(", #4"); //TODO TEST BX [rc, #4]
+        text.append("\n\tBX [").append(rc).append(", #4"); //TODO TEST BX [rc, #4] in assembly
 
-        text.append("\n\tADD sp, #").append(Integer.toString(popSize));
+        // add popSize (size of args) + size of free args from the closure (in [rc])
+        text.append("\n\tLDR r2, [").append(rc).append("]");
+        text.append("\n\tADD r2, r2, #").append(Integer.toString(popSize));
+        text.append("\n\tADD sp, r2"); // erase free_args + args from the stack
 
         if(instr.ret != null){
             emitAssign(instr.ret, "r11");
         }
-        text.append("\n\t@ end call");
+        text.append("\n\t@ end apply cls");
 
     }
 
@@ -540,7 +605,7 @@ public class AssemblyGenerator {
         text.append("\n\tLDR r0, =error_message");
         text.append("\n\tBL min_caml_print_string");
         text.append("\n\tBL min_caml_exit\n");
-
+        //TODO MERGE CHECK HEAP INTO MALLOC
         // function malloc (r0) :
         text.append("\nmalloc :");
         text.append("\n\tLDR r1, =head");
