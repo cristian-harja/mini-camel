@@ -1,33 +1,31 @@
 package mini_camel.comp;
 
 import ldf.java_cup.runtime.*;
-import mini_camel.ErrMsg;
-import mini_camel.Pair;
-import mini_camel.PrintVisitor;
+import mini_camel.ir.CodeGenerator;
+import mini_camel.ir.CodeGenerator2;
+import mini_camel.knorm.KNode;
+import mini_camel.knorm.Program;
+import mini_camel.type.*;
+import mini_camel.util.SymRef;
+import mini_camel.util.Pair;
+import mini_camel.visit.*;
 import mini_camel.ast.AstExp;
-import mini_camel.ast.Id;
 import mini_camel.gen.Lexer;
 import mini_camel.gen.Parser;
-import mini_camel.ir.FunDef;
-import mini_camel.ir.Instr;
-import mini_camel.transform.AlphaConv;
-import mini_camel.transform.BetaReduc;
-import mini_camel.transform.ConstantFold;
-import mini_camel.type.Checker;
-import mini_camel.type.Type;
+import mini_camel.ir.Function;
+import mini_camel.ir.instr.Instr;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
-import static mini_camel.ir.CodeGenerator.*;
-
 public class MyCompiler {
     private Reader inputReader;
     private AstExp parsedAst;
     private AstExp transformedAst;
-    private List<FunDef> funDefs;
+    private KNode kNormalized;
+    private List<Function> funDefs;
 
     private final Set<ErrMsg> messageLog = new TreeSet<>();
 
@@ -35,12 +33,30 @@ public class MyCompiler {
     private boolean freeVarsBegun, freeVarsSuccessful;
     private boolean typingBegun, typingSuccessful;
 
-    private static Set<String> PREDEFS = new LinkedHashSet<>();
+
+    public static final Map<String, Type> PREDEFS;
     static {
-        Collections.addAll(PREDEFS,
-                "print_newline", "print_int", "abs_float", "sqrt", "sin",
-                "cos", "float_of_int", "int_of_float", "truncate"
-        );
+        Map<String, Type> predefs  = new LinkedHashMap<>();
+
+        Type UNIT = TUnit.INSTANCE;
+        Type INT = TInt.INSTANCE;
+        Type FLOAT = TFloat.INSTANCE;
+
+        predefs.put("print_newline", new TFun(UNIT, UNIT));
+        predefs.put("print_int", new TFun(INT, UNIT));
+
+        Type floatFun = new TFun(FLOAT, FLOAT);
+
+        predefs.put("abs_float", floatFun);
+        predefs.put("sqrt", floatFun);
+        predefs.put("sin", floatFun);
+        predefs.put("cos", floatFun);
+
+        predefs.put("float_of_int", new TFun(INT, FLOAT));
+        predefs.put("int_of_float", new TFun(FLOAT, INT));
+        predefs.put("truncate", new TFun(FLOAT, INT));
+
+        PREDEFS = Collections.unmodifiableMap(predefs);
     }
 
     public MyCompiler(@Nonnull Reader input) {
@@ -110,12 +126,11 @@ public class MyCompiler {
         if (freeVarsBegun) return freeVarsSuccessful;
         freeVarsBegun = true;
 
-        FreeVarVisitor fvv = new FreeVarVisitor(PREDEFS);
-        parsedAst.accept(fvv);
+        FreeVars fvv = FreeVars.compute(parsedAst, PREDEFS.keySet());
 
-        Set<Id> freeVars = fvv.getFreeVariables();
+        Set<SymRef> freeVars = fvv.getFreeVariables();
 
-        for (Id i : freeVars) {
+        for (SymRef i : freeVars) {
             error(i.getSymbol(), "Unknown symbol: " + i.id + ".");
         }
 
@@ -126,7 +141,7 @@ public class MyCompiler {
         if (typingBegun) return typingSuccessful;
         typingBegun = true;
 
-        Checker c = new Checker(parsedAst);
+        Checker c = new Checker(parsedAst, PREDEFS);
         typingSuccessful = c.wellTyped();
 
         if (!typingSuccessful) {
@@ -143,35 +158,82 @@ public class MyCompiler {
 
     public void outputAST(PrintStream out) {
         parsedAst.accept(new PrintVisitor(out));
+        out.print("\n");
+    }
+
+    public void outputTransformedAst(PrintStream out) {
+        transformedAst.accept(new PrintVisitor(out));
+        out.print("\n");
     }
 
     private void transformAlphaConversion() {
-        AlphaConv ac = new AlphaConv();
-        transformedAst = ac.applyTransform(transformedAst);
+        transformedAst = AlphaConv.compute(transformedAst);
     }
 
     private void transformBetaReduction() {
-        BetaReduc br = new BetaReduc();
-        transformedAst = br.applyTransform(transformedAst);
+        transformedAst = BetaReduction.compute(transformedAst);
     }
 
     private void transformConstantFolding() {
-        ConstantFold cf = new ConstantFold();
-        transformedAst = cf.applyTransform(transformedAst);
+        transformedAst = ConstantFold.compute(transformedAst);
+    }
+    private void transformInlining() {
+        transformedAst = Inlining.compute(transformedAst);
+    }
+
+    private void transformElimination() {
+        transformedAst = UnusedElim.compute(transformedAst);
     }
 
     public boolean preProcessCode() {
-        transformAlphaConversion();
-        transformBetaReduction();
-        transformConstantFolding();
+        AstExp oldAst;
+        try {
+            int i = 0;
+            do {
+                i++;
+                oldAst = transformedAst;
+                //System.out.println("ETAPE 1 : " + transformedAst.toString());
+                transformAlphaConversion();
+                transformBetaReduction();
+                transformConstantFolding();
+                //System.out.println("ETAPE 2 : " + transformedAst.toString());
+                transformElimination();
+                transformInlining();
+                //System.out.println("ETAPE 3 : " + transformedAst.toString());
+            } while (oldAst != transformedAst || i == 3);
+        } catch (RuntimeException e) {
+            error("An exception has occurred while pre-processing the AST.", e);
+            return false;
+        }
         return true;
     }
 
     // virtual code generation, immediate optimisation and register allocation
     // build 3-adress code ??
-    public boolean codeGeneration() {
+    public boolean codeGeneration_old() {
         try {
-            funDefs = generateIR(transformedAst, "_main");
+            funDefs = CodeGenerator.generateIR(transformedAst, "_main");
+        } catch (RuntimeException e) {
+            error("An exception has occurred while generating the IR.", e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean performKNormalization() {
+        try {
+            kNormalized = KNormalize.compute(transformedAst);
+        } catch (RuntimeException e) {
+            error("An exception has occurred while K-normalizing.", e);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean codeGeneration_new() {
+        try {
+            Program p = ClosureConv.compute(kNormalized, PREDEFS.keySet());
+            funDefs = CodeGenerator2.compile(p, PREDEFS, "_main");
         } catch (RuntimeException e) {
             error("An exception has occurred while generating the IR.", e);
             return false;
@@ -193,8 +255,8 @@ public class MyCompiler {
     }
 
     public void outputIR(PrintStream out) {
-        for(FunDef fd : funDefs){
-            out.println("# Function: " + fd.name.getName());
+        for(Function fd : funDefs){
+            out.println("# Function: " + fd.name.name);
             out.println("# Arguments: " + fd.args);
             out.println("# Locals: " + fd.locals);
             for (Instr i : fd.body) {
@@ -206,12 +268,10 @@ public class MyCompiler {
     }
 
     public void printErrors(PrintStream err) {
-        StringBuilder sb = new StringBuilder(200);
+        StringBuilder sb = new StringBuilder(1000);
         for (ErrMsg msg : messageLog) {
             sb.setLength(0);
-            sb.append('[');
-            sb.append(msg.type);
-            sb.append("]");
+            sb.append('[').append(msg.type).append("]");
 
             LocationAwareEntity loc = msg.loc;
             if (loc != null) {
@@ -223,17 +283,16 @@ public class MyCompiler {
                 sb.append(loc.getLineR());
                 sb.append(':');
                 sb.append(loc.getColumnR());
-                sb.append(")");
+                sb.append("):");
             }
 
-            sb.append(": ");
+            sb.append(' ');
             sb.append(msg.message);
             err.println(sb.toString());
 
-            if (msg.ex == null) {
-                continue;
+            if (msg.ex != null) {
+                msg.ex.printStackTrace(err);
             }
-            msg.ex.printStackTrace(err);
         }
     }
 

@@ -1,14 +1,15 @@
 package mini_camel.type;
 
-import mini_camel.Pair;
-import mini_camel.SymTable;
 import mini_camel.ast.*;
+import mini_camel.util.*;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+@ParametersAreNonnullByDefault
 public class EquationGenerator {
 
     static final Type UNIT = TUnit.INSTANCE;
@@ -16,24 +17,14 @@ public class EquationGenerator {
     static final Type INT = TInt.INSTANCE;
     static final Type FLOAT = TFloat.INSTANCE;
 
-    public List<Pair<Type, Type>> genEquations(final AstExp exp) {
+    public List<Pair<Type, Type>> genEquations(
+            final AstExp exp,
+            final Map<String, Type> predefs
+    ) {
         List<Pair<Type, Type>> out = new ArrayList<>();
         SymTable<Type> env = new SymTable<>();
         env.push();
-        env.put("print_newline", new TFun(UNIT, UNIT));
-        env.put("print_int", new TFun(INT, UNIT));
-
-        Type floatFun = new TFun(FLOAT, FLOAT);
-
-        env.put("abs_float", floatFun);
-        env.put("sqrt", floatFun);
-        env.put("sin", floatFun);
-        env.put("cos", floatFun);
-
-        env.put("float_of_int", new TFun(INT, FLOAT));
-        env.put("int_of_float", new TFun(FLOAT, INT));
-        env.put("truncate", new TFun(FLOAT, INT));
-
+        env.putAll(predefs);
         genEquations(out, env, exp, UNIT);
         return out;
     }
@@ -57,183 +48,131 @@ public class EquationGenerator {
                 genEquations(out, env, e, t);
             }
 
-            @Override
-            public void visit(@Nonnull AstErr e) {
-                // TODO: the error type
+            public void visit(AstErr e) {
+                // no equations are generated for an erroneous AST node
             }
 
-            @Override
-            public void visit(@Nonnull AstUnit e) {
+            public void visit(AstUnit e) {
                 typeEquals(type, UNIT);
             }
 
-            @Override
-            public void visit(@Nonnull AstBool e) {
+            public void visit(AstBool e) {
                 typeEquals(type, BOOL);
             }
 
-            @Override
-            public void visit(@Nonnull AstInt e) {
+            public void visit(AstInt e) {
                 typeEquals(type, INT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFloat e) {
+            public void visit(AstFloat e) {
                 typeEquals(type, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstNot e) {
+            public void visit(AstNot e) {
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e, BOOL);
             }
 
-            @Override
-            public void visit(@Nonnull AstNeg e) {
+            public void visit(AstNeg e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e, INT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFNeg e) {
+            public void visit(AstFNeg e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstAdd e) {
+            public void visit(AstAdd e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e1, INT);
                 exprIsOfType(e.e2, INT);
             }
 
-            @Override
-            public void visit(@Nonnull AstSub e) {
+            public void visit(AstSub e) {
                 typeEquals(type, INT);
                 exprIsOfType(e.e1, INT);
                 exprIsOfType(e.e2, INT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFAdd e) {
+            public void visit(AstFAdd e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFSub e) {
+            public void visit(AstFSub e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFMul e) {
+            public void visit(AstFMul e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstFDiv e) {
+            public void visit(AstFDiv e) {
                 typeEquals(type, FLOAT);
                 exprIsOfType(e.e1, FLOAT);
                 exprIsOfType(e.e2, FLOAT);
             }
 
-            @Override
-            public void visit(@Nonnull AstEq e) {
+            public void visit(AstEq e) {
                 Type t = Type.gen();
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e1, t);
                 exprIsOfType(e.e2, t);
             }
 
-            @Override
-            public void visit(@Nonnull AstLE e) {
+            public void visit(AstLE e) {
                 Type t = Type.gen();
                 typeEquals(type, BOOL);
                 exprIsOfType(e.e1, t);
                 exprIsOfType(e.e2, t);
             }
 
-            @Override
-            public void visit(@Nonnull AstIf e) {
-                exprIsOfType(e.e1, BOOL);
-                exprIsOfType(e.e2, type);
-                exprIsOfType(e.e3, type);
+            public void visit(AstIf e) {
+                exprIsOfType(e.eCond, BOOL);
+                exprIsOfType(e.eThen, type);
+                exprIsOfType(e.eElse, type);
             }
 
-            @Override
-            public void visit(@Nonnull AstLet e) {
-                exprIsOfType(e.e1, e.id_type);
+            public void visit(AstLet e) {
+                exprIsOfType(e.initializer, e.decl.type);
                 env.push();
                 {
-                    env.put(e.id.id, e.id_type);
-                    exprIsOfType(e.e2, type);
+                    env.put(e.decl.id, e.decl.type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
 
-            @Override
-            public void visit(@Nonnull AstVar e) {
-                typeEquals(type, env.get(e.id.id));
+            public void visit(SymRef e) {
+                typeEquals(type, env.get(e.id));
             }
 
-            @Override
-            public void visit(@Nonnull AstLetRec e) {
+            public void visit(AstLetRec e) {
                 env.push();
                 {
-                    env.put(e.fd.id.id, e.fd.functionType);
-                    exprIsOfType(e.fd, e.fd.functionType);
-                    exprIsOfType(e.e, type);
+                    env.put(e.fd.decl.id, e.fd.decl.type);
+                    exprIsOfType(e.fd, e.fd.decl.type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
 
-            /*
-            @Override
             public void visit(AstFunDef e) {
-                int i, numArgs = e.args.size();
-                Type returnType = Type.gen();
-                List<Type> argTypes = new ArrayList<>(numArgs);
-
-                for (i = 0; i < numArgs; ++i) {
-                    argTypes.add(Type.gen());
-                }
-
-                Type functionType = returnType;
-
-                for (i = numArgs - 1; i >= 0; --i) {
-                    functionType = new TFun(argTypes.get(i), functionType);
-                }
-
-                for (i = 0; i < numArgs; ++i) {
-                    env.put(e.args.get(i).id, argTypes.get(i));
-                }
-
-                typeEquals(type, functionType);
-                exprIsOfType(e.e, returnType);
-
-                for (i = 0; i < numArgs; ++i) {
-                    env.remove(e.args.get(i).id);
-                }
-            }
-            */
-
-            @Override
-            public void visit(@Nonnull AstFunDef e) {
-                int i, numArgs = e.args.size();
 
                 env.push();
                 {
-                    for (i = 0; i < numArgs; ++i) {
-                        env.put(e.args.get(i).id, e.argTypes.get(i));
+                    for (SymDef arg : e.args) {
+                        env.put(arg.id, arg.type);
                     }
 
                     //typeEquals(type, e.functionType);
-                    exprIsOfType(e.e, e.returnType);
+                    exprIsOfType(e.body, e.returnType);
                 }
                 env.pop();
             }
@@ -256,15 +195,13 @@ public class EquationGenerator {
                 curry(functionType.ret, arguments, returnType);
             }
 
-            @Override
-            public void visit(@Nonnull AstApp e) {
+            public void visit(AstApp e) {
                 Type calleeType = Type.gen();
                 exprIsOfType(e.e, calleeType);
                 curry(calleeType, e.es.iterator(), type);
             }
 
-            @Override
-            public void visit(@Nonnull AstTuple e) {
+            public void visit(AstTuple e) {
                 List<Type> items = new ArrayList<>(e.es.size());
                 for (AstExp item : e.es) {
                     Type t = Type.gen();
@@ -274,42 +211,37 @@ public class EquationGenerator {
                 typeEquals(type, new TTuple(items));
             }
 
-            @Override
-            public void visit(@Nonnull AstLetTuple e) {
-                int i, n = e.ids.size();
-                exprIsOfType(e.e1, new TTuple(e.ts));
+            public void visit(AstLetTuple e) {
+                exprIsOfType(e.initializer, new TTuple(e.getIdentifierTypes()));
 
                 env.push();
                 {
-                    for (i = 0; i < n; ++i) {
-                        env.put(e.ids.get(i).id, e.ts.get(i));
+                    for (SymDef sym : e.ids) {
+                        env.put(sym.id, sym.type);
                     }
 
-                    exprIsOfType(e.e2, type);
+                    exprIsOfType(e.ret, type);
                 }
                 env.pop();
             }
 
-            @Override
-            public void visit(@Nonnull AstArray e) {
+            public void visit(AstArray e) {
                 Type elementType = Type.gen();
-                exprIsOfType(e.e1, INT);
-                exprIsOfType(e.e2, elementType);
+                exprIsOfType(e.size, INT);
+                exprIsOfType(e.initializer, elementType);
                 typeEquals(type, new TArray(elementType));
             }
 
-            @Override
-            public void visit(@Nonnull AstGet e) {
-                exprIsOfType(e.e1, new TArray(type));
-                exprIsOfType(e.e2, INT);
+            public void visit(AstGet e) {
+                exprIsOfType(e.array, new TArray(type));
+                exprIsOfType(e.index, INT);
             }
 
-            @Override
-            public void visit(@Nonnull AstPut e) {
+            public void visit(AstPut e) {
                 Type t = Type.gen();
-                exprIsOfType(e.e1, new TArray(t));
-                exprIsOfType(e.e2, INT);
-                exprIsOfType(e.e3, t);
+                exprIsOfType(e.array, new TArray(t));
+                exprIsOfType(e.index, INT);
+                exprIsOfType(e.value, t);
                 typeEquals(type, UNIT);
             }
         });

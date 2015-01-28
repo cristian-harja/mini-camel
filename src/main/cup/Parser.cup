@@ -1,9 +1,9 @@
 package mini_camel.gen;
 
-import mini_camel.Pair;
 import mini_camel.ast.*;
 import mini_camel.comp.MyCompiler;
 import mini_camel.type.*;
+import mini_camel.util.*;
 
 import ldf.java_cup.runtime.Symbol;
 import java.util.*;
@@ -44,8 +44,8 @@ terminal prec_let, prec_if, prec_unary_minus, prec_app;
 
 non terminal List<AstExp> elems;
 non terminal List<AstExp> actual_args;
-non terminal List<Id> formal_args;
-non terminal Pair<List<Id>, List<Type>>  pat;
+non terminal List<SymDef> formal_args;
+non terminal List<SymDef> pat;
 non terminal AstFunDef fundef;
 non terminal AstExp simple_exp;
 non terminal AstExp exp;
@@ -72,7 +72,7 @@ simple_exp
   |   BOOL:b        {: RESULT = new AstBool(b); :}
   |   INT:i         {: RESULT = new AstInt(i); :}
   |   FLOAT:f       {: RESULT = new AstFloat(f); :}
-  |   IDENT:id      {: RESULT = new AstVar(id); :}
+  |   IDENT:id      {: RESULT = new SymRef(id); :}
   |   simple_exp:e1 DOT LPAREN exp:e2 RPAREN
       {:  RESULT = new AstGet(e1, e2);  :}
 ;
@@ -137,7 +137,7 @@ exp
       {: RESULT = new AstFDiv(e1, e2); :}
 
   |   LET IDENT:id EQUAL exp:e1 IN exp:e2
-      {: RESULT = new AstLet(id, Type.gen(), e1, e2); :}
+      {: RESULT = new AstLet(id, e1, e2); :}
       %prec prec_let
 
   |   LET REC fundef:fd IN exp:e
@@ -152,13 +152,13 @@ exp
       {: RESULT = new AstTuple(es); :}
 
   |   LET LPAREN pat:p RPAREN EQUAL exp:e1 IN exp:e2
-      {: RESULT = new AstLetTuple(p.left, p.right, e1, e2); :}
+      {: RESULT = new AstLetTuple(p, e1, e2); :}
 
   |   simple_exp:e1 DOT LPAREN exp:e2 RPAREN LESS_MINUS exp:e3
       {: RESULT = new AstPut(e1, e2, e3); :}
 
   |   exp:e1 SEMICOLON exp:e2
-      {: RESULT = new AstLet(Id.gen(), TUnit.INSTANCE, e1, e2); :}
+      {: RESULT = AstLet.semicolonSyntacticSugar(e1, e2); :}
 
   |   ARRAY_CREATE simple_exp:e1 simple_exp:e2
       {: RESULT = new AstArray(e1, e2); :}
@@ -175,12 +175,12 @@ fundef
 
 formal_args
   ::= IDENT:id formal_args:args
-      {: args.add(0, id); RESULT = args; :}
+      {: args.add(0, new SymDef(id)); RESULT = args; :}
 
   |   IDENT:id
       {:
-        List l = new LinkedList<Id>();
-        l.add(0, id);
+        List l = new LinkedList<SymDef>();
+        l.add(0, new SymDef(id));
         RESULT = l;
       :}
 ;
@@ -214,16 +214,13 @@ elems
 
 pat
   ::= pat:is COMMA IDENT:i
-      {: is.left.add(i); is.right.add(Type.gen()); RESULT = is; :}
+      {: is.add(new SymDef(i)); RESULT = is; :}
 
   |   IDENT:i1 COMMA IDENT:i2
       {:
-        List<Id> l = new LinkedList<Id>();
-        List<Type> t = new LinkedList<Type>(); 
-        t.add(0, Type.gen());
-        t.add(0, Type.gen());
-        l.add(0, i2); 
-        l.add(0, i1);
-        RESULT = new Pair<List<Id>, List<Type>>(l, t);
+        List<SymDef> l = new LinkedList<SymDef>();
+        l.add(0, new SymDef(i2));
+        l.add(0, new SymDef(i1));
+        RESULT = l;
       :}
 ;

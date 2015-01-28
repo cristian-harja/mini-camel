@@ -1,10 +1,13 @@
 package mini_camel.comp;
 
 
-import mini_camel.ir.*;
+import mini_camel.ir.Function;
+import mini_camel.ir.instr.*;
+import mini_camel.ir.op.*;
 
 import javax.annotation.Nonnull;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +16,16 @@ public class AssemblyGenerator {
     StringBuilder data;
     StringBuilder text;
 
-    boolean[] registers;
 
     private static final Map<String, String> IMPORTS = new LinkedHashMap<>();
+
+    private Map<String, Integer> argOffsets;
+    private String[] registers;
+    private ArrayList<String> memory;
+    private int cursor;
+
+    private String RET_KEYWORD = "ret"; // return value in r11
+    private int heap_size = 2048; // To have 2048 cells of 4 bytes
 
     static {
         IMPORTS.put("print_newline", "min_caml_print_newline");
@@ -23,241 +33,591 @@ public class AssemblyGenerator {
 
     }
 
+
     public AssemblyGenerator() {
         //headers for .data and .text sections
-        data = new StringBuilder("\t.data");
-        text = new StringBuilder();
+        data = new StringBuilder("\t.data\n\t.balign 4");
+        data.append("\nlimit : .word 0");    // to store the limit of the heap (head + heap_size*4)
+        data.append("\nhead : .word 0");     // to have the head/top of the heap
+        data.append("\nheap : .skip ").append(heap_size * 4); // to have heap_size cells of 4 bytes
+        data.append("\nerror_message : .asciz\t\"Not enough space in the heap\\n\"");
 
-        // TODO: use register for return value
-        data.append("\nret\t: .word @ ugly\n");
-
-        text.append("\n\t.text");
+        text = new StringBuilder("\n\t.text");
         text.append("\n\t.global _start");
-        text.append("\n\n_start:");
+        text.append("\n_start:");
         text.append("\n\tBL _main");
+        //text.append("\n\tBL min_caml_print_newline"); // for more clarity we print a new line before terminating correctly
         text.append("\n\tBL min_caml_exit\n");
 
-        registers = new boolean[13];
+
+
     }
 
-    public void generateAssembly(List<FunDef> functions) {
-        for (FunDef fd : functions) {
+    public void generateAssembly(List<Function> functions) {
+        for (Function fd : functions) {
             generateAssembly(fd);
         }
     }
-    private void generateAssembly(FunDef funDef) {
+
+    private void generateAssembly(Function funDef) {
+        int i, n;
+        List<Var> args = funDef.args;
+        String varName;
+        int varOffset;
+
         genLabel(funDef.name);
 
-        // Prologue
-        text.append("\n\t@ prologue");
-        text.append("\n\tSUB sp, #4");
-        text.append("\n\tSTR lr, [sp]");
+        argOffsets = new LinkedHashMap<>();
+        // initialization for the register allocator
+        registers = new String[11];
+        memory = new ArrayList<>();
+        cursor = 3;
+
+
+        // initialization of the heap management
+        if(funDef.name.name.equals("_main")) {
+            //push lr in stack
+            text.append("\n\t@ prologue");
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR lr, [sp]");
+
+            //initialize the head of the heap in memory
+            text.append("\n\tLDR r0, =heap");
+            text.append("\n\tLDR r1, =head");
+            text.append("\n\tSTR r0, [r1]");
+
+            //initialize the limit of the heap in memory
+            text.append("\n\tLDR r2, =limit");
+            text.append("\n\tLDR r3, =").append(heap_size * 4);
+            text.append("\n\tADD r3, r0, r3");
+            text.append("\n\tSTR r3, [r2]");
+        }
+        else {
+            // Function arguments
+            n = args.size();
+            if (n > 0) {
+                text.append("\n\t@ arguments");
+                for (i = 0; i < n; i++) {
+                    varName = args.get(i).name;
+                    varOffset = 4 * i + 40;
+                    text.append("\n\t@   ").append(varName);
+                    text.append(" -> r12");
+                    text.append("+").append(varOffset);
+
+                    argOffsets.put(varName, varOffset);
+                }
+                text.append('\n');
+            }
+
+            // Prologue
+            text.append("\n\t@ prologue");
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR lr, [sp]");
+            text.append("\n\tstmfd	sp!, {r3 - r10}");
+
+
+            // Push frame pointer
+            text.append("\n\tSUB sp, #4");
+            text.append("\n\tSTR r12, [sp]");
+            text.append("\n\tMOV r12, sp");
+        }
+
+
 
         // Body of the function
-        for (Instr i : funDef.body) {
-            Instr.Type t = i.getType();
+        for (Instr instr : funDef.body) {
+            Instr.Type t = instr.getInstrType();
             if (t != Instr.Type.LABEL) {
-                text.append("\n\n\t@ ").append(i.toString());
+                text.append("\n\n\t@ ").append(instr.toString());
             }
+
 
             switch (t) {
                 case LABEL:
-                    genLabel((Label) i);
+                    genLabel((Label) instr);
                     break;
                 case CALL:
-                    genCall((Call) i);
+                    genCall((DirApply) instr);
+                    break;
+                case CLS_MAKE:
+                    genMake((ClsMake)instr);
+                    break;
+                case CLS_APPLY:
+                    genApply((ClsApply)instr);
+                    break;
+                case ARRAY_NEW:
+                    genMakeArray((ArrNew) instr);
+                    break;
+                case ARRAY_GET:
+                    genGetArray((ArrGet) instr);
+                    break;
+                case ARRAY_PUT:
+                    genPutArray((ArrPut) instr);
                     break;
                 case ASSIGN:
-                    genAssign((Assign) i);
+                    genAssign((Assign) instr);
                     break;
                 case ADD_I:
-                    genAddI((AddI) i);
+                    genAddI((AddI) instr);
                     break;
                 case SUB_I:
-                    genSubI((SubI) i);
+                    genSubI((SubI) instr);
                     break;
-                case CMP:
-                    genCmp((Compare) i);
-                    break;
-                case BEQ:
-                    genBeq((BranchEq) i);
-                    break;
-                case BLE:
-                    genBle((BranchLe) i);
+                case BRANCH:
+                    genBranch((Branch) instr);
                     break;
                 case JUMP:
-                    genJump((Jump) i);
+                    genJump((Jump) instr);
                     break;
                 case RETURN:
-                    genReturn((Ret) i);
+                    genReturn((Ret) instr);
                     break;
 
                 default:
                     throw new RuntimeException(
-                            "Can't generate assembly for " + i.getType()
+                            "Generating assembly for " +
+                                    instr.getInstrType() +
+                                    " instructions not supported yet (" +
+                                    instr.toString() + ")."
                     );
             }
 
         }
 
         // Epilogue
-        text.append('\n');
         text.append("\n\t@epilogue");
+        if(!funDef.name.name.equals("_main")){
+            text.append("\n\tMOV sp, r12");
+            text.append("\n\tLDR r12, [sp]");
+            text.append("\n\tADD sp, #4");
+            text.append("\n\tldmfd	sp!, {r3 - r10}");
+        }
         text.append("\n\tLDR lr, [sp]");
         text.append("\n\tADD sp, #4");
-        text.append("\n\tMOV pc, lr");
-        text.append('\n');
-        text.append('\n');
+        text.append("\n\tMOV pc, lr\n\n");
     }
 
-    private void loadOperand1(Op op1) {
-        switch (op1.getType()) {
+    private void genMakeArray(ArrNew instr) {
+        text.append("\n@start make array");
+
+        int r = getnewReg();
+        registers[r] = instr.var.name;
+        String rd = "r" + r;
+
+        emitAssign("r0", instr.size);
+        text.append("\n\tBL malloc");
+        text.append("\n\tMOV ").append(rd).append(", r0");
+
+        if(instr.init != null) {
+            //need to put the value init in every cell of the array in the heap
+            emitAssign("r1", instr.init);
+            emitAssign("r2", instr.size);
+            text.append("MOV r0, ").append(rd);
+
+            text.append("\nfor_make_array : ");
+            text.append("\n\tCMP r2, #0");
+            text.append("\n\tBLE end_for_make_array");
+            text.append("\n\tSTR r1, [r0]");
+            text.append("\n\tADD r0, r0, #4");
+            text.append("\n\tSUB r2, r2, #1");
+            text.append("\n\tBAL for_make_array");
+
+            text.append("\nend_for_make_array : \n");
+        }
+
+        text.append("\n@end make array");
+    }
+
+    private void genPutArray(ArrPut instr) {
+        text.append("\n@start put array");
+
+        int reg = getReg(instr.array.name);
+        emitAssign("r0", instr.index);
+        emitAssign("r1", instr.value);
+        text.append("\n\tADD r0, r").append(reg).append(", r0, LSL #2");
+        text.append("\n\tSTR r1, [r0]");
+
+        text.append("\n@end put array");
+    }
+
+    private void genGetArray(ArrGet instr) {
+        text.append("\n@start get array");
+        String out = instr.output.name;
+        int rd;
+        int arr = getReg(instr.array.name);
+        if((rd = getReg(out))==-1){
+            rd= getnewReg();
+            registers[rd] = out;
+        }
+        emitAssign("r0", instr.index);
+
+        text.append("\n\tADD r0, r").append(arr).append(", r0, LSL #2");
+        text.append("\n\tSTR r").append(rd).append(", [r0]");
+
+        text.append("\n@end get array");
+    }
+
+    private Integer locateVar(
+            @Nonnull String name
+    ) {
+        Integer offset = argOffsets.get(name);
+        return offset;
+    }
+
+
+    private int getnewReg(){
+
+        for(int i = 3; i<=10; i++){
+            if(registers[i] == null){
+                return i;
+            }
+        }
+
+        String tmp = registers[cursor];
+        data.append("\n").append(tmp).append(" : .word ");
+        text.append("\n\tLDR r0, =").append(tmp);
+        text.append("\n\tSTR r").append(cursor).append(", [r0]");
+        memory.add(tmp);
+
+        int ret = cursor;
+        cursor = cursor > 9 ? 3 : ++cursor;
+
+        return ret;
+    }
+
+    private int getReg(String var){
+        int i;
+
+        if(var.equals(RET_KEYWORD)){
+            return 11;
+        }
+
+        for (i = 3; i<11; i++){
+            if(registers[i] != null && registers[i].equals(var)){
+                return i;
+            }
+        }
+
+        for(i = 0; i<memory.size(); i++){
+            if(memory.get(i).equals(var)){
+                memory.remove(i);
+                int r = getnewReg();
+                text.append("\n\tLDR r0, =").append(var);
+                text.append("\n\tLDR r").append(r).append(", [r0]");
+
+                return r;
+            }
+        }
+
+        return -1;
+    }
+
+
+
+
+
+    private void emitAssign(@Nonnull Var v, @Nonnull Operand op) {
+        String var = v.name;
+        int rd;
+        switch (op.getOperandType()) {
+            case CONST_INT:
+                rd = getnewReg();
+                int val = ((ConstInt)op).value;
+                registers[rd] = var;
+                text.append("\n\tLDR r").append(rd).append(", =").append(val);
+                return;
+
+
+            case VAR :
+                if((rd = getReg(var)) != -1){
+                    emitAssign("r"+rd, op);
+                }
+
+                Integer offset = locateVar(var);
+                if(offset != null) {
+                    emitAssign("r0", op);
+                    text.append("\n\tSTR r0, [r12, #").append(offset).append("]");
+                    return;
+                }
+
+                // here the var is not encountered yet
+                rd = getnewReg();
+                registers[rd] = var;
+                emitAssign("r"+rd,op);
+                return;
+
+
+        }
+
+    }
+
+    private void emitAssign(@Nonnull Var v, @Nonnull String register) {
+        int rd;
+        String var = v.name;
+
+        if((rd = getReg(var)) != -1){
+            text.append("\n\tMOV r").append(rd).append(", ").append(register);
+            return;
+        }
+
+        Integer offset = locateVar(var);
+        if(offset != null) {
+            text.append("\n\tSTR ").append(register).append(", [r12, #").append(offset).append("]");
+            return;
+        }
+
+        // here the var is not encountered yet
+        rd = getnewReg();
+        registers[rd] = var;
+        text.append("\n\tMOV r").append(rd).append(", ").append(register);
+        return;
+
+    }
+
+    private void emitAssign(@Nonnull String register, @Nonnull Operand op) {
+        switch (op.getOperandType()) {
+            case CONST_INT:
+                text.append("\n\tLDR ").append(register);
+                text.append(", =").append(((ConstInt) op).value);
+                return;
+
+            case CONST_FLOAT:
+                // TODO: floats
+                throw new RuntimeException(
+                        "floating point constants not supported yet."
+                );
+
+            case LABEL:
+                text.append("\n\tLDR ").append(register);
+                text.append(", =").append(((Label)op).name);
+                return;
+
             case VAR:
-                text.append("\n\tLDR r1, =").append(((Var) op1).getName());
-                text.append("\n\tLDR r1, [r1]");
-                break;
-            case CONST:
-                text.append("\n\tMOV r1, #").append(((Const) op1).getValueI());
+                int rd;
+                String var = ((Var)op).name;
+
+                if((rd = getReg(var)) != -1){
+                    text.append("\n\tMOV ").append(register).append(", r").append(rd);
+                    return;
+                }
+
+                int offset = locateVar(var);
+                text.append("\n\tLDR ").append(register).append(", [r12, #").append(offset).append("]");
+
         }
     }
 
-    private void loadOperand2(Op op2) {
-        switch (op2.getType()) {
-            case VAR:
-                text.append("\n\tLDR r2, =").append(((Var) op2).getName());
-                text.append("\n\tLDR r2, [r2]");
-                break;
-            case CONST:
-                text.append("\n\tMOV r2, #").append(((Const) op2).getValueI());
-        }
+    private void emitAssign(String destRegister, String srcRegister) {
+        text.append("\n\tMOV ").append(destRegister).append(", ").append(srcRegister);
     }
 
-    private void genBinaryOp(String mnemonic, Var var, Op op1, Op op2) {
-        String varName = var.getName();
-        data.append("\n").append(varName).append("\t: .word ");
+    private void genBinaryOp(
+            @Nonnull String mnemonic,
+            @Nonnull Var var,
+            @Nonnull Operand op1,
+            @Nonnull Operand op2
+    ) {
+        emitAssign("r1", op1); // r1 <- op1
+        emitAssign("r2", op2); // r2 <- op2
 
-        loadOperand1(op1);
-        loadOperand2(op2);
+        // r3 <- op1 (?) op2
+        text.append("\n\t").append(mnemonic).append(" r0, r1, r2");
 
-        text.append("\n\t").append(mnemonic).append(" r3, r1, r2");
-        text.append("\n\tLDR r0, =").append(varName);
-        text.append("\n\tSTR r3, [r0]");
+        emitAssign(var, "r0"); // var <- r0
     }
 
     private void genLabel(@Nonnull Label i) {
-        text.append("\n").append(i.getName()).append(":");
+        text.append("\n").append(i.name).append(":");
     }
 
-    private void genCall(Call i) {
-        String name = i.getName();
+    private void genCall(@Nonnull DirApply instr) {
+        String name = instr.name;
         String newName = IMPORTS.get(name);
         if (newName != null) name = newName;
 
+
         // EXCEPTION: print_int
         if (name.equals("min_caml_print_int")) {
-            Op arg = i.getArgs().get(0);
-            if (arg instanceof Const) {
-                text.append("\n\tMOV r0, #").append(((Const) arg).getValueI());
-            } else if (arg instanceof Var) {
-                text.append("\n\tLDR r0, =").append(((Var) arg).getName());
-                text.append("\n\tLDR r0, [r0]");
+            emitAssign("r0", instr.args.get(0)); // r0 <- only argument
+            text.append("\n\tBL ").append(name); // just call
+
+            if(instr.ret != null){
+                emitAssign(instr.ret, "r11");
             }
-            text.append("\n\tBL ").append(name);
 
             return;
         }
 
-        for (Op arg : i.getArgs()) {
-            text.append("\n\tSUB sp, #4");
-            if (arg instanceof Const) {
-                text.append("\n\rMOV r0, #").append(((Const) arg).getValueI());
-            } else if (arg instanceof Var) {
-                text.append("\n\tLDR r0, =").append(((Var) arg).getName());
-                text.append("\n\tLDR r0, [r0]");
-            }
-            text.append("\n\tSTR r0, [sp]");
+        if (name.equals("min_caml_print_newline")) {
+            text.append("\n\tBL min_caml_print_newline");
 
+            if(instr.ret != null){
+                emitAssign(instr.ret, "r11");
+            }
+            return;
         }
+
+
+        List<Operand> args = instr.args;
+        for (int i = args.size() - 1; i >= 0; i--) {
+            text.append("\n\t@ push argument ").append(i);
+            text.append("\n\tSUB sp, #4");
+            emitAssign("r0", args.get(i));
+            text.append("\n\tSTR r0, [sp]");
+        }
+
+        text.append("\n\t@ call, free stack and set the return value");
         text.append("\n\tBL ").append(name);
 
-        int popSize = 4*i.getArgs().size();
+        int popSize = 4 * instr.args.size();
         text.append("\n\tADD sp, #").append(Integer.toString(popSize));
-    }
 
-    private void genAssign(Assign i) {
-        String varName = i.getVar().getName();
-        Op op = i.getOp();
-
-        data.append("\n");
-        data.append(varName);
-        data.append("\t: .word ");
-
-        switch (op.getType()) {
-            case VAR:
-                text.append("\n\tLDR r1, =").append(((Var) op).getName());
-                text.append("\n\tLDR r0, [r1]");
-                text.append("\n\tLDR r1, =").append(varName);
-                text.append("\n\tSTR r0, [r1]");
-                break;
-
-            case CONST:
-                if (((Const) op).getConstType().equals("int")) {
-                    data.append(((Const) op).getValueI());
-                }
-                /*else{
-                    valuef1 = ((Const)op).getValueF();
-                    data.append(valuef1);
-                }*/
+        if(instr.ret != null){
+            emitAssign(instr.ret, "r11");
         }
+
+        text.append("\n\t@ end call");
     }
 
-    private void genAddI(AddI i) {
-        genBinaryOp("ADD", i.getVar(), i.getOp1(), i.getOp2());
-    }
+    private void genMake(@Nonnull ClsMake instr) {
+        List<Operand> args = instr.free_args;
+        int var = getnewReg();
+        String rd = "r" + var;
+        registers[var] = instr.v.name;
 
-    private void genSubI(SubI i) {
-        genBinaryOp("SUB", i.getVar(), i.getOp1(), i.getOp2());
-    }
+        text.append("\n@starting make cls");
+        text.append("\n\tLDR r0, =").append(Integer.toString(args.size() + 2));
+        text.append("\n\tBL malloc");
+        text.append("\n\tMOV ").append(rd).append(", r0");
 
-    private void genCmp(Compare i) {
-        Op op1 = i.getOp1(), op2 = i.getOp2();
-        text.append("\n\tCMP ").append(op1).append(", ").append(op2);
-    }
+        text.append("\n\tLDR r2, =").append(Integer.toString(args.size()));
+        text.append("\n\tSTR r2, [").append(rd).append("]");
 
-
-    private void genBle(BranchLe i) {
-        text.append("\n\tBLE ").append(i.getLabel());
-    }
-
-
-    private void genBeq(BranchEq i) {
-        text.append("\n\tBEQ ").append(i.getLabel());
-    }
+        text.append("\n\tLDR r2, =").append(instr.fun.name);
+        text.append("\n\tSTR r2, [").append(rd).append(", #4]");
 
 
-    private void genJump(Jump i) {
-        text.append("\n\tBAL ").append(i.getLabel());
-    }
-
-    private void genReturn(Ret i) {
-        Op op = i.getOperand();
-        if (op instanceof Const) {
-            text.append("\n\tMOV r12, #").append(((Const) op).getValueI());
-        } else if (op instanceof Var) {
-            text.append("\n\tLDR r12, =").append(((Var) op).getName());
-            text.append("\n\tLDR r12, [r12]");
+        for(int i = 0; i<args.size(); i++){
+            emitAssign("r2", args.get(i));
+            text.append("\n\tSTR r2, [").append(rd).append(", #").append(Integer.toString(i*4 + 8)).append("]");
         }
-        // TODO: remove this when you get rid of "ret"
-        // (really ugly)
-        text.append("\n\tLDR r0, =ret");
-        text.append("\n\tSTR r12, [r0]");
+
+        text.append("\n@ending make cls");
     }
 
-    public void writeAssembly(PrintStream out) {
-        //footer for .text section and printing everything in the output_file
-        if (data.length() > 7) {
-            out.println(data.toString());
+    private void genApply(@Nonnull ClsApply instr) {
+        int cls = getReg(instr.cls.name);
+        String rc = "r" + cls;
+        int popSize = 0;
+
+        text.append("\n@starting apply cls");
+
+        text.append("\n\tLDR r2, [").append(rc).append("]");
+        text.append("\n\tSUB r2, r2, #1");  // r2 <- (size - 1)
+        text.append("\n\tADD r1, ").append(rc).append(", #8]");
+        text.append("\n\tADD r1, r1, r2, LSL #2"); // r1 <- address of the last arg (rc + r2*4 + 8)
+        text.append("\nfor_apply_cls : ");
+        text.append("\n\tCMP r2, #0");
+        text.append("\n\tBLT end_for_apply_cls");
+        text.append("\n\tLDR r0, [r1]");
+        text.append("\n\tSUB sp, sp, #4");
+        text.append("\n\tSTR r0, [sp]");
+        text.append("\n\tSUB r2, r2, #1");
+        text.append("\n\tBAL for_apply_cls");
+
+        text.append("\nend_for_apply_cls : \n");
+
+
+
+        List<Operand> args = instr.args;
+        for (int i = args.size() - 1; i >= 0; i--) {
+            text.append("\n\t@ push argument ").append(i);
+            text.append("\n\tSUB sp, #4");
+            emitAssign("r0", args.get(i));
+            text.append("\n\tSTR r0, [sp]");
+            popSize += 4;
         }
+
+        text.append("\n\t@ call, free stack and set the return value");
+        text.append("\n\tBX [").append(rc).append(", #4"); //TODO TEST BX [rc, #4] in assembly
+
+        // add popSize (size of args) + size of free args from the closure (in [rc])
+        text.append("\n\tLDR r2, [").append(rc).append("]");
+        text.append("\n\tADD r2, r2, #").append(Integer.toString(popSize));
+        text.append("\n\tADD sp, r2"); // erase free_args + args from the stack
+
+        if(instr.ret != null){
+            emitAssign(instr.ret, "r11");
+        }
+        text.append("\n\t@ end apply cls");
+
+    }
+
+
+
+    private void genAssign(@Nonnull Assign i) {
+        emitAssign(i.var, i.op); // r0 <- op
+    }
+
+    private void genAddI(@Nonnull AddI i) {
+        genBinaryOp("ADD", i.var, i.op1, i.op2);
+    }
+
+    private void genSubI(@Nonnull SubI i) {
+        genBinaryOp("SUB", i.var, i.op1, i.op2);
+    }
+
+    private void genBranch(@Nonnull Branch i) {
+        emitAssign("r1", i.op1); // r1 <- op1
+        emitAssign("r2", i.op2); // r2 <- op2
+
+        String mnemonic = i.lessOrEqual ? "\n\tBLE " : "\n\tBEQ ";
+
+        text.append("\n\tCMP r1, r2");
+        text.append(mnemonic).append(i.ifTrue.name);
+        text.append("\n\tBAL ").append(i.ifFalse.name);
+    }
+
+
+    private void genJump(@Nonnull Jump i) {
+        text.append("\n\tBAL ").append(i.label.name);
+    }
+
+    private void genReturn(@Nonnull Ret i) {
+        if (i.op == null) return;
+        if (i.op instanceof Var) {
+            if (((Var) i.op).name.equals(RET_KEYWORD)) {
+                return;
+            }
+        }
+        emitAssign("r11", i.op);
+    }
+
+    public void writeAssembly(@Nonnull PrintStream out) {
+        // function check_heap :
+        text.append("\ncheck_heap :");
+        text.append("\n\tLDR r0, =limit");
+        text.append("\n\tLDR r0, [r0]");
+        text.append("\n\tCMP r1, r0");
+        text.append("\n\tBGT error_in_heap");
+        text.append("\n\tMOV PC, LR");
+        text.append("\nerror_in_heap :");
+        text.append("\n\tLDR r0, =error_message");
+        text.append("\n\tBL min_caml_print_string");
+        text.append("\n\tBL min_caml_exit\n");
+        //TODO MERGE CHECK HEAP INTO MALLOC
+        // function malloc (r0) :
+        text.append("\nmalloc :");
+        text.append("\n\tLDR r1, =head");
+        text.append("\n\tLDR r2, [r1]");
+        text.append("\n\tADD r1, r2, r0, LSL #2");
+        text.append("\n\tBL check_heap");
+        text.append("\n\tLDR r0, =head");
+        text.append("\n\tSTR r1, [r0]");
+        text.append("\n\tMOV r0, r1\n");
+
+        //prints everything contained in data and text in the output_file
+        out.println(data.toString());
         out.println(text.toString());
     }
 

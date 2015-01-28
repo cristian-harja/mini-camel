@@ -1,8 +1,11 @@
 package mini_camel.ast;
 
-import mini_camel.ir.Couple;
+import mini_camel.util.Visitor;
+import mini_camel.util.Visitor1;
+import mini_camel.util.Visitor2;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -10,40 +13,55 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class AstIf extends AstExp {
-    public final AstExp e1, e2, e3;
+    /**
+     * Expression representing the {@code if}'s condition. Its data type is
+     * expected to be {@link mini_camel.type.TBool}.
+     */
+    @Nonnull
+    public final AstExp eCond;
 
-    public AstIf(
-            @Nonnull AstExp e1,
-            @Nonnull AstExp e2,
-            @Nonnull AstExp e3
-    ) {
-        this.e1 = e1;
-        this.e2 = e2;
-        this.e3 = e3;
+    /**
+     * The {@code then} branch. Its data type is expected to be identical to
+     * that of {@link #eElse}.
+     */
+    @Nonnull
+    public final AstExp eThen;
+
+    /**
+     * The {@code else} branch. Its data type is expected to be identical to
+     * that of {@link #eThen}.
+     */
+    @Nonnull
+    public final AstExp eElse;
+
+    public AstIf(AstExp eCond, AstExp eThen, AstExp eElse) {
+        this.eCond = eCond;
+        this.eThen = eThen;
+        this.eElse = eElse;
     }
 
-    public void accept(@Nonnull Visitor v) {
+    public void accept(Visitor v) {
         v.visit(this);
     }
 
-    @Override
-    public Couple accept(@Nonnull Visitor3 v) {
+    public <T> T accept(Visitor1<T> v) {
         return v.visit(this);
     }
 
-    public <T, U> T accept(@Nonnull Visitor2<T, U> v, U a) {
+    public <T, U> T accept(Visitor2<T, U> v, @Nullable U a) {
         return v.visit(a, this);
     }
 
+    @Nonnull
     public String toString(){
         StringBuilder sb = new StringBuilder();
 
         sb.append("(if(");
-        sb.append(e1);
+        sb.append(eCond);
         sb.append(") then ");
-        sb.append(e2);
+        sb.append(eThen);
         sb.append(" else ");
-        sb.append(e3);
+        sb.append(eElse);
         sb.append(")");
 
         return sb.toString();

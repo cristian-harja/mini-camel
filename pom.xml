@@ -43,8 +43,8 @@
              classes for working with collections -->
         <dependency>
             <groupId>com.google.guava</groupId>
-            <artifactId>guava-collections</artifactId>
-            <version>r03</version>
+            <artifactId>guava</artifactId>
+            <version>r07</version>
         </dependency>
 
         <!-- Unit Testing Library -->
