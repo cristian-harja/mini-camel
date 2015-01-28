@@ -163,8 +163,7 @@ public class MyCompiler {
         System.out.println("Le nombre d'opérations est : "+tmp);
         FunNumOp in = new FunNumOp();
         List<mini_camel.transform.Pair> l = in.applyTransform(transformedAst);*/
-        Inlining cf = new Inlining();
-        transformedAst = cf.applyTransform(transformedAst);
+        transformedAst = Inlining.compute(transformedAst);
         /*RecursiveCheck rc = new RecursiveCheck();
         List<String> l = rc.applyTransform(transformedAst);
         for(String i : l)
@@ -175,8 +174,7 @@ public class MyCompiler {
     }
 
     private void transformElimination() {
-        Elim cf = new Elim();
-        transformedAst = cf.applyTransform(transformedAst);
+        transformedAst = UnusedElim.compute(transformedAst);
     }
 
     public boolean preProcessCode() {
@@ -185,14 +183,14 @@ public class MyCompiler {
         do {
             i++;
             oldAst = transformedAst;
-            System.out.println("ETAPE 1 : " + transformedAst.toString());
+            //System.out.println("ETAPE 1 : " + transformedAst.toString());
             transformAlphaConversion();
             transformBetaReduction();
             transformConstantFolding();
-            System.out.println("ETAPE 2 : " + transformedAst.toString());
+            //System.out.println("ETAPE 2 : " + transformedAst.toString());
             transformElimination();
             transformInlining();
-            System.out.println("ETAPE 3 : " + transformedAst.toString());
+            //System.out.println("ETAPE 3 : " + transformedAst.toString());
         } while (oldAst != transformedAst || i == 3);
         return true;
     }

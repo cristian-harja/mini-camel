@@ -1,5 +1,6 @@
 package mini_camel.ir.op;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -10,12 +11,12 @@ public final class ConstInt implements Operand {
         this.value = value;
     }
 
-    @Override
+    @Nonnull
     public Type getOperandType() {
         return Type.CONST_INT;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return Integer.toString(value);
     }

@@ -6,12 +6,13 @@ import mini_camel.ast.*;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@ParametersAreNonnullByDefault
 public final class FreeVars extends DummyVisitor {
 
     private Set<String> globals = new HashSet<>();
@@ -22,13 +23,13 @@ public final class FreeVars extends DummyVisitor {
     private FreeVars() {
     }
 
-    public static FreeVars compute(@Nonnull AstExp root) {
+    public static FreeVars compute(AstExp root) {
         return compute(root, Collections.<String>emptyList());
     }
 
     public static FreeVars compute(
-            @Nonnull AstExp root,
-            @Nonnull Collection<String> globals
+            AstExp root,
+            Collection<String> globals
     ) {
         FreeVars fvv = new FreeVars();
         fvv.globals.addAll(globals);
@@ -44,8 +45,7 @@ public final class FreeVars extends DummyVisitor {
         return freeStr;
     }
 
-    @Override
-    public void visit(@Nonnull AstLet e) {
+    public void visit(AstLet e) {
         String id = e.decl.id;
         e.initializer.accept(this);
         bound.add(id);
@@ -53,8 +53,7 @@ public final class FreeVars extends DummyVisitor {
         bound.remove(id);
     }
 
-    @Override
-    public void visit(@Nonnull SymRef e) {
+    public void visit(SymRef e) {
         String id = e.id;
         if (bound.contains(id)) return;
         if (globals.contains(id)) return;
@@ -62,8 +61,7 @@ public final class FreeVars extends DummyVisitor {
         freeStr.add(id);
     }
 
-    @Override
-    public void visit(@Nonnull AstLetRec e) {
+    public void visit(AstLetRec e) {
         String id = e.fd.decl.id;
         bound.add(id);
         e.fd.accept(this);
@@ -71,8 +69,7 @@ public final class FreeVars extends DummyVisitor {
         bound.remove(id);
     }
 
-    @Override
-    public void visit(@Nonnull AstLetTuple e) {
+    public void visit(AstLetTuple e) {
         e.initializer.accept(this);
         bound.addAll(e.getIdentifierList());
         e.ret.accept(this);
@@ -83,8 +80,7 @@ public final class FreeVars extends DummyVisitor {
         }
     }
 
-    @Override
-    public void visit(@Nonnull AstFunDef e) {
+    public void visit(AstFunDef e) {
         bound.addAll(e.getArgumentNames());
         e.body.accept(this);
         for (SymDef s : e.args) {

@@ -6,7 +6,9 @@ import mini_camel.util.SymTable;
 import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@ParametersAreNonnullByDefault
 public final class BetaReduction extends TransformHelper {
 
     private SymTable<SymRef> reMapping = new SymTable<>();
@@ -14,18 +16,21 @@ public final class BetaReduction extends TransformHelper {
     private BetaReduction() {
     }
 
+    @Nonnull
     public static AstExp compute(AstExp astNode) {
         return astNode.accept(new BetaReduction());
     }
 
 
-    public AstExp visit(@Nonnull SymRef e) {
+    @Nonnull
+    public AstExp visit(SymRef e) {
         AstExp new_e = reMapping.get(e.id);
         return (new_e == null) ? e : new_e;
     }
 
 
-    public AstExp visit(@Nonnull AstLet e){
+    @Nonnull
+    public AstExp visit(AstLet e){
         SymDef old_id = e.decl;
         AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;

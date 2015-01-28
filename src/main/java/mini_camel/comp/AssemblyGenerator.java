@@ -2,7 +2,6 @@ package mini_camel.comp;
 
 
 import mini_camel.ir.Function;
-import mini_camel.ir.instr.Label;
 import mini_camel.ir.instr.*;
 import mini_camel.ir.op.*;
 
@@ -71,7 +70,7 @@ public class AssemblyGenerator {
         argOffsets = new LinkedHashMap<>();
         // initialization for the register allocator
         registers = new String[11];
-        memory = new ArrayList<String>();
+        memory = new ArrayList<>();
         cursor = 3;
 
 
@@ -140,11 +139,11 @@ public class AssemblyGenerator {
                 case CALL:
                     genCall((Call) instr);
                     break;
-                case MAKE_CLS :
-                    genMake((Make_cls)instr);
+                case CLS_MAKE:
+                    genMake((ClosureMake)instr);
                     break;
-                case APPLY_CLS :
-                    genApply((Apply_cls)instr);
+                case CLS_APPLY:
+                    genApply((ClosureApply)instr);
                     break;
                 case ASSIGN:
                     genAssign((Assign) instr);
@@ -418,7 +417,7 @@ public class AssemblyGenerator {
         text.append("\n\t@ end call");
     }
 
-    private void genMake(@Nonnull Make_cls instr) {
+    private void genMake(@Nonnull ClosureMake instr) {
         List<Operand> args = instr.free_args;
         int var = getnewReg();
         String rd = "r" + var;
@@ -444,7 +443,7 @@ public class AssemblyGenerator {
         text.append("\n@ending make cls");
     }
 
-    private void genApply(@Nonnull Apply_cls instr) {
+    private void genApply(@Nonnull ClosureApply instr) {
         int cls = getReg(instr.cls.name);
         String rc = "r" + cls;
         int popSize = 0;

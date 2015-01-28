@@ -2,7 +2,6 @@ package mini_camel.util;
 
 import mini_camel.ast.*;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**

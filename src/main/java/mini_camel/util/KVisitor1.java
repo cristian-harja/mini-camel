@@ -2,6 +2,9 @@ package mini_camel.util;
 
 import mini_camel.knorm.*;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public interface KVisitor1<T> {
     // Values
     T visit(KUnit k);

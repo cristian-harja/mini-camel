@@ -4,7 +4,7 @@ import mini_camel.ast.*;
 import mini_camel.util.SymRef;
 import mini_camel.util.Visitor;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * An implementation of the {@link mini_camel.util.Visitor} interface that just traverses the
@@ -12,161 +12,136 @@ import javax.annotation.Nonnull;
  * methods in order to only handle certain node types in your sub-class, while
  * ignoring the others.
  */
+@ParametersAreNonnullByDefault
 public abstract class DummyVisitor implements Visitor {
 
-    public void visit(@Nonnull AstUnit e) {
+    public void visit(AstUnit e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull AstBool e) {
+    public void visit(AstBool e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull AstInt e) {
+    public void visit(AstInt e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull AstFloat e) {
+    public void visit(AstFloat e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull SymRef e) {
+    public void visit(SymRef e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull AstErr e) {
+    public void visit(AstErr e) {
         // do nothing
     }
 
-    @Override
-    public void visit(@Nonnull AstNot e) {
+    public void visit(AstNot e) {
         e.e.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstNeg e) {
+    public void visit(AstNeg e) {
         e.e.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFNeg e) {
+    public void visit(AstFNeg e) {
         e.e.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstAdd e) {
+    public void visit(AstAdd e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstSub e) {
+    public void visit(AstSub e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFAdd e) {
+    public void visit(AstFAdd e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFSub e) {
+    public void visit(AstFSub e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFMul e) {
+    public void visit(AstFMul e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFDiv e) {
+    public void visit(AstFDiv e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstEq e) {
+    public void visit(AstEq e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstLE e) {
+    public void visit(AstLE e) {
         e.e1.accept(this);
         e.e2.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstIf e) {
+    public void visit(AstIf e) {
         e.eCond.accept(this);
         e.eThen.accept(this);
         e.eElse.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstLet e) {
+    public void visit(AstLet e) {
         e.initializer.accept(this);
         e.ret.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstLetRec e) {
+    public void visit(AstLetRec e) {
         e.fd.accept(this);
         e.ret.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstApp e) {
+    public void visit(AstApp e) {
         e.e.accept(this);
         for (AstExp arg : e.es) {
             arg.accept(this);
         }
     }
 
-    @Override
-    public void visit(@Nonnull AstTuple e) {
+    public void visit(AstTuple e) {
         for (AstExp arg : e.es) {
             arg.accept(this);
         }
     }
 
-    @Override
-    public void visit(@Nonnull AstLetTuple e) {
+    public void visit(AstLetTuple e) {
         e.initializer.accept(this);
         e.ret.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstArray e) {
+    public void visit(AstArray e) {
         e.size.accept(this);
         e.initializer.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstGet e) {
+    public void visit(AstGet e) {
         e.array.accept(this);
         e.index.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstPut e) {
+    public void visit(AstPut e) {
         e.array.accept(this);
         e.index.accept(this);
         e.value.accept(this);
     }
 
-    @Override
-    public void visit(@Nonnull AstFunDef e) {
+    public void visit(AstFunDef e) {
         e.body.accept(this);
     }
 }

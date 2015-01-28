@@ -8,27 +8,29 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public final class AddI implements Instr {
+    @Nonnull
     public final Var var;
+
+    @Nonnull
     public final Operand op1, op2;
 
-    public AddI(
-            @Nonnull Var v,
-            @Nonnull Operand operand1,
-            @Nonnull Operand operand2
-    ) {
+    public AddI(Var v, Operand operand1, Operand operand2) {
         this.var = v;
         this.op1 = operand1;
         this.op2 = operand2;
     }
 
-    @Override
+    @Nonnull
     public Type getInstrType() {
         return Type.ADD_I;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
-        return var + " := " + op1 + " + " + op2;
+        return String.format(
+                "%s := %s + %s",
+                var.name, op1.toString(), op2.toString()
+        );
     }
 
 }

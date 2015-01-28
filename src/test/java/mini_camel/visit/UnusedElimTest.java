@@ -8,10 +8,10 @@ import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ElimTest extends TestHelper {
+public class UnusedElimTest extends TestHelper {
 
     private static void testOnCode(String s) throws Exception {
-        AstExp result = Elim.compute(parse(s));
+        AstExp result = UnusedElim.compute(parse(s));
         checkCorrectness(result);
     }
 

@@ -1,5 +1,7 @@
 package mini_camel.ir.op;
 
+import javax.annotation.Nonnull;
+
 public interface Operand {
     enum Type {
         VAR,
@@ -8,5 +10,9 @@ public interface Operand {
         LABEL
     }
 
+    @Nonnull
     Type getOperandType();
+
+    @Nonnull
+    String toString();
 }

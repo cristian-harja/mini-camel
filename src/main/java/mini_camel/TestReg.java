@@ -3,7 +3,6 @@ package mini_camel;
 import mini_camel.comp.*;
 
 import java.io.*;
-import java.util.ArrayList;
 
 public class TestReg {
     static public void main(String argv[]) throws FileNotFoundException {

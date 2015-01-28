@@ -24,11 +24,10 @@ public final class Branch implements Instr {
 
     public Branch(
             boolean lessOrEqual,
-            @Nonnull Operand op1,
-            @Nonnull Operand op2,
-            @Nonnull Label ifTrue,
-            @Nonnull Label ifFalse
-
+            Operand op1,
+            Operand op2,
+            Label ifTrue,
+            Label ifFalse
     ) {
         this.lessOrEqual = lessOrEqual;
         this.op1 = op1;
@@ -37,15 +36,17 @@ public final class Branch implements Instr {
         this.ifFalse = ifFalse;
     }
 
-    @Override
+    @Nonnull
     public Type getInstrType() {
         return Type.BRANCH;
     }
 
-    @Override
+    @Nonnull
     public String toString() {
-        return "IF (" + op1 + (lessOrEqual ? " <= " : " = ") + op2 +
-                ") THEN " + ifTrue.name +
-                " ELSE " + ifFalse.name;
+        return String.format(
+                "IF (%s %s %s) THEN %s ELSE %s",
+                op1, (lessOrEqual ? "<=" : "="), op2,
+                ifTrue.name, ifFalse.name
+        );
     }
 }

@@ -1,5 +1,7 @@
 package mini_camel.ir.instr;
 
+import javax.annotation.Nonnull;
+
 public interface Instr  {
 
     public static enum Type {
@@ -11,15 +13,18 @@ public interface Instr  {
         MUL_F,  // multiplication
         DIV_F,  // division
         CALL,   // function call (apply direct)
-        MAKE_CLS, // make closure
-        APPLY_CLS, // apply closure
+        CLS_APPLY, // closure apply
+        CLS_MAKE,  // closure creation
         LABEL,  // label
         JUMP,   // unconditional branch
         BRANCH, // branch (if equal / if less than or equal)
         RETURN  // return from function call
     }
 
+    @Nonnull
     Type getInstrType();
+
+    @Nonnull
     String toString();
 
 }

@@ -5,48 +5,49 @@ import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 import mini_camel.util.Visitor;
 
-import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.PrintStream;
 import java.util.*;
 
+@ParametersAreNonnullByDefault
 public final class PrintVisitor implements Visitor {
 
     private PrintStream out;
-    
+
     public PrintVisitor(PrintStream out) {
         this.out = out;
     }
-    
-    public void visit(@Nonnull AstUnit e) {
+
+    public void visit(AstUnit e) {
         out.print("()");
     }
 
-    public void visit(@Nonnull AstBool e) {
+    public void visit(AstBool e) {
         out.print(e.b);
     }
 
-    public void visit(@Nonnull AstInt e) {
+    public void visit(AstInt e) {
         out.print(e.i);
     }
 
-    public void visit(@Nonnull AstFloat e) {
+    public void visit(AstFloat e) {
         String s = String.format("%.2f", e.f);
         out.print(s);
     }
 
-    public void visit(@Nonnull AstNot e) {
+    public void visit(AstNot e) {
         out.print("(not ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(@Nonnull AstNeg e) {
+    public void visit(AstNeg e) {
         out.print("(- ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(@Nonnull AstAdd e) {
+    public void visit(AstAdd e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" + ");
@@ -54,7 +55,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstSub e) {
+    public void visit(AstSub e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" - ");
@@ -62,13 +63,13 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFNeg e){
+    public void visit(AstFNeg e){
         out.print("(-. ");
         e.e.accept(this);
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFAdd e){
+    public void visit(AstFAdd e){
         out.print("(");
         e.e1.accept(this);
         out.print(" +. ");
@@ -76,7 +77,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFSub e){
+    public void visit(AstFSub e){
         out.print("(");
         e.e1.accept(this);
         out.print(" -. ");
@@ -84,7 +85,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFMul e) {
+    public void visit(AstFMul e) {
         out.print("(");
         e.e1.accept(this);
         out.print(" *. ");
@@ -92,7 +93,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFDiv e){
+    public void visit(AstFDiv e){
         out.print("(");
         e.e1.accept(this);
         out.print(" /. ");
@@ -100,7 +101,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstEq e){
+    public void visit(AstEq e){
         out.print("(");
         e.e1.accept(this);
         out.print(" = ");
@@ -108,7 +109,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstLE e){
+    public void visit(AstLE e){
         out.print("(");
         e.e1.accept(this);
         out.print(" <= ");
@@ -116,7 +117,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstIf e){
+    public void visit(AstIf e){
         out.print("(if ");
         e.eCond.accept(this);
         out.print(" then ");
@@ -126,7 +127,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstLet e) {
+    public void visit(AstLet e) {
         out.print("(let ");
         out.print(e.decl.id);
         out.print(" = ");
@@ -136,7 +137,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull SymRef e){
+    public void visit(SymRef e){
         out.print(e.id);
     }
 
@@ -167,7 +168,7 @@ public final class PrintVisitor implements Visitor {
         }
     }
 
-    public void visit(@Nonnull AstLetRec e){
+    public void visit(AstLetRec e){
         out.print("(let rec ");
         out.print(e.fd.decl.id);
         out.print(" ");
@@ -179,7 +180,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstApp e){
+    public void visit(AstApp e){
         out.print("(");
         e.e.accept(this);
         out.print(" ");
@@ -187,13 +188,13 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstTuple e){
+    public void visit(AstTuple e){
         out.print("(");
         printInfix2(e.es, ", ");
         out.print(")");
     }
 
-    public void visit(@Nonnull AstLetTuple e){
+    public void visit(AstLetTuple e){
         out.print("(let (");
         printInfix(e.ids, ", ");
         out.print(") = ");
@@ -203,7 +204,7 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstArray e){
+    public void visit(AstArray e){
         out.print("(Array.create ");
         e.size.accept(this);
         out.print(" ");
@@ -211,14 +212,14 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstGet e){
+    public void visit(AstGet e){
         e.array.accept(this);
         out.print(".(");
         e.index.accept(this);
         out.print(")");
     }
 
-    public void visit(@Nonnull AstPut e){
+    public void visit(AstPut e){
         out.print("(");
         e.array.accept(this);
         out.print(".(");
@@ -228,12 +229,11 @@ public final class PrintVisitor implements Visitor {
         out.print(")");
     }
 
-    public void visit(@Nonnull AstFunDef e) {
-
+    public void visit(AstFunDef e) {
+        // nothing to do
     }
 
-    @Override
-    public void visit(@Nonnull AstErr astErr) {
+    public void visit(AstErr e) {
         out.print("<error>");
     }
 }
