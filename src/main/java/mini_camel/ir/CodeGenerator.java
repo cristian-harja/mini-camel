@@ -298,7 +298,7 @@ public class CodeGenerator extends CodeGeneratorHelper {
         Couple fCode = e.e.accept(this, null);
 
         code.addAll(fCode.getInstr());
-        code.add(new Call(ret, fCode.getVar().name, args));
+        code.add(new DirApply(ret, fCode.getVar().name, args));
 
         return new Couple(code, ret);
     }

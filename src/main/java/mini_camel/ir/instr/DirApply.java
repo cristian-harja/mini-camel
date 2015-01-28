@@ -11,33 +11,33 @@ import java.util.Collections;
 import java.util.List;
 
 @Immutable
-public final class ClosureApply implements Instr{
+public final class DirApply implements Instr {
     @CheckForNull
     public final Var ret;
 
     @Nonnull
-    public final Var cls;
+    public final String name;
 
     @Nonnull
     public final List<Operand> args;
 
-    public ClosureApply(@Nullable Var ret, Var cls, List<Operand> l){
+    public DirApply(@Nullable Var ret, String s, List<Operand> l) {
         this.ret = ret;
-        this.cls = cls;
+        name = s;
         args = Collections.unmodifiableList(l);
     }
-
     @Nonnull
-    public Instr.Type getInstrType() {
-        return Type.CLS_APPLY;
+    public Type getInstrType() {
+        return Type.CALL;
     }
 
     @Nonnull
     public String toString() {
         return String.format(
-                "%sClosureApply(%s,%s)",
-                ((ret != null) ? (ret.name + " := ") : ""),
-                cls, args
+                "%sCALL %s%s",
+                ((ret != null)? (ret.name + " := ") : ""),
+                name, args
         );
     }
+
 }

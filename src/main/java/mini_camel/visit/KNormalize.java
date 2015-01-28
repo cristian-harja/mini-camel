@@ -308,11 +308,14 @@ public final class KNormalize extends KNormalizeHelper
     }
 
     public KNode visit(AstArray e) {
-        return insert_let2(
-                e.size.accept(this),
-                e.initializer.accept(this),
-                HANDLE_ARRAY
-        );
+        final KNode size = e.size.accept(this);
+        final KNode init = e.initializer.accept(this);
+        final Handler2 handler = new Handler2() {
+            public KNode apply(SymRef var1, SymRef var2) {
+                return new KArray(var1, var2, init.getDataType());
+            }
+        };
+        return insert_let2(size, init, handler);
     }
 
     public KNode visit(AstGet e) {

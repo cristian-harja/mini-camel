@@ -12,6 +12,7 @@ public interface KVisitor {
     void visit(KFloat k);
     void visit(KVar k);
     void visit(KTuple k);
+    void visit(KArray k);
 
     // Integer operations
     void visit(KNeg k);

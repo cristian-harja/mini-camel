@@ -27,6 +27,10 @@ public class KDummyVisitor implements KVisitor {
         // do nothing
     }
 
+    public void visit(KArray k) {
+        // do nothing
+    }
+
     public void visit(KNeg k) {
         // do nothing
     }
