@@ -9,10 +9,13 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public final class TFun extends Type {
+    @Nonnull
     public final Type arg;
+
+    @Nonnull
     public final Type ret;
 
-    public TFun(@Nonnull Type arg, @Nonnull Type ret) {
+    public TFun(Type arg, Type ret) {
         this.arg = arg;
         this.ret = ret;
     }
@@ -21,8 +24,13 @@ public final class TFun extends Type {
         this(Type.gen(), Type.gen());
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         return "(" + arg + " -> " + ret + ")";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.FUNCTION;
     }
 }

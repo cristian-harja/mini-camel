@@ -12,15 +12,21 @@ import java.util.List;
  */
 @Immutable
 public final class TTuple extends Type {
+    @Nonnull
     public final List<Type> items;
 
-    public TTuple(@Nonnull List<Type> items) {
+    public TTuple(List<Type> items) {
         this.items = Collections.unmodifiableList(items);
     }
 
-    @Override
+    @Nonnull
     public String toString() {
         String s = items.toString();
         return "(" + s.substring(1, s.length()-2) + ")";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.TUPLE;
     }
 }

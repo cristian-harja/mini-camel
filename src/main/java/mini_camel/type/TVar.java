@@ -15,7 +15,13 @@ public final class TVar extends Type {
         this.v = v;
     }
 
+    @Nonnull
     public String toString() {
         return v;
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.VARIABLE;
     }
 }

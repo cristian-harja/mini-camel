@@ -1,5 +1,6 @@
 package mini_camel.type;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -14,8 +15,13 @@ public final class TBool extends Type {
     // Immutable singleton class. Use TBool.INSTANCE instead.
     private TBool() {}
 
-    @Override
+    @Nonnull
     public String toString() {
         return "bool";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.BOOL;
     }
 }
