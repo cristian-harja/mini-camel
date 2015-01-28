@@ -88,6 +88,14 @@ public class MyCompiler {
         error(null, s, null);
     }
 
+    public void warn(@Nonnull String msg) {
+        ErrMsg m = new ErrMsg();
+        m.type = ErrMsg.Type.WARN;
+        m.message = msg;
+        messageLog.add(m);
+    }
+
+
     public void parseError(Symbol s) {
         parseErrors = true;
 
@@ -187,6 +195,12 @@ public class MyCompiler {
 
     public boolean preProcessCode() {
         AstExp oldAst;
+
+        Set<String> unusedVars = UnusedVar.compute(parsedAst);
+        for (String unusedVar : unusedVars) {
+            warn("Unused variable: " + unusedVar);
+        }
+
         try {
             int i = 0;
             do {

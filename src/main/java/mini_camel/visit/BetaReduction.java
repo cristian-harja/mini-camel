@@ -1,9 +1,10 @@
 package mini_camel.visit;
 
+import mini_camel.ast.AstExp;
+import mini_camel.ast.AstLet;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 import mini_camel.util.SymTable;
-import mini_camel.ast.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -30,26 +31,24 @@ public final class BetaReduction extends TransformHelper {
 
 
     @Nonnull
-    public AstExp visit(AstLet e){
+    public AstExp visit(AstLet e) {
         SymDef old_id = e.decl;
         AstExp new_e1 = e.initializer.accept(this);
         AstExp new_e2;
 
-        if(new_e1 instanceof SymRef){
+        if (new_e1 instanceof SymRef) {
             reMapping.push();
             {
-                reMapping.put(old_id.id,(SymRef)new_e1);
+                reMapping.put(old_id.id, (SymRef) new_e1);
                 new_e2 = e.ret.accept(this);
             }
             reMapping.pop();
-        }
-        else {
+        } else {
             new_e2 = e.ret.accept(this);
         }
 
         return new AstLet(old_id, new_e1, new_e2);
     }
-
 
 
 }

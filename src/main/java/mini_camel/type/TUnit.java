@@ -1,5 +1,6 @@
 package mini_camel.type;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -14,8 +15,13 @@ public final class TUnit extends Type {
     // Immutable singleton class. Use TUnit.INSTANCE instead.
     private TUnit() {}
 
-    @Override
+    @Nonnull
     public String toString() {
         return "()";
+    }
+
+    @Nonnull
+    public Kind getKind() {
+        return Kind.UNIT;
     }
 }
