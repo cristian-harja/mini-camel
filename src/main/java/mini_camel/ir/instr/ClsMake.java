@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Immutable
-public final class ClosureMake implements Instr{
+public final class ClsMake implements Instr{
     @Nonnull
     public final Var v;
 
@@ -19,7 +19,7 @@ public final class ClosureMake implements Instr{
     @Nonnull
     public final List<Operand> free_args;
 
-    public ClosureMake(Var v, Label l, List<Operand> list){
+    public ClsMake(Var v, Label l, List<Operand> list){
         this.v = v;
         fun = l;
         free_args = Collections.unmodifiableList(list);

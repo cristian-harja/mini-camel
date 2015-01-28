@@ -12,6 +12,9 @@ public interface Instr  {
         ASSIGN, // assignment
         MUL_F,  // multiplication
         DIV_F,  // division
+        ARRAY_NEW, // array create
+        ARRAY_GET, // array get
+        ARRAY_PUT, // array put
         CALL,   // function call (apply direct)
         CLS_APPLY, // closure apply
         CLS_MAKE,  // closure creation

@@ -38,6 +38,11 @@ public abstract class KTransformHelper implements KVisitor1<KNode> {
     }
 
     @Nonnull
+    public KNode visit(KArray k) {
+        return k;
+    }
+
+    @Nonnull
     public KNode visit(KNeg k) {
         return k;
     }

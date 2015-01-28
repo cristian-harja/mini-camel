@@ -95,15 +95,6 @@ abstract class KNormalizeHelper {
         }
     };
 
-    protected final static Handler2 HANDLE_ARRAY = new Handler2() {
-        @Override
-        public KNode apply(SymRef var1, SymRef var2) {
-            throw new RuntimeException(
-                    "Array creation not implemented in K-normalization."
-            );
-        }
-    };
-
     protected final static Handler3 HANDLE_PUT = new Handler3() {
         @Override
         public KNode apply(SymRef var1, SymRef var2, SymRef var3) {

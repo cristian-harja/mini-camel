@@ -137,13 +137,13 @@ public class AssemblyGenerator {
                     genLabel((Label) instr);
                     break;
                 case CALL:
-                    genCall((Call) instr);
+                    genCall((DirApply) instr);
                     break;
                 case CLS_MAKE:
-                    genMake((ClosureMake)instr);
+                    genMake((ClsMake)instr);
                     break;
                 case CLS_APPLY:
-                    genApply((ClosureApply)instr);
+                    genApply((ClsApply)instr);
                     break;
                 case ASSIGN:
                     genAssign((Assign) instr);
@@ -368,7 +368,7 @@ public class AssemblyGenerator {
         text.append("\n").append(i.name).append(":");
     }
 
-    private void genCall(@Nonnull Call instr) {
+    private void genCall(@Nonnull DirApply instr) {
         String name = instr.name;
         String newName = IMPORTS.get(name);
         if (newName != null) name = newName;
@@ -417,7 +417,7 @@ public class AssemblyGenerator {
         text.append("\n\t@ end call");
     }
 
-    private void genMake(@Nonnull ClosureMake instr) {
+    private void genMake(@Nonnull ClsMake instr) {
         List<Operand> args = instr.free_args;
         int var = getnewReg();
         String rd = "r" + var;
@@ -443,7 +443,7 @@ public class AssemblyGenerator {
         text.append("\n@ending make cls");
     }
 
-    private void genApply(@Nonnull ClosureApply instr) {
+    private void genApply(@Nonnull ClsApply instr) {
         int cls = getReg(instr.cls.name);
         String rc = "r" + cls;
         int popSize = 0;
