@@ -44,6 +44,8 @@ public final class UnusedVar extends DummyVisitor {
     }
 
     public void visit(AstLetRec e) {
+        left.add(e.fd.decl.id);
+        e.fd.body.accept(this);
         e.ret.accept(this);
     }
 
