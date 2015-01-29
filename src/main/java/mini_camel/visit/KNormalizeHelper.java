@@ -61,25 +61,25 @@ abstract class KNormalizeHelper {
 
     protected final static Handler2 HANDLE_ADD_F = new Handler2() {
         public KNode apply(SymRef var1, SymRef var2) {
-            return new KAdd(var1, var2);
+            return new KFAdd(var1, var2);
         }
     };
 
     protected final static Handler2 HANDLE_SUB_F = new Handler2() {
         public KNode apply(SymRef var1, SymRef var2) {
-            return new KSub(var1, var2);
+            return new KFSub(var1, var2);
         }
     };
 
     protected final static Handler2 HANDLE_MUL_F = new Handler2() {
         public KNode apply(SymRef var1, SymRef var2) {
-            return new KAdd(var1, var2);
+            return new KFMul(var1, var2);
         }
     };
 
     protected final static Handler2 HANDLE_DIV_F = new Handler2() {
         public KNode apply(SymRef var1, SymRef var2) {
-            return new KSub(var1, var2);
+            return new KFDiv(var1, var2);
         }
     };
 
