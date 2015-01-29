@@ -61,6 +61,8 @@ public class MyCompiler {
         PREDEFS = Collections.unmodifiableMap(predefs);
     }
 
+    private Checker typeChecker;
+
     public MyCompiler(@Nonnull Reader input) {
         inputReader = input;
     }
@@ -151,11 +153,11 @@ public class MyCompiler {
         if (typingBegun) return typingSuccessful;
         typingBegun = true;
 
-        Checker c = new Checker(parsedAst, PREDEFS);
-        typingSuccessful = c.wellTyped();
+        typeChecker = new Checker(parsedAst, PREDEFS);
+        typingSuccessful = typeChecker.wellTyped();
 
         if (!typingSuccessful) {
-            for (Pair<Type, Type> e : c.getErrors()) {
+            for (Pair<Type, Type> e : typeChecker.getErrors()) {
                 ErrMsg msg = new ErrMsg();
                 msg.type = ErrMsg.Type.ERROR;
                 msg.message = "Type mismatch: " + e.left + " = " + e.right;
@@ -268,7 +270,9 @@ public class MyCompiler {
 
     public boolean generateIR() {
         try {
-            funDefs = CodeGenerator2.compile(closureConv, PREDEFS, "_main");
+            funDefs = CodeGenerator2.compile(
+                    PREDEFS, typeChecker, closureConv, "_main"
+            );
         } catch (RuntimeException e) {
             error("An exception has occurred while generating the IR.", e);
             return false;
@@ -292,6 +296,7 @@ public class MyCompiler {
     public void outputIR(PrintStream out) {
         for(Function fd : funDefs){
             out.println("# Function: " + fd.name.name);
+            out.println("# Closure: " + fd.free);
             out.println("# Arguments: " + fd.args);
             out.println("# Locals: " + fd.locals);
             for (Instr i : fd.body) {
