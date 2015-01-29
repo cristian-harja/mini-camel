@@ -29,4 +29,13 @@ public final class ArrNew implements Instr {
     public Type getInstrType() {
         return Type.ARRAY_NEW;
     }
+
+    @Nonnull
+    public String toString() {
+        return String.format(
+                "%s := new Array(%s%s)",
+                var.name, size.toString(),
+                init == null ? "" : (", " + init.toString())
+        );
+    }
 }
