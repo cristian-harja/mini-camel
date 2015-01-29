@@ -36,7 +36,6 @@ public final class Checker {
         return solution;
     }
 
-    @SuppressWarnings("unused")
     public Type concreteType(Type t) {
         switch (t.getKind()) {
             case VARIABLE :
