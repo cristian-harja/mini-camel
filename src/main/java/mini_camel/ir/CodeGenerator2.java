@@ -1,9 +1,12 @@
 package mini_camel.ir;
 
 import mini_camel.ir.instr.*;
-import mini_camel.ir.instr.ClsMake;
-import mini_camel.ir.op.*;
+import mini_camel.ir.op.ConstFloat;
+import mini_camel.ir.op.ConstInt;
+import mini_camel.ir.op.Operand;
+import mini_camel.ir.op.Var;
 import mini_camel.knorm.*;
+import mini_camel.type.Checker;
 import mini_camel.type.TFun;
 import mini_camel.type.TUnit;
 import mini_camel.type.Type;
@@ -11,32 +14,111 @@ import mini_camel.util.KVisitor;
 import mini_camel.util.SymDef;
 import mini_camel.util.SymRef;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
 @ParametersAreNonnullByDefault
-public class CodeGenerator2 implements KVisitor {
+public final class CodeGenerator2 implements KVisitor {
 
     private List<Instr> code = new ArrayList<>();
     private Stack<Var> assignStack = new Stack<>();
 
     private Var dest;
 
-    private Label functionBegin;
     private Map<String, Var> free = new LinkedHashMap<>();
     private Map<String, Var> args = new LinkedHashMap<>();
     private Map<String, Var> locals = new LinkedHashMap<>();
-    private Map<String, Type> predefs = new LinkedHashMap<>();
 
-    private static final ConstInt CONST_0 = new ConstInt(0);
-    private static final ConstInt CONST_1 = new ConstInt(1);
+    @Nonnull
+    private Map<String, Type> globals;
 
-    private CodeGenerator2() {
+    @Nonnull
+    private Map<String, Integer> arity;
+
+    @Nonnull
+    private Map<String, Integer> arityFree;
+
+    @CheckForNull
+    private Checker typeChecker;
+
+    private CodeGenerator2(
+            @Nonnull Map<String, Type> globals,
+            @Nonnull Map<String, Integer> arity,
+            @Nonnull Map<String, Integer> freeArity,
+            @Nullable Checker typeChecker
+    ) {
+        this.globals = globals;
+        this.arity = arity;
+        this.arityFree = freeArity;
+        this.typeChecker = typeChecker;
     }
 
-    private Function getResult() {
+    public static List<Function> compile(
+            @Nullable Map<String, Type> predefs,
+            @Nullable Checker checker,
+            @Nonnull Program p,
+            @Nonnull String mainName
+    ) {
+        if (predefs == null) predefs = Collections.emptyMap();
+        Map<String, Type> globals = new LinkedHashMap<>(predefs);
+        Map<String, KFunDef> jobs = new LinkedHashMap<>(p.topLevel);
+        Map<String, Integer> arity = new HashMap<>();
+        Map<String, Integer> freeArity = new HashMap<>();
+
+        jobs.put(mainName, new KFunDef(
+                new SymDef(mainName, TUnit.INSTANCE),
+                Collections.<SymDef>emptyList(),
+                p.mainBody
+        ));
+
+        for (KFunDef fd : jobs.values()) {
+            String id = fd.name.id;
+            globals.put(id, fd.name.type);
+            arity.put(id, fd.args.size());
+            freeArity.put(id, fd.freeVars.size());
+        }
+
+        for (String predef : predefs.keySet()) {
+            arity.put(predef, 1);
+        }
+
+        List<Function> compiled = new ArrayList<>(p.topLevel.size() + 1);
+
+        for (KFunDef fd2 : jobs.values()) {
+            CodeGenerator2 cg = new CodeGenerator2(
+                    globals, arity, freeArity, checker
+            );
+            compiled.add(cg.compile(fd2));
+        }
+
+        return compiled;
+    }
+
+    private Function compile(KFunDef fd) {
+        for (SymDef arg : fd.args) {
+            args.put(arg.id, new Var(arg.id, arg.type));
+        }
+        for (SymRef arg : fd.freeVars) {
+            free.put(arg.id, new Var(arg.id, null));
+        }
+
+        Type funcType = concreteType(fd.name.type);
+        if (funcType.getKind() == Type.Kind.UNIT) {
+            fd.body.accept(this);
+            code.add(new Ret(null));
+        } else {
+            Type retType = ((TFun) funcType).ret;
+            pushVar(newLocal(new SymDef("ret", retType)));
+            fd.body.accept(this);
+            code.add(new Ret(dest));
+            popVar();
+        }
+
         return new Function(
-                functionBegin,
+                new Label(fd.name.id),
                 new ArrayList<>(free.values()),
                 new ArrayList<>(args.values()),
                 new ArrayList<>(locals.values()),
@@ -44,52 +126,28 @@ public class CodeGenerator2 implements KVisitor {
         );
     }
 
-    private static Function compile(KFunDef fd, Map<String, Type> predefs) {
-        CodeGenerator2 cg = new CodeGenerator2();
-        cg.functionBegin = new Label(fd.name.id);
-        cg.predefs.putAll(predefs);
-
-        for (SymDef arg : fd.args) {
-            cg.args.put(arg.id, new Var(arg.id, arg.type));
-        }
-        for (SymRef arg : fd.freeVars) {
-            cg.free.put(arg.id, new Var(arg.id, null));
-        }
-
-        fd.body.accept(cg);
-
-        return cg.getResult();
+    @Nonnull
+    private Type concreteType(@Nullable Type t) {
+        if (t == null) return Type.gen();
+        if (typeChecker == null) return t;
+        return typeChecker.concreteType(t);
     }
 
-    public static List<Function> compile(
-            Program p,
-            Map<String, Type> predefs,
-            String mainName
-    ) {
-        KFunDef fd = new KFunDef(
-                new SymDef(mainName, TUnit.INSTANCE),
-                Collections.<SymDef>emptyList(),
-                p.mainBody
-        );
-
-        Collection<KFunDef> topLevel = p.topLevel.values();
-        Map<String, Type> globals = new LinkedHashMap<>();
-        globals.putAll(predefs);
-
-        for (KFunDef funDef : topLevel) {
-            globals.put(funDef.name.id, funDef.name.type);
-        }
-
-        List<Function> result = new ArrayList<>(p.topLevel.size() + 1);
-
-        result.add(compile(fd, globals));
-        for (KFunDef funDef : topLevel) {
-            result.add(compile(funDef, globals));
-        }
-
-        return result;
+    @Nonnull
+    private Type concreteType(String symbol) {
+        return concreteType(globals.get(symbol));
     }
 
+    private boolean returnsVoid(String id) {
+        Type funType = concreteType(id);
+        if (funType.getKind() != Type.Kind.FUNCTION) return false;
+        if (((TFun) funType).ret.getKind() != Type.Kind.UNIT) return false;
+        return true;
+    }
+
+
+    private static final ConstInt CONST_0 = new ConstInt(0);
+    private static final ConstInt CONST_1 = new ConstInt(1);
 
     private ConstInt cons(int i) {
         if (i == 0) return CONST_0;
@@ -123,9 +181,15 @@ public class CodeGenerator2 implements KVisitor {
         v = free.get(ref.id);
         if (v != null) return v;
 
+        v = new Var(ref.id, globals.get(ref.id));
+        return v;
+        /*
+        if (v != null) return v;
+
         throw new RuntimeException(
                 "Unknown reference " + ref.id + " found when generating IR"
         );
+        */
     }
 
     public void visit(KUnit k) {
@@ -197,9 +261,14 @@ public class CodeGenerator2 implements KVisitor {
     }
 
     public void visit(KLet k) {
-        pushVar(newLocal(k.id));
-        k.initializer.accept(this);
-        popVar();
+        SymDef id = k.id;
+        if (id.id.startsWith("?v")) {
+            k.initializer.accept(this);
+        } else {
+            pushVar(newLocal(id));
+            k.initializer.accept(this);
+            popVar();
+        }
         k.ret.accept(this);
     }
 
@@ -260,7 +329,15 @@ public class CodeGenerator2 implements KVisitor {
         for (SymRef ref : k.args) {
             args.add(find(ref));
         }
-        code.add(new DirApply(dest, k.f.id, args));
+        String id = k.f.id;
+        int arity = this.arity.get(id);
+        if (arity > args.size()) {
+            throw new RuntimeException(
+                    "Sorry, currying not supported for: " + id
+            );
+        }
+        if (arity == 0) args.clear();
+        code.add(new DirApply(dest, id, args));
     }
 
     public void visit(ApplyClosure k) {
@@ -268,6 +345,8 @@ public class CodeGenerator2 implements KVisitor {
         for (SymRef ref : k.boundArguments) {
             args.add(find(ref));
         }
+        // fixme: implement currying or change type system to prevent it
+        // since we can't prevent it at compile-time, will crash at runtime
         code.add(new ClsApply(dest, find(k.functionObj), args));
     }
 
@@ -278,15 +357,16 @@ public class CodeGenerator2 implements KVisitor {
         }
 
         // Name of the function to call
-        String fName = k.functionName.id;
-
-        // Check that its type is not () -> T
-        Type fType = predefs.get(fName);
-        if (fType instanceof TFun && ((TFun) fType).arg == TUnit.INSTANCE) {
-            args.clear();
+        String id = k.functionName.id;
+        int arity = this.arity.get(id);
+        if (arity > args.size()) {
+            throw new RuntimeException(
+                    "Sorry, currying not supported for: " + id
+            );
         }
+        if (arity == 0) args.clear();
 
-        code.add(new DirApply(dest, fName, args));
+        code.add(new DirApply(returnsVoid(id) ? null : dest, id, args));
     }
 
     public void visit(ClosureMake k) {
@@ -294,6 +374,18 @@ public class CodeGenerator2 implements KVisitor {
         for (SymRef ref : k.freeArguments) {
             args.add(find(ref));
         }
+        /*
+        // fixme: is this necessary?
+        String id = k.functionName.id;
+        int arity = this.arityFree.get(id);
+        if (arity > args.size()) {
+            throw new RuntimeException(
+                    "Sorry, currying not supported for: " + id
+            );
+        }
+        if (arity == 0) args.clear();
+        */
+
         pushVar(newLocal(k.target));
         code.add(new ClsMake(dest, new Label(k.functionName.id), args));
         popVar();

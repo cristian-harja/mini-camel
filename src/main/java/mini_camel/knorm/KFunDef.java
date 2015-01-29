@@ -48,6 +48,7 @@ public final class KFunDef {
             }
             if (ref.id.equals(name.id)) {
                 isRecursive = true;
+                it.remove();
             }
         }
 
