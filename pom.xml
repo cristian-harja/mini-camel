@@ -7,7 +7,7 @@
 
     <groupId>les-quatre-mousquetengineers</groupId>
     <artifactId>mini-camel</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 
     <properties>
         <!-- Miscellaneous -->

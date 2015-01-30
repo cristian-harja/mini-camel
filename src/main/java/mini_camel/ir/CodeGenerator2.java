@@ -69,16 +69,17 @@ public final class CodeGenerator2 implements KVisitor {
         Map<String, Integer> freeArity = new HashMap<>();
 
         jobs.put(mainName, new KFunDef(
-                new SymDef(mainName, TUnit.INSTANCE),
+                new SymDef(mainName, new TFun(TUnit.INSTANCE, TUnit.INSTANCE)),
                 Collections.<SymDef>emptyList(),
                 p.mainBody
         ));
 
         for (KFunDef fd : jobs.values()) {
             String id = fd.name.id;
-            globals.put(id, fd.name.type);
-            arity.put(id, fd.args.size());
+            globals.put(id, checker.concreteType(fd.name.type));
             freeArity.put(id, fd.freeVars.size());
+            Type functionType = checker.concreteType(fd.name.type);
+            arity.put(id, takesVoid(functionType) ? 0 : fd.args.size());
         }
 
         for (String predef : predefs.keySet()) {
@@ -106,7 +107,7 @@ public final class CodeGenerator2 implements KVisitor {
         }
 
         Type funcType = concreteType(fd.name.type);
-        if (funcType.getKind() == Type.Kind.UNIT) {
+        if (returnsVoid(funcType)) {
             fd.body.accept(this);
             code.add(new Ret(null));
         } else {
@@ -138,8 +139,15 @@ public final class CodeGenerator2 implements KVisitor {
         return concreteType(globals.get(symbol));
     }
 
-    private boolean returnsVoid(String id) {
-        Type funType = concreteType(id);
+    private static boolean takesVoid(@Nullable Type funType) {
+        if (funType == null) return false;
+        if (funType.getKind() != Type.Kind.FUNCTION) return false;
+        if (((TFun) funType).arg.getKind() != Type.Kind.UNIT) return false;
+        return true;
+    }
+
+    private static boolean returnsVoid(@Nullable Type funType) {
+        if (funType == null) return false;
         if (funType.getKind() != Type.Kind.FUNCTION) return false;
         if (((TFun) funType).ret.getKind() != Type.Kind.UNIT) return false;
         return true;
@@ -212,7 +220,7 @@ public final class CodeGenerator2 implements KVisitor {
         int i, n = k.items.size();
         code.add(new ArrNew(dest, cons(n), null));
         for (i = 0; i < n; ++i) {
-            code.add(new ArrPut(dest, cons(i), find(k.items.get(0))));
+            code.add(new ArrPut(dest, cons(i), find(k.items.get(i))));
         }
     }
 
@@ -289,9 +297,10 @@ public final class CodeGenerator2 implements KVisitor {
         int i, n = k.ids.size();
         Var array = find(k.initializer);
         for (i = 0; i < n; ++i) {
-            Var dest = newLocal(k.ids.get(0));
+            Var dest = newLocal(k.ids.get(i));
             code.add(new ArrGet(dest, array, cons(i)));
         }
+        k.ret.accept(this);
     }
 
     private void emitBranch(
@@ -358,6 +367,7 @@ public final class CodeGenerator2 implements KVisitor {
 
         // Name of the function to call
         String id = k.functionName.id;
+        Type t = globals.get(k.functionName);
         int arity = this.arity.get(id);
         if (arity > args.size()) {
             throw new RuntimeException(
@@ -366,7 +376,7 @@ public final class CodeGenerator2 implements KVisitor {
         }
         if (arity == 0) args.clear();
 
-        code.add(new DirApply(returnsVoid(id) ? null : dest, id, args));
+        code.add(new DirApply(returnsVoid(t) ? null : dest, id, args));
     }
 
     public void visit(ClosureMake k) {
@@ -389,5 +399,6 @@ public final class CodeGenerator2 implements KVisitor {
         pushVar(newLocal(k.target));
         code.add(new ClsMake(dest, new Label(k.functionName.id), args));
         popVar();
+        k.ret.accept(this);
     }
 }

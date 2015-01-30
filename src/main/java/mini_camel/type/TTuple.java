@@ -22,7 +22,7 @@ public final class TTuple extends Type {
     @Nonnull
     public String toString() {
         String s = items.toString();
-        return "(" + s.substring(1, s.length()-2) + ")";
+        return "(" + s.substring(1, s.length()-1) + ")";
     }
 
     @Nonnull

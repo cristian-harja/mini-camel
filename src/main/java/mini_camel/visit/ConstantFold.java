@@ -139,7 +139,7 @@ public final class ConstantFold extends TransformHelper {
             );
         }
 
-        return new AstFAdd(new_e1, new_e2);
+        return new AstFSub(new_e1, new_e2);
     }
 
     @Nonnull
@@ -153,7 +153,7 @@ public final class ConstantFold extends TransformHelper {
             );
         }
 
-        return new AstFAdd(new_e1, new_e2);
+        return new AstFMul(new_e1, new_e2);
     }
 
     @Nonnull
@@ -167,7 +167,7 @@ public final class ConstantFold extends TransformHelper {
             );
         }
 
-        return new AstFAdd(new_e1, new_e2);
+        return new AstFMul(new_e1, new_e2);
     }
 
     @Nonnull

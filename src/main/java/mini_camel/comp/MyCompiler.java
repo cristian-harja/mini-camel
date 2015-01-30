@@ -3,6 +3,7 @@ package mini_camel.comp;
 import ldf.java_cup.runtime.*;
 import mini_camel.ir.CodeGenerator;
 import mini_camel.ir.CodeGenerator2;
+import mini_camel.ir.instr.Label;
 import mini_camel.knorm.KNode;
 import mini_camel.knorm.Program;
 import mini_camel.type.*;
@@ -299,8 +300,9 @@ public class MyCompiler {
             out.println("# Closure: " + fd.free);
             out.println("# Arguments: " + fd.args);
             out.println("# Locals: " + fd.locals);
+            out.println(fd.name.toString());
             for (Instr i : fd.body) {
-                out.print('\t');
+                if (!(i instanceof Label)) out.print('\t');
                 out.println(i.toString());
             }
             out.println();
