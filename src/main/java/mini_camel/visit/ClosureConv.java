@@ -37,10 +37,17 @@ public final class ClosureConv extends KTransformHelper {
     @Nonnull
     public KNode visit(KLetRec e) {
         KNode e1_new, e2_new;
-
         String id = e.fd.name.id;
+        List<SymRef> e1_free = new LinkedList<>(e.fd.freeVars);
+        Iterator<SymRef> it;
 
-        List<SymRef> e1_free = e.fd.freeVars;
+        it = e1_free.iterator();
+        while (it.hasNext()) {
+            SymRef ref = it.next();
+            if (known.contains(ref.id)) {
+                it.remove();
+            }
+        }
 
         if (e1_free.isEmpty()) {
             known.add(id);
@@ -55,7 +62,7 @@ public final class ClosureConv extends KTransformHelper {
         e2_new = e.ret.accept(this);
 
         List<SymRef> e2_free = KFreeVars.compute(e2_new);
-        Iterator<SymRef> it = e2_free.iterator();
+        it = e2_free.iterator();
         while (it.hasNext()) {
             SymRef ref = it.next();
             if (!ref.id.equals(id)) {

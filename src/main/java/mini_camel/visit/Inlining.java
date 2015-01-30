@@ -10,7 +10,7 @@ import java.util.*;
 @ParametersAreNonnullByDefault
 public final class Inlining extends TransformHelper {
 
-    private List<AstFunDef> afd = new ArrayList<>();
+    private Map<String, AstFunDef> afd = new HashMap<>();
     private Collection<String> l;
 
     public Inlining(Collection<String> functionsToInline) {
@@ -33,45 +33,21 @@ public final class Inlining extends TransformHelper {
     @Nonnull
     public AstExp visit(AstLetRec e) {
         if (l.contains(e.fd.decl.id)) {
-            afd.add(e.fd);
-
+            afd.put(e.fd.decl.id, e.fd);
         }
-        return new AstLetRec(e.fd, e.ret.accept(this));
+        return super.visit(e);
     }
 
 
     @Nonnull
     public AstExp visit(AstApp e) {
-        if(e.e instanceof SymRef)
-        {
-            if(((SymRef)e.e).id.equals("print_int") ||((SymRef)e.e).id.equals("print_newline")){
-                return e;
+        if(e.e instanceof SymRef) {
+            AstFunDef fd = afd.get(((SymRef) e.e).id);
+            if (fd != null) {
+                return inline(fd, e);
             }
         }
-        int index = 0;
-        for (AstFunDef iterator : afd) {
-            if (iterator.decl.id.equals(e.e.toString())) {
-                break;
-            }
-            index++;
-        }
-
-        int bool = 0;
-        for (AstExp iterator : e.es) {
-            if (iterator instanceof AstApp) {
-                bool++;
-            }
-        }
-        if (bool == 0) {
-            return inline(afd.get(index), e);
-        }
-        AstExp tmp = e.es.get(0).accept(this);
-        AstLet tmp2 = inline(afd.get(index), e); // ??? fixme
-        return new AstLet(
-                afd.get(index).args.get(0),
-                tmp, afd.get(index).body
-        );
-
+        return super.visit(e);
     }
 
 

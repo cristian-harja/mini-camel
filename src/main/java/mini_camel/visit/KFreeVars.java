@@ -68,8 +68,6 @@ public final class KFreeVars extends KDummyVisitor {
             k.ret.accept(this);
         }
         symbolTable.pop();
-
-        k.ret.accept(this);
     }
 
     public void visit(ApplyClosure k) {

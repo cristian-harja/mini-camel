@@ -36,5 +36,12 @@ public final class UnusedElim extends TransformHelper {
         return super.visit(e);
     }
 
+    @Nonnull
+    public AstExp visit(AstLetRec e) {
+        if (unused.contains(e.fd.decl.id)) {
+            return e.ret.accept(this);
+        }
+        return super.visit(e);
+    }
 
 }
