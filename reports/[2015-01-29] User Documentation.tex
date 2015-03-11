@@ -1,0 +1,330 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
+\usepackage{color}
+\usepackage{multirow}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{%
+	basicstyle=\scriptsize\sffamily,%
+	commentstyle=\footnotesize\ttfamily,%
+	frameround=trBL,
+	frame=single,
+	breaklines=true,
+	showstringspaces=false,
+	numbers=left,
+	numberstyle=\tiny,
+	numbersep=10pt,
+	keywordstyle=\bf
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+\newcommand{\subtitle}[1]{%
+	\posttitle{%
+	\par\end{center}
+\begin{center}\large#1\end{center}
+\vskip0.5em}%
+}
+
+
+\title{Compilation Project}
+\subtitle{User Documentation\\ 
+Les Quatre MousquetEngineers\\ Master M1 MOSIG, Grenoble Universities}
+\author{Cristian HARJA \and Yassine JAZOUANI \and Lina MARSS0 
+\and Cl\'{e}ment MOMMESSIN}
+\date{29/01/2015}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+\paragraph{}
+	This is a group project (part of the MoSIG graduate program) in which we are
+	required to implement a compiler for the min-caml language, targeting the ARM architecture.
+	We chose to implement our compiler in Java.
+
+\section{Compilation and execution}
+	\subsection{Building}
+		\paragraph{}
+			In order to build and run this project you need to have installed Java 
+			and Apache Maven on your machine. Make sure the \texttt{java} and \texttt{mvn} commands 
+			are in your PATH. You also need an Internet connection the first time
+			 you build the project and approximately 50 MB of disk space (for Maven to do its job).
+			 
+		\paragraph{}
+			To compile our program, just execute \texttt{mvn package}. This will download all 
+			dependencies, generate the parser, run the unit tests and finally, 
+			compile the project. If successful, a \texttt{target/mini-camel.jar} file will be created.
+		
+	\subsection{Running}
+		\paragraph{}
+			To run our program, execute \texttt{java -jar target/mini-camel.jar} 
+			(after compiling the project) followed by any command line options that 
+			are specific to our application. By running the application with no command 
+			line arguments, you can see a brief description of the available commands. 
+			For example: \texttt{java -jar target/mini-camel.jar -v} will print the current 
+			version number of our application.
+
+	\subsection{Test suite}
+	
+    	\paragraph{}
+        	To run the unit tests bundled with our source code, execute \texttt{mvn test}. This is also done automatically when you compile the project with \texttt{mvn package}.
+    
+\section{Command-line options}
+	\begin{lstlisting}
+    java -jar mini-camel.jar <action> [-o <output>] [<input>]\end{lstlisting}
+	\paragraph{}
+    	In case of an error in the source code, or a typing error, or simply an exception in our compiler, our program prints the list of errors (and warnings) on stderr. The process will terminate with exit code 0 in case of success (the action was carried out successfully and an output was printed to stdout), or exit code 1 in case of an error.
+    
+	\subsection{Actions}
+		\begin{tabular}{|R{2.3cm}|C{9cm}|}
+		\hline \rowcolor{lightgray}Options & Descriptions \\
+		\hline   -h & Displays usage instructions \\
+		\hline   -v & Displays the version number \\
+		\hline   -p & Only parse the input (no further processing) \\
+		\hline   -t & Only perform type checking (after parsing) \\
+		\hline   -a & Print the Abstract Syntax Tree \\
+		\hline   -A & Print the pre-processed AST \\
+		\hline   -I & Print compiled code in Intermediate Representation (IR) \\
+		\hline (nothing) & Perform all steps and generate ARM assembly \\
+		\hline 
+		\end{tabular}
+	
+	\subsection{Other options}
+		\begin{tabular}{|R{2.3cm}|C{9cm}|}
+		\hline \rowcolor{lightgray}Options & Descriptions \\
+		\hline  -o \textless output\textgreater & Optional. Specifies an output file; default is stdout.\\
+		\hline  \textless input\textgreater & Optional. Specifies the input file; default is stdin.\\
+		\hline 
+		\end{tabular}
+
+\section{Example usage}
+	
+    \paragraph{}
+    We will abbreviate \texttt{java -jar target/mini-camel.jar} by \texttt{mini-camel.jar}.
+    The following sample is found in \texttt{src/test/resources/mini\_camel/tests/fib.ml},
+    which we will abbreviate by \texttt{fib.ml}:
+    
+    \begin{lstlisting}[language=caml]
+let rec fib n =
+  if n <= 1 then n else
+  fib (n - 1) + fib (n - 2) in
+print_int (fib 30)
+    \end{lstlisting}
+    
+    Output of executing \texttt{mini-camel.jar -A fib.ml} (pre-processed source):
+    
+    \begin{lstlisting}[language=caml]
+let rec fib_1 n_2 = (
+	if (n_2 <= 1) then n_2
+	else (
+    	(fib_1 (n_2 - 1)) + (fib_1 (n_2 - 2)))
+	)
+in
+	print_int (fib_1 30)
+    \end{lstlisting}
+    
+    Output of executing \texttt{mini-camel.jar -I fib.ml} (intermediate code):
+	\begin{lstlisting}
+# Function: fib_1
+# Closure: []
+# Arguments: [n_2]
+# Locals: [ret, tmp7, tmp6, tmp4, tmp3, tmp5, tmp2, tmp1]
+	tmp7 := 1
+	IF (n_2 <= tmp7) THEN l0 ELSE l1
+	l0:
+	ret := n_2
+	JMP l2
+	l1:
+	tmp3 := 2
+	tmp4 := n_2 - tmp3
+	tmp6 := CALL fib_1[tmp4]
+	tmp1 := 1
+	tmp2 := n_2 - tmp1
+	tmp5 := CALL fib_1[tmp2]
+	ret := tmp5 + tmp6
+	l2:
+	RET ret
+
+# Function: _main
+# Closure: []
+# Arguments: []
+# Locals: [tmp9, tmp8]
+	tmp8 := 30
+	tmp9 := CALL fib_1[tmp8]
+	CALL print_int[tmp9]
+	RET
+\end{lstlisting}
+
+	Final ARM code (summary), obtained by executing \texttt{mini-camel.jar fib.ml}:
+\begin{lstlisting}[language={}]
+fib_1:
+	@ arguments
+	@   n_2 -> r12+40
+
+	@ prologue
+	SUB sp, #4
+	STR lr, [sp]
+	stmfd	sp!, {r3 - r10}
+	SUB sp, #4
+	STR r12, [sp]
+	MOV r12, sp
+
+	@ tmp7 := 1
+	LDR r3, =1
+
+	@ IF (n_2 <= tmp7) THEN l0 ELSE l1
+	MOV r2, r3
+	CMP r1, r2
+	BLE l0
+	BAL l1
+l0:
+
+	@ ret := n_2
+
+	@ JMP l2
+	BAL l2
+l1:
+
+	@ tmp3 := 2
+	LDR r5, =2
+
+	@ tmp4 := n_2 - tmp3
+	MOV r2, r5
+	SUB r0, r1, r2
+	MOV r6, r0
+
+	@ tmp6 := CALL fib_1[tmp4]
+	@ push argument 0
+	SUB sp, #4
+	MOV r0, r6
+	STR r0, [sp]
+	@ call, free stack and set the return value
+	BL fib_1
+	ADD sp, #4
+	MOV r7, r11
+	@ end call
+
+	@ tmp1 := 1
+	LDR r8, =1
+
+	@ tmp2 := n_2 - tmp1
+	MOV r2, r8
+	SUB r0, r1, r2
+	MOV r9, r0
+
+	@ tmp5 := CALL fib_1[tmp2]
+	@ push argument 0
+	SUB sp, #4
+	MOV r0, r9
+	STR r0, [sp]
+	@ call, free stack and set the return value
+	BL fib_1
+	ADD sp, #4
+	MOV r10, r11
+	@ end call
+
+	@ ret := tmp5 + tmp6
+	MOV r1, r10
+	MOV r2, r7
+	ADD r0, r1, r2
+	MOV r11, r0
+l2:
+
+	@ RET ret
+	@epilogue
+	MOV sp, r12
+	LDR r12, [sp]
+	ADD sp, #4
+	ldmfd	sp!, {r3 - r10}
+	LDR lr, [sp]
+	ADD sp, #4
+	MOV pc, lr
+\end{lstlisting}
+
+\section{Features of our compiler}
+	\subsection{Part of min-caml supported}
+	% which part of min-caml are supported, exemple ???
+		As of writing this report, the following features of min-caml are fully supported by our compiler:
+		\begin{itemize}
+        	\item Type checking \& inference
+			\item Integer computations
+			\item \texttt{let}-binding
+			\item Basics and recursive functions
+			\item Array operations
+		\end{itemize}
+        Supported, but insufficiently tested (might break):
+        \begin{itemize}
+			\item Tuples (and \texttt{let (x, y, ...) = ... in ...})
+			\item Closures
+            \item ARM code generation involving closures
+        \end{itemize}
+        
+	\subsection{Functionality implemented}
+    	The following algorithms are implemented as part of our compiler:
+		\begin{enumerate}
+			\item Detection of free variables (+ unit tests)
+			\item Type checking (+ unit tests)
+			\item Alpha Conversion (+ unit tests)
+			\item Beta Reduction (+ unit tests)
+			\item Constant Folding (tested manually)
+            \item Function Inlining (tested manually)
+            \item K-normalization
+            \item Closure conversion
+			\item Intermediate Code Generation
+			\item Assembly Code generation (integer computation, print\_newline and print\_int)
+		\end{enumerate}
+
+	\subsection{Limitation of our compiler}
+		\begin{itemize}
+			\item Inlining for recursive function: It's surely possible to transform any recursive function into an iterative one, and then apply inlining. Because of a lack of time, we didn't implemente inlining for all functions.
+        	\item We don't compile float operation ARM assembly for floating point operations, but they are supported in the other stages of the compiler (up to and intermediate code generation with the \texttt{-I} switch)
+        	\item Function currying is not supported; however, because it exists in the type system, the user may be able to partially apply functions (though this would lead to erroneous assembly code). We sometimes detect this while doing code generation and throw an exception. We can't always detect this (when calling a closure function) so this is a problem. 
+		\end{itemize}
+	\subsection{Optimisation of our compiler}
+	\begin{enumerate}
+		\item Detection of free variables
+		\item Type Checking
+		\item Alpha Conversion
+		\item Beta Reduction
+		\item Constant Folding
+    	\item Inlining
+    	\item Elimination of unused let-expression
+    	\item K-normalization
+		\item Intermediate Code Generation
+		\item Assembly Code generation (without float)
+	\end{enumerate}
+		
+\end{document}

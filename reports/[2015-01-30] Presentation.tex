@@ -1,0 +1,161 @@
+\documentclass{beamer}
+\usepackage{beamerthemesplit} % new 
+\setbeamertemplate{items}[rectangle]
+\setbeamertemplate{navigation symbols}{}
+\usepackage{graphicx} 
+\usepackage[labelformat=empty]{caption} % pas de "Figure: "
+\usepackage{textcomp}
+\usepackage{makeidx}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usecolortheme[RGB={21, 101, 178}]{structure} 
+\usepackage{color}
+
+\definecolor{rltred}{rgb}{0.75,0,0}
+	\definecolor{rltgreen}{rgb}{0,0.5,0}
+	\definecolor{oneblue}{rgb}{0.06,0.04,0.9}
+	\definecolor{marron}{rgb}{0.64,0.16,0.16}
+	\definecolor{forestgreen}{rgb}{0.13,0.54,0.13}
+	\definecolor{purple}{rgb}{0.62,0.12,0.94}
+	\definecolor{dockerblue}{rgb}{0.11,0.56,0.98}
+	\definecolor{freeblue}{rgb}{0.25,0.41,0.88}
+	\definecolor{myblue}{rgb}{0,0.2,0.4}
+
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+\hfill\usebeamertemplate***{navigation symbols}
+\hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
+
+\begin{document}
+\title{Compilation Project}
+\subtitle{Presentation\\ 
+Les Quatre MousquetEngineers\\ Master M1 MOSIG, Grenoble Universities}
+\date{\today} 
+\author[MousquetEngineers]{Cristian HARJA \and Yassine JAZOUANI \and Lina MARSS0 
+\and Cl\'{e}ment MOMMESSIN}
+\institute[L2]{Joseph Fourier Grenoble University}
+\frame{\titlepage} 
+
+\frame{\frametitle{Summary}\tableofcontents} 
+
+
+\section{Functionalities implemented} 
+\frame{\frametitle{Functionalities implemented} 
+\begin{itemize}
+	\item Free variables
+	\item Type Checking
+	\item Alpha Conversion
+	\item Beta Reduction
+	\item Constant Folding
+    \item Inlining
+    \item Elimination
+    \item K-normalization
+    \item Closure conversion
+	\item Intermediate Code Generation
+	\item Assembly Code Generation
+\end{itemize}
+%~ \begin{columns}
+			%~ \begin{column}{4cm}
+				%~ \begin{figure}
+	%~ \includegraphics[scale=0.26]{img/sante.jpg}
+%~ \end{figure}
+%~ \begin{figure}
+	%~ \includegraphics[scale=0.26]{img/ferro.jpg}
+%~ \end{figure}
+%~ \begin{figure}
+	%~ \includegraphics[scale=0.26]{img/aviation.jpg}
+%~ \end{figure}
+			%~ \end{column}
+			%~ \begin{column}{0.5\textwidth}
+			%~ \begin{figure}
+	%~ \includegraphics[scale=0.3]{img/nucleaire.jpg}
+%~ \end{figure}
+%~ \begin{figure}
+	%~ \includegraphics[scale=0.3]{img/voiture.jpg}
+%~ \end{figure}
+			%~ \end{column}
+		%~ \end{columns}
+}
+
+\section{Choice of Algorithm}
+\frame{\frametitle{Choice of Algorithms} 
+%~ \begin{figure}
+	%~ \begin{center}
+		%~ \includegraphics[scale=0.5]{img/bug.jpg}
+	%~ \end{center}
+%~ \end{figure}
+	\begin{itemize}
+		\item AST
+		\item Type Checking \& Free Variables
+		\item Transformation
+		\item Intermediate Representation
+		\item Code Generation
+	\end{itemize}
+}
+
+\frame{\frametitle{Transformation} 
+	\begin{itemize}
+		\item Inlining
+		\item Elimination
+	\end{itemize}
+}
+
+\frame{\frametitle{K-Normalization} 
+	\begin{itemize}
+		\item K-Normalized Tree
+		\item Insert Let*
+	\end{itemize}
+}
+
+
+\frame{\frametitle{Closure} 
+	\begin{itemize}
+		\item Special Instructions
+		\item Visit of K-Normalized Tree
+	\end{itemize}
+}
+
+\frame{\frametitle{Intermediate Code Generation} 
+	\begin{itemize}
+		\item Intermediate Representation
+		\item Separate functions
+		\item Instr / Operand
+		\item ASSIGN 
+	    \item ADD\_I, SUB\_I, ADD\_F, SUB\_F, MUL\_F, DIV\_F
+	    \item LABEL, JUMP, BRANCH
+	    \item CALL, RETURN, CLS\_MAKE and CLS\_APPLY
+	    \item ARRAY\_NEW, ARRAY\_GET, ARRAY\_PUT
+	\end{itemize}
+}
+
+\frame{\frametitle{Assembly Code Generation} 
+	\begin{itemize}
+		\item ARM assembly
+		\item Each register has a specific role
+		\item Register allocation
+        \item Stack and Heap Management
+	\end{itemize}
+}
+
+\section{Demonstration}
+\frame{\frametitle{Demonstration}
+	\begin{center}
+		It's demo time.
+	\end{center}
+}
+\section{Bibliography}
+\frame{\frametitle{Bibliography}
+	\begin{itemize}
+		\item MinCaml: A Simple and Efficient Compilerfor a Minimal Functional Language, Eijiro Sumii from Tohoku University.
+	\end{itemize}
+}
+
+\frame{\frametitle{End}
+	\begin{center}
+		 Thank you for your attention, do you have any question ?
+	\end{center}
+}
+
+\end{document}
+

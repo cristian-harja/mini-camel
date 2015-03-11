@@ -1,0 +1,279 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
+\usepackage{color}
+\usepackage{multirow}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{%
+	basicstyle=\scriptsize\sffamily,%
+	commentstyle=\footnotesize\ttfamily,%
+	frameround=trBL,
+	frame=single,
+	breaklines=true,
+	showstringspaces=false,
+	numbers=left,
+	numberstyle=\tiny,
+	numbersep=10pt,
+	keywordstyle=\bf
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+\newcommand{\subtitle}[1]{%
+	\posttitle{%
+	\par\end{center}
+\begin{center}\large#1\end{center}
+\vskip0.5em}%
+}
+
+
+\title{Compilation Project}
+\subtitle{Dev documentation\\ 
+Les Quatre MousquetEngineers
+\\Master M1 MOSIG, Grenoble Universities}
+\author{Cristian HARJA \and Yassine JAZOUANI \and Lina MARSS0 
+\and Cl\'{e}ment MOMMESSIN}
+\date{29/01/2015}
+
+\begin{document}
+% Beginning serious stuff. 
+
+
+\maketitle
+
+
+\section{Architecture of our compiler}
+%details of our architecture
+%the new classes / types / modules implemented
+	\subsection{Langage}
+		\paragraph{}
+		For this project, we were torn between OCaml and Java. As one member
+		didn't have any solid background of OCaml, we have wisely chosen 
+		Java. For the IDE, we have chosen to use IntelliJ IDEA.
+	\subsection{File management}
+		\paragraph{}
+		In the mini\_camel folder, we have created 8 packages:
+		\begin{enumerate}
+			\item 'comp': in which we have all the files related
+			 to the compilor (FreeVariablesVisitor, AssemblyGenerator ...) 
+			\item 'ir': in which we have all the files related to the
+			 Intermediate Representation
+			\item 'visit': in which we have all the files related to
+			 the different transformations and optimisations which we will
+			 describe in the following section. 
+			\item 'type': in which we have all the files related to the
+			 typechecking of an expression
+			\item 'ast': in which we have all the files related the Ast.
+			\item 'util': in which we have all the files that help us visiting
+			the AST Tree for all kind of transformations.
+			\item 'knorm': in which we have all the files related to the 
+			K-Normalization which generates us a K-AST Tree
+			\item We also have 4 files for manual testing in the main folder.
+		\end{enumerate}
+		For our unit tests, we have created a new folder in 
+		which we have the unit tests for all packages. These test files
+		are in the /src/test/java/mini\_camel/visit.
+
+
+
+\section{Functionalities implemented}
+\begin{itemize}
+	\item Detection of free variables
+	\item Type Checking
+	\item Alpha Conversion
+	\item Beta Reduction
+	\item Constant Folding
+    \item Inlining
+    \item Elimination of unused let-expression
+    \item K-normalization
+	\item Intermediate Code Generation
+	\item Assembly Code generation (without float)
+\end{itemize}
+
+
+\section{Choice of algorithms}
+
+\paragraph{}
+We already had a parser given by our teacher. This parser produced an Abstract Syntax Tree (AST) which had to be type checked. We checked all free variables.
+Then we applied all the transformations to simplify the AST, generated the Intermediate Representation, and then generate the Assembly Code. 
+
+\paragraph{}
+Let's see how the different parts of our compilor is implemented.
+
+\subsection{Transformations}
+
+Globally, for all transformations and pre-processing, we have chosen to use 3 different
+interfaces, which are:
+\begin{itemize}
+\item Visitor
+\item Visitor 1
+\item Visitor 2
+\end{itemize}
+
+The differences between these 3 patterns are the returned result :
+\begin{enumerate}
+\item Visitor.java doesn't return any value
+\item Visitor1.java returns a value 
+\item Visitor2.java returns a value but also takes an argument which is mainly used for context and symbol tables. 
+\end{enumerate}
+
+Thanks to these different interfaces, it's possible to visit the tree and to do some computation depending on whether we are in presence of a AstAdd, AstEq etc...
+
+\subsubsection{Inlining}
+
+To apply inlining to our AstTree, we first select only the none recursive functions. 
+
+
+One example of none recursive function would be
+\begin{lstlisting}[language=caml]
+	let rec f x = x + 1 in f 3;;
+\end{lstlisting}
+
+Then once we have a list of functions needed to be inlined, we just recursively visit the AstTree and apply the following transformations: 
+\begin{itemize}
+\item If we have an AstLetRec, we just fill in a list.
+\item If we have an AstApp, we check if the following function can be inlined and then we inline it.
+\end{itemize}
+
+
+\subsubsection{Elimination}
+To apply elimination of useless declarations,we visit all the tree, then:
+\begin{itemize}
+\item If we have a variable declaration, we fill a list called left with the ID of the declared variable
+\item Each time a variable is seen at the right side of an equality, this variable cannot be eliminated.
+\end{itemize}
+
+\paragraph{}
+Here is an example of elimination:
+
+This expression: 
+\begin{lstlisting}[language=caml]
+	let x = 3 in print_int(3);;
+	\end{lstlisting}
+    
+leads to this one:
+\begin{lstlisting}[language=caml]
+	print_int(3);;
+	\end{lstlisting}
+
+
+\subsection{K-normalization}
+\paragraph{}
+	Implemented in \texttt{src/main/java/mini\_camel/visit/KNormalize.java}, recursively traverses the AST and usually relies on the \texttt{KNormalizeHelper.insert\_let*} functions to help build the K-normalized AST.
+    
+\paragraph{}
+	Note that the transformed program is now represented in a new hierarchy of classes, very similar to the \texttt{Ast*}, but simplified to be very specific about its structures (for example, \texttt{AstAdd} allows any 2 sub-expressions as its operands, but \texttt{mini\_camel.knorm.KAdd} only allows 2 identifiers as its operand, which should contain the results of the expressions).
+
+\paragraph{}
+	The \texttt{insert\_let*} functions take K-normalized code as arguments and, if they can't be used as operands in another expression (because they are not identifiers, but constants or complex expressions), they generate one \texttt{let} for each complex expression, and then calls \texttt{KNormalizeHelper.Handler*.apply(...)} (user-supplied callback) to generate code that actually uses the operands (which are now guaranteed to be identifiers).
+    
+\subsection{Closure conversion}
+\paragraph{}
+	Based on K-normalization, extends it with a few special instructions (\texttt{ApplyClosure}, \texttt{ApplyDirect} and \texttt{ClosureMake}).\\The implementation in \texttt{src/main/java/mini\_camel/visit/ClosureConv.java} looks for special nodes in the K-normalized code: \texttt{visit(KLetRec)} detects closures (and possibly converts them) and \texttt{visit(KAdd)} determines how a function should be called.
+
+
+\subsection{Intermediate Code Generation}
+\paragraph{}
+	To go from the AST which has been K-normalized to the Generation of Assembly Code, we need first to define a bridge bewteen these 2 representation which is the Intermediate Representation (IR).\\
+    This representation divides the AST into separated functions (one main, and as many functions as there are "let rec"). Each body of a function is a list of instructions (Instr) applied to operands (Operand) that makes this representation close to the Assembly Code.\\
+    
+\paragraph{}
+	The list of defined instructions are : 
+    
+    \begin{itemize}
+    \item ASSIGN for assignment
+    \item ADD\_I, SUB\_I, ADD\_F, SUB\_F, MUL\_F, DIV\_F for integer and float computation
+    \item LABEL, JUMP, BRANCH for boolean expressions and labels for functions
+    \item CALL, RETURN, CLS\_MAKE and CLS\_APPLY for calling, returning functions with values, making and applying closures
+    \item ARRAY\_NEW, ARRAY\_GET, ARRAY\_PUT for making and using arrays
+    \end{itemize}
+    
+
+We can notice the existence of instructions on floats that are defined for the IR but not handled yet during the Assembly Code Generation.\\
+The implementation of Tuples is handled by representing them as arrays.\\
+
+\subsection{Assembly Code Generation }
+\paragraph{}
+	The assembly architecture generated is ARM assembly. \\
+    
+	\textbf{Roles for each registers :}
+    \begin{itemize}
+    	\item r0 - r2 are 'intern' registers used by the system to load/store values and variables, containing adresses, indexes for loops or accessing memory and other internally processes of the compiler.
+
+ 		\item r3 - r10 are "scratch registers" containing local variables
+
+ 		\item r11 is used to store the return value of each function. If the return value of a function is "void" this register remains untouched during a call to this 
+ 	function.
+
+ 		\item r12 is the frame pointer (FP), for each entering fnction the caller's FP is pushed in the stack and the nexw FP is initialized to point on that cell of the
+ 	stack. \\
+ 	FP is used to access to the parameters of the called function, and easily return from the call.
+
+	\end{itemize}
+    
+    \paragraph{}
+	\textbf{Register allocation : } \\
+There is a mapping from indexes of registers (3 to 10) to the name of the variable stored in the register and a cursor pointing to some index. There is also a list of variables that are in the data section of the assembly code. \\
+When all registers are used and we need another one, the variable stored in the register pointed by the cursor is spilled in the memory, and the variable is added in the list, so that the register is now free and the cursor is moved to the next index.
+
+
+\section{Problem encountered and solution found}
+\begin{itemize}
+	\item We had some minor problems concerning the IR. We couldn't find 
+		  a simple and efficient way to implement it. Now, we use the interface 				Visitor3.java
+		  that uses the same methods used in the other interfaces : visit(AstXXX)
+	\item We have some issues during the assembly code generation for float. We have some ideas but nothing concrete right now.
+    \item We had some issues concerning inlining. Indeed, when we do a \texttt{print\_int} or \texttt{print\_newline}, we had a transformation that transforms these expression into to \texttt{?vX = print}. Then, when elimination was applied, since the variable \texttt{?vX} was never used, it eliminated the print. We have then chosen to modify our elimination. Now, when the variable begins with \texttt{?v}, it doesn't eliminate it. 
+    \item k-norm
+\end{itemize}
+
+\section{Future development and improvements}
+
+\subsection{Preprocessing}
+\begin{itemize}
+ \item Let Reduction
+\end{itemize}
+
+\subsection{Assembly Code Generation}
+\begin{itemize}
+	\item Handle float computation
+    \item Modify the register allocator to spill local variables in the stack instead of the data section
+    \item Merge the function "check\_heap" into the function "malloc"
+    \item Enable/disable the heap management : don't add the code for the heap initialization and the function "malloc" if the programm never uses Arrays or Tuples
+    
+    
+\end{itemize}
+
+
+\end{document}

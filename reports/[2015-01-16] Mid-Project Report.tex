@@ -1,0 +1,120 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash }b{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash }b{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash }b{#1}}
+\usepackage{color}
+\usepackage{multirow}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{%
+	basicstyle=\scriptsize\sffamily,%
+	commentstyle=\footnotesize\ttfamily,%
+	frameround=trBL,
+	frame=single,
+	breaklines=true,
+	showstringspaces=false,
+	numbers=left,
+	numberstyle=\tiny,
+	numbersep=10pt,
+	keywordstyle=\bf
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Octave,                 % the language of the code
+  morekeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=2,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+\newcommand{\subtitle}[1]{%
+	\posttitle{%
+	\par\end{center}
+\begin{center}\large#1\end{center}
+\vskip0.5em}%
+}
+
+
+\title{Compilation Project}
+\subtitle{Mid-Project Report\\ Master M1 MOSIG, Grenoble Universities}
+\author{Cristian HARJA \and Yassine JAZOUANI \and Lina MARSS0 
+\and Cl\'{e}ment MOMMESSIN}
+\date{16/01/2015}
+
+\begin{document}
+% Beginning serious stuff. 
+
+
+\maketitle
+
+\section{Introduction}
+\paragraph{}
+Today, we are in the mid project. Therefore, we wrote this report to sum up all our work done. 
+\paragraph{}
+We begin by presenting you our planning of work for the last weeks and our logs,
+then we list all the implemented functionalities, as well as the problems encountered with our solutions.
+\paragraph{}
+In the root folder of our project there is a "README.md" file, detailing the build instructions and structure of our project.
+\section{Planning and log}
+\paragraph{}
+\begin{tabular}{|R{1.5cm}|C{7cm}|}
+\hline \rowcolor{lightgray}Date & Implementation \\
+\hline  12/01 & Intermediate Representation classes\\
+\hline  13/01 & IR code generation from AST\\
+\hline  14/01 & Finished code generation\\
+\hline  15/01 & Assembly generation\\
+\hline  16/01 & Working prototype, able to compile simple programs\\
+\hline 
+\end{tabular}
+
+\section{Functionality implemented}
+\begin{enumerate}
+	\item Detection of free variables with unit tests
+	\item Type Checking with unit tests
+	\item Alpha Conversion with unit tests (for integers and float)
+	\item Beta Reduction (for integers and float)
+	\item Constant Folding
+	\item Code Generation with an Intermediate Representation (IR)
+	\item Assembly Code generation (integer computation, print\_newline and print\_int)
+\end{enumerate}
+\section{Problems encountered and solution found}
+\begin{itemize}
+	\item We had some minor problems concerning the IR. We couldn't find 
+		  (in a timely fashion) a simple and efficient way of implementing it.
+	\item We have some issues during the assembly code generation for float. We have some ideas 
+		  but nothing concrete right now.
+    \item We tried implementing stack management as well, but couldn't get it to work for this mid-project dead-line. For the moment we use global variables; this means recursive functions will not work properly.
+    \item Some language constructs were difficult to compile (like closures), so for now we just stop the compilation with an error when encountering such a situation.
+\end{itemize}
+\section{Future steps}
+\begin{itemize}
+	\item Finish all other transformations on the AST (closure conversion, K-normalization, let-reduction...)
+    \item Debug and improve our code generation (both IR and assembly).
+    \item Implement optimizations on the IR.
+    \item Follow the guidelines more closely, towards project completion.
+\end{itemize}
+
+\end{document}
